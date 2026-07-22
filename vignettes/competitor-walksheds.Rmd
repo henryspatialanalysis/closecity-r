@@ -36,7 +36,7 @@ labels <- sapply(types, `[[`, "label")
 ids <- sapply(types, `[[`, "dest_type_id")
 cafe <- ids[labels == "cafes"]
 
-city <- close$places("Providence")$results[[1]]
+city <- close$places("Providence")$data$places[[1]]
 ```
 
 ## Find the shops

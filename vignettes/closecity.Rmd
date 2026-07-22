@@ -61,7 +61,7 @@ labels <- sapply(types, `[[`, "label")
 ids <- sapply(types, `[[`, "dest_type_id")
 grocery_id <- ids[labels == "grocery_stores"]
 
-providence <- close$places("Providence")$results[[1]]
+providence <- close$places("Providence")$data$places[[1]]
 providence$geoid
 ```
 
@@ -83,7 +83,7 @@ join census-block boundaries for you, using the `tigris` package.
 
 ```{r}
 close$spatial <- FALSE
-summary <- close$block_summary("440070036001010", mode = "walk")
+summary <- close$block_summary("440070008001068", mode = "walk")
 summary$results
 ```
 

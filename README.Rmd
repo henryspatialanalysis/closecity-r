@@ -40,7 +40,7 @@ library(closecity)
 close <- close_client("ck_live_your_key")   # use your own key here
 ```
 
-```{r first-call}
+```{r first-call, fig.alt = "Grocery stores near downtown Providence, drawn as points."}
 # Grocery stores within a 1.5 km walk of a point (type 30 is grocery stores):
 groceries <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1500, type = 30)
 plot(sf::st_geometry(groceries), pch = 19, col = "#202a5b")
@@ -50,7 +50,7 @@ Catalog and lookup routes are free and need no key:
 
 ```{r}
 close$modes()$data$modes                       # walk, bike, transit
-close$places("Providence")$results[[1]]        # a city name to its GEOID and centre
+close$places("Providence")$data$places[[1]]        # a city name to its GEOID and centre
 ```
 
 ## Words you will see
@@ -72,7 +72,7 @@ them). To work with the raw data instead, set the client's `spatial` flag to FAL
 
 ```{r}
 close$spatial <- FALSE
-reply <- close$block_summary("250173523004004", mode = "walk")
+reply <- close$block_summary("440070008001068", mode = "walk")
 reply$results
 ```
 

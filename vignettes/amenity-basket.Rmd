@@ -47,7 +47,7 @@ basket <- c(
   cafe = ids[labels == "cafes"]
 )
 
-city <- close$places("Richmond")$results[[1]]
+city <- close$places("Richmond")$data$places[[1]]
 ```
 
 ## Pull the blocks, with population
