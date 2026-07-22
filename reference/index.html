@@ -40,7 +40,7 @@
     <div class="section level2">
       <h2 id="client">Client<a class="anchor" aria-label="anchor" href="#client"></a></h2>
 
-      <div class="section-desc"><p>Create a client and understand the reply it returns.</p></div>
+      <div class="section-desc"><p>The client is an R6 object with one method per route. Build it with close_client(); make calls through its methods.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -56,203 +56,14 @@
 
         <dt>
 
-          <code><a href="close_reply.html">close_reply</a></code>
+          <code><a href="CloseClient.html">CloseClient</a></code>
 
         </dt>
-        <dd>The reply object returned by every endpoint</dd>
+        <dd>Close API client</dd>
       </dl></div><div class="section level2">
-      <h2 id="catalog-and-lookup-free-">Catalog and lookup (free)<a class="anchor" aria-label="anchor" href="#catalog-and-lookup-free-"></a></h2>
+      <h2 id="spatial-output-and-replies">Spatial output and replies<a class="anchor" aria-label="anchor" href="#spatial-output-and-replies"></a></h2>
 
-      <div class="section-desc"><p>Keyless metadata and place-name lookup.</p></div>
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="close_destination_types.html">close_destination_types()</a></code>
-
-        </dt>
-        <dd>Destination-type taxonomy</dd>
-
-        <dt>
-
-          <code><a href="close_health.html">close_health()</a></code>
-
-        </dt>
-        <dd>Liveness check</dd>
-
-        <dt>
-
-          <code><a href="close_last_updated.html">close_last_updated()</a></code>
-
-        </dt>
-        <dd>Newest-data publication timestamp</dd>
-
-        <dt>
-
-          <code><a href="close_modes.html">close_modes()</a></code>
-
-        </dt>
-        <dd>Travel modes</dd>
-
-        <dt>
-
-          <code><a href="close_places.html">close_places()</a></code>
-
-        </dt>
-        <dd>Search census places by name</dd>
-
-        <dt>
-
-          <code><a href="close_vintage.html">close_vintage()</a></code>
-
-        </dt>
-        <dd>Dataset vintages</dd>
-      </dl></div><div class="section level2">
-      <h2 id="travel-times-from-a-block">Travel times from a block<a class="anchor" aria-label="anchor" href="#travel-times-from-a-block"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="close_block_pois.html">close_block_pois()</a></code>
-
-        </dt>
-        <dd>Nearby POIs and their travel time from a block</dd>
-
-        <dt>
-
-          <code><a href="close_block_summary.html">close_block_summary()</a></code>
-
-        </dt>
-        <dd>Fastest travel time from a block to each destination category</dd>
-      </dl></div><div class="section level2">
-      <h2 id="travel-times-from-a-point">Travel times from a point<a class="anchor" aria-label="anchor" href="#travel-times-from-a-point"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="close_point_pois.html">close_point_pois()</a></code>
-
-        </dt>
-        <dd>Nearby POIs and their travel time from a point</dd>
-
-        <dt>
-
-          <code><a href="close_point_summary.html">close_point_summary()</a></code>
-
-        </dt>
-        <dd>Fastest travel time from a point to each destination category</dd>
-      </dl></div><div class="section level2">
-      <h2 id="points-of-interest">Points of interest<a class="anchor" aria-label="anchor" href="#points-of-interest"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="close_poi.html">close_poi()</a></code>
-
-        </dt>
-        <dd>One POI's details</dd>
-
-        <dt>
-
-          <code><a href="close_poi_catchment.html">close_poi_catchment()</a></code>
-
-        </dt>
-        <dd>A POI's catchment (blocks that can reach it)</dd>
-
-        <dt>
-
-          <code><a href="close_pois_search.html">close_pois_search()</a></code>
-
-        </dt>
-        <dd>Search POIs by area</dd>
-      </dl></div><div class="section level2">
-      <h2 id="areal-queries">Areal queries<a class="anchor" aria-label="anchor" href="#areal-queries"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="close_blocks_query.html">close_blocks_query()</a></code>
-
-        </dt>
-        <dd>Per-block travel times within a polygon or radius</dd>
-
-        <dt>
-
-          <code><a href="close_place_blocks.html">close_place_blocks()</a></code>
-
-        </dt>
-        <dd>Per-block travel times for a whole place</dd>
-      </dl></div><div class="section level2">
-      <h2 id="isochrones">Isochrones<a class="anchor" aria-label="anchor" href="#isochrones"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="close_isochrone.html">close_isochrone()</a></code>
-
-        </dt>
-        <dd>Travel-time contours (isochrone)</dd>
-
-        <dt>
-
-          <code><a href="close_isochrone_meta.html">close_isochrone_meta()</a></code>
-
-        </dt>
-        <dd>Isochrone metadata</dd>
-      </dl></div><div class="section level2">
-      <h2 id="pagination">Pagination<a class="anchor" aria-label="anchor" href="#pagination"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="close_records.html">close_records()</a></code>
-
-        </dt>
-        <dd>Collect every record from a paginated endpoint</dd>
-      </dl></div><div class="section level2">
-      <h2 id="spatial-output">Spatial output<a class="anchor" aria-label="anchor" href="#spatial-output"></a></h2>
-
-      <div class="section-desc"><p>Convert a reply to an sf object.</p></div>
+      <div class="section-desc"><p>Feature methods return sf objects by default. Turn that off to work with the raw reply.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -264,14 +75,21 @@
           <code><a href="close_as_sf.html">close_as_sf()</a></code>
 
         </dt>
-        <dd>Convert a Close reply to an <code>sf</code> object</dd>
+        <dd>Convert a Close reply to an sf object</dd>
+
+        <dt>
+
+          <code><a href="close_reply.html">close_reply</a></code>
+
+        </dt>
+        <dd>The reply object</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Nathaniel Henry, Close.</p>
+  <p>Developed by Nathaniel Henry, Henry Spatial Analysis.</p>
 </div>
 
 <div class="pkgdown-footer-right">

@@ -1,87 +1,90 @@
 # Competitor walksheds
 
-**Question.** For a given business in a given industry, which
-competitors also serve its walkshed — the residential blocks that can
-walk to it — and how much do their catchments overlap? We use
-**Providence, RI** and the coffee-shop trade (destination type `31`).
+A coffee shop wants to know which competitors draw from the same
+neighbourhood it does. Its **walkshed** is every residential block that
+can walk to it. This tutorial finds nearby competitors and measures how
+much of that walkshed they share. The example city is Providence, Rhode
+Island.
 
-## Pick the business and its industry
+## Set up
+
+Read the cafe category id from the free catalog and find the city
+centre.
 
 ``` r
 
 library(closecity)
-close <- close_client("ck_live_your_key_here")
+library(sf)
 
-CAFE <- 31
-providence <- close_places(close, "Providence")$results[[1]]
+close <- close_client("ck_live_your_key")   # use your own key here
 
-cafes <- close_records(close_pois_search, close,
-                       lat = providence$lat, lon = providence$lon,
-                       radius_m = 1200, type = CAFE)
-ours <- cafes[[1]]
-competitors <- cafes[2:6]
+types <- close$destination_types()$data$destination_types
+labels <- sapply(types, `[[`, "label")
+ids <- sapply(types, `[[`, "dest_type_id")
+cafe <- ids[labels == "cafes"]
+
+city <- close$places("Providence")$results[[1]]
+```
+
+## Find the shops
+
+Search for cafes near downtown. The result is an sf of points, so plot
+them and pick one shop as the subject.
+
+``` r
+
+cafes <- close$pois_search(lat = city$lat, lon = city$lon,
+                           radius_m = 1200, type = cafe)
+plot(st_geometry(cafes), pch = 19, col = "#202a5b")
+
+ours <- cafes[1, ]
 ours$name
 ```
 
 ## Our walkshed
 
-Every block that can reach our shop within a 10-minute walk:
+Ask for every block that can reach our shop within a 10-minute walk.
+This comes back as sf polygons, with the block boundaries downloaded
+once by `tigris`.
 
 ``` r
 
-walkshed <- function(dest_id) {
-  rows <- close_records(close_poi_catchment, close, dest_id,
-                        mode = "walk", max_minutes = 10)
-  unique(vapply(rows, function(r) r$geoid, character(1)))
-}
+our_shed <- close$poi_catchment(ours$dest_id, mode = "walk", max_minutes = 10)
 
-ours_shed <- walkshed(ours$dest_id)
-length(ours_shed)
+plot(st_geometry(our_shed), col = "#eef0f7", border = "#c6cbe0")
+plot(st_geometry(ours), add = TRUE, pch = 19, col = "#f36e21", cex = 1.6)
 ```
 
-## Which competitors contest it
+## Who else serves it
 
-Local set math, free once the catchments are pulled:
+For each of the nearest competitors, pull their walkshed and count the
+blocks they share with ours. `our_shed$geoid` is just a vector of block
+ids, so the overlap is a plain set intersection.
 
 ``` r
 
-for (c in competitors) {
-  shed <- walkshed(c$dest_id)
-  shared <- intersect(ours_shed, shed)
-  cat(sprintf("%-30s shares %3d blocks (%.0f%% of ours)\n",
-              c$name, length(shared), 100 * length(shared) / length(ours_shed)))
+for (i in 2:6) {
+  their_shed <- close$poi_catchment(cafes$dest_id[i], mode = "walk",
+                                    max_minutes = 10)
+  shared <- intersect(our_shed$geoid, their_shed$geoid)
+  cat(sprintf("%-28s %3d shared blocks (%.0f%% of ours)\n",
+              cafes$name[i], length(shared),
+              100 * length(shared) / nrow(our_shed)))
 }
 ```
 
 ## Map the contested ground
 
+Draw our walkshed, then every cafe on top, with our shop highlighted.
+The clusters of competitors inside the walkshed are the ones competing
+for the same walk-in traffic.
+
 ``` r
 
-library(sf)
-pts <- close_as_sf(close_pois_search(close, lat = providence$lat,
-                                     lon = providence$lon, radius_m = 1200,
-                                     type = CAFE))
-shed_blocks <- close_as_sf(close_poi_catchment(close, ours$dest_id, mode = "walk",
-                                               max_minutes = 10), fetch = TRUE)
-
-plot(st_geometry(shed_blocks), col = "#eef0f7", border = "#c6cbe0")
-plot(st_geometry(pts), add = TRUE, col = "#202a5b", pch = 19)
-plot(st_geometry(pts[pts$dest_id == ours$dest_id, ]), add = TRUE,
-     col = "#f36e21", pch = 19, cex = 1.6)
+plot(st_geometry(our_shed), col = "#eef0f7", border = "#c6cbe0")
+plot(st_geometry(cafes), add = TRUE, pch = 19, col = "#202a5b")
+plot(st_geometry(ours), add = TRUE, pch = 19, col = "#f36e21", cex = 1.6)
 ```
 
-## Scaling to a county or state
-
-The same recipe runs over a wider area — search a bounding box instead
-of a radius — but catchment pulls are metered per block, so a
-county-wide sweep can run into thousands of tokens. Keep `max_minutes`
-small and page in batches.
-
-## Token cost
-
-- `close_places` + one `close_pois_search`: free lookup + a few dozen
-  tokens.
-- Six 10-minute walk catchments (~50-150 blocks each): ~600 tokens.
-
-Well inside a 5,000-token month for a single business and its near
-neighbours.
+The same recipe works over a wider area: search a bounding box instead
+of a radius, and loop over more shops.

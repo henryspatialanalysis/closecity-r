@@ -1,4 +1,4 @@
 # License
 
     YEAR: 2026
-    COPYRIGHT HOLDER: Close
+    COPYRIGHT HOLDER: Henry Spatial Analysis

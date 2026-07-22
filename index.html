@@ -19,8 +19,8 @@
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Client for the Close API (api.close.city)">
-<meta name="description" content="Access travel times from every US census block to nearby points of interest, by walking, biking, and public transit, over the Close API. Wraps the metered, read-only public endpoints with keyset pagination, ETag/304 conditional requests, token accounting, typed RFC 9457 error handling, and optional sf output.">
-<meta property="og:description" content="Access travel times from every US census block to nearby points of interest, by walking, biking, and public transit, over the Close API. Wraps the metered, read-only public endpoints with keyset pagination, ETag/304 conditional requests, token accounting, typed RFC 9457 error handling, and optional sf output.">
+<meta name="description" content="Access travel times from every US census block to nearby points of interest, by walking, biking, and public transit, over the Close API. Wraps the metered, read-only public endpoints with keyset pagination, ETag/304 conditional requests, token accounting, typed RFC 9457 error handling, and sf output by default.">
+<meta property="og:description" content="Access travel times from every US census block to nearby points of interest, by walking, biking, and public transit, over the Close API. Wraps the metered, read-only public endpoints with keyset pagination, ETag/304 conditional requests, token accounting, typed RFC 9457 error handling, and sf output by default.">
 <meta property="og:image" content="https://henryspatialanalysis.github.io/closecity-r/logo.png">
 </head>
 <body>
@@ -69,7 +69,7 @@
 <img src="logo.png" class="logo" alt=""><h1 id="closecity-">closecity <a class="anchor" aria-label="anchor" href="#closecity-"></a>
 </h1>
 </div>
-<p>R client for the Close API — travel times from every US census block to nearby points of interest, by walking, biking, and public transit, the data behind <a href="https://close.city" class="external-link">close.city</a>, over the <a href="https://api.close.city" class="external-link">Close API</a>.</p>
+<p>R client for the Close API. Get travel times from every US census block to nearby places, on foot, by bike, and by public transit. This is the data behind <a href="https://close.city" class="external-link">close.city</a>, read over the <a href="https://api.close.city" class="external-link">Close API</a>.</p>
 <p><strong>Documentation:</strong> <a href="https://henryspatialanalysis.github.io/closecity-r/" class="uri">https://henryspatialanalysis.github.io/closecity-r/</a></p>
 <div class="section level2">
 <h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
@@ -79,87 +79,71 @@
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"henryspatialanalysis/closecity-r"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="quickstart">Quickstart<a class="anchor" aria-label="anchor" href="#quickstart"></a>
+<h2 id="a-first-call">A first call<a class="anchor" aria-label="anchor" href="#a-first-call"></a>
 </h2>
+<p>You make requests through a client object. Feature results come back as <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> objects, so you can map them right away.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://henryspatialanalysis.github.io/closecity-r">closecity</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># The API key (ck_live_ / ck_test_) is created at https://account.close.city.</span></span>
-<span><span class="va">client</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key_here"</span><span class="op">)</span></span>
+<span><span class="co"># The key (ck_live_ or ck_test_) comes from https://account.close.city</span></span>
+<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key"</span><span class="op">)</span>   <span class="co"># use your own key here</span></span>
 <span></span>
-<span><span class="co"># Fastest travel time to each category from a census block.</span></span>
-<span><span class="va">summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_block_summary.html">close_block_summary</a></span><span class="op">(</span><span class="va">client</span>, <span class="st">"410390020001010"</span>, mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"walk"</span>, <span class="st">"transit"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">row</span> <span class="kw">in</span> <span class="va">summary</span><span class="op">$</span><span class="va">results</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">row</span><span class="op">$</span><span class="va">dest_type_id</span>, <span class="va">row</span><span class="op">$</span><span class="va">mode</span>, <span class="va">row</span><span class="op">$</span><span class="va">travel_time</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co"># Metering is surfaced on every metered reply.</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">summary</span><span class="op">$</span><span class="va">tokens_charged</span>, <span class="st">"charged;"</span>, <span class="va">summary</span><span class="op">$</span><span class="va">tokens_remaining</span>, <span class="st">"left\n"</span><span class="op">)</span></span></code></pre></div>
-<p>Free routes (catalog, place lookup, health) need no key:</p>
+<span><span class="co"># Coffee shops within a 1.5 km walk of a point, as an sf of points:</span></span>
+<span><span class="va">cafes</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span>lat <span class="op">=</span> <span class="fl">41.823</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.412</span>, radius_m <span class="op">=</span> <span class="fl">1500</span>, type <span class="op">=</span> <span class="fl">31</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">cafes</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Catalog and lookup routes are free and need no key:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/close_modes.html">close_modes</a></span><span class="op">(</span><span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">modes</span></span>
-<span><span class="fu"><a href="reference/close_last_updated.html">close_last_updated</a></span><span class="op">(</span><span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">last_updated</span></span>
-<span></span>
-<span><span class="co"># Resolve a city name to its census place GEOID + centroid:</span></span>
-<span><span class="fu"><a href="reference/close_places.html">close_places</a></span><span class="op">(</span><span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"Providence"</span><span class="op">)</span><span class="op">$</span><span class="va">results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">close</span><span class="op">$</span><span class="fu">modes</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">modes</span>                       <span class="co"># walk, bike, transit</span></span>
+<span><span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span><span class="st">"Providence"</span><span class="op">)</span><span class="op">$</span><span class="va">results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>        <span class="co"># a city name to its GEOID and centre</span></span>
+<span><span class="va">types</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">destination_types</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">destination_types</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="pagination">Pagination<a class="anchor" aria-label="anchor" href="#pagination"></a>
+<h2 id="words-you-will-see">Words you will see<a class="anchor" aria-label="anchor" href="#words-you-will-see"></a>
 </h2>
-<p>List endpoints are keyset-paginated. <code><a href="reference/close_records.html">close_records()</a></code> follows the opaque cursor and returns every record:</p>
+<p>A few terms show up throughout the API:</p>
+<ul>
+<li>
+<strong>Census block.</strong> The smallest unit the Census Bureau publishes. Each one has a 15-digit id called a <strong>GEOID</strong>.</li>
+<li>
+<strong>Destination type.</strong> A category of place, such as grocery stores or libraries. Each type has a numeric id. Look them up with <code>close$destination_types()</code>.</li>
+<li>
+<strong>Mode.</strong> How someone travels: walk, bike, or transit.</li>
+<li>
+<strong>Isochrone.</strong> The area you can reach from a point within a time limit, drawn as a polygon.</li>
+<li>
+<strong>Catchment.</strong> The reverse of an isochrone: every block that can reach a given place.</li>
+<li>
+<strong>Token.</strong> One unit of API usage. Free routes cost nothing; data routes draw down a monthly allowance.</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="reading-many-pages">Reading many pages<a class="anchor" aria-label="anchor" href="#reading-many-pages"></a>
+</h2>
+<p>List routes return one page at a time. Use <code>$records()</code> to follow the pages to the end and return everything at once.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pois</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_records.html">close_records</a></span><span class="op">(</span><span class="va">close_pois_search</span>, <span class="va">client</span>,</span>
-<span>                      lat <span class="op">=</span> <span class="fl">44.05</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">123.09</span>, radius_m <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">pois</span>, <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="va">p</span><span class="op">$</span><span class="va">name</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Or fetch a single page and read its metadata directly:</p>
+<code class="sourceCode R"><span><span class="va">all_cafes</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">records</span><span class="op">(</span><span class="st">"pois_search"</span>, lat <span class="op">=</span> <span class="fl">41.823</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.412</span>,</span>
+<span>                           radius_m <span class="op">=</span> <span class="fl">1500</span>, type <span class="op">=</span> <span class="fl">31</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="spatial-output-on-or-off">Spatial output, on or off<a class="anchor" aria-label="anchor" href="#spatial-output-on-or-off"></a>
+</h2>
+<p>Feature methods return sf by default. Block routes join census-block boundaries for you (this needs the <code>tigris</code> package, which downloads the boundaries once and caches them). To work with the raw data instead, set <code>spatial = FALSE</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">page</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_block_pois.html">close_block_pois</a></span><span class="op">(</span><span class="va">client</span>, <span class="st">"410390020001010"</span>, limit <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">page</span><span class="op">$</span><span class="va">results</span><span class="op">)</span>, <span class="st">"rows;"</span>, <span class="va">page</span><span class="op">$</span><span class="va">tokens_remaining</span>, <span class="st">"tokens left\n"</span><span class="op">)</span></span>
-<span><span class="va">page</span><span class="op">$</span><span class="va">next_cursor</span>   <span class="co"># pass back as `cursor =` for the next page</span></span></code></pre></div>
-<p>Cursors are opaque and signed — never construct or modify them.</p>
+<code class="sourceCode R"><span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key"</span>, spatial <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>   <span class="co"># use your own key here</span></span>
+<span><span class="va">reply</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"250173523004004"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
+<span><span class="va">reply</span><span class="op">$</span><span class="va">results</span></span></code></pre></div>
+<p>You can also flip it at any time with <code>close$spatial &lt;- FALSE</code>.</p>
 </div>
 <div class="section level2">
-<h2 id="conditional-requests-free-revalidation">Conditional requests (free revalidation)<a class="anchor" aria-label="anchor" href="#conditional-requests-free-revalidation"></a>
+<h2 id="handling-errors">Handling errors<a class="anchor" aria-label="anchor" href="#handling-errors"></a>
 </h2>
-<p>Metered <code>GET</code>s return an <code>ETag</code>. Send it back to revalidate for free — a <code>304</code> costs no tokens, even at a zero balance:</p>
+<p>Failed requests raise a classed condition. Catch the base <code>close_api_error</code>, or a specific one such as <code>close_api_tokens_exhausted</code>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">first</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_block_summary.html">close_block_summary</a></span><span class="op">(</span><span class="va">client</span>, <span class="st">"410390020001010"</span><span class="op">)</span></span>
-<span><span class="va">again</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_block_summary.html">close_block_summary</a></span><span class="op">(</span><span class="va">client</span>, <span class="st">"410390020001010"</span>, if_none_match <span class="op">=</span> <span class="va">first</span><span class="op">$</span><span class="va">etag</span><span class="op">)</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="va">again</span><span class="op">$</span><span class="va">not_modified</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="co"># your cached copy is still current; nothing was charged</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="isochrones">Isochrones<a class="anchor" aria-label="anchor" href="#isochrones"></a>
-</h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">iso</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_isochrone.html">close_isochrone</a></span><span class="op">(</span><span class="va">client</span>, block <span class="op">=</span> <span class="st">"410390020001010"</span>,</span>
-<span>                       contours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">30</span>, <span class="fl">45</span><span class="op">)</span>, mode <span class="op">=</span> <span class="st">"walk"</span>, direction <span class="op">=</span> <span class="st">"to"</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">f</span> <span class="kw">in</span> <span class="va">iso</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">features</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">f</span><span class="op">$</span><span class="va">properties</span><span class="op">$</span><span class="va">contour</span>, <span class="va">f</span><span class="op">$</span><span class="va">properties</span><span class="op">$</span><span class="va">reachable_blocks</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="errors">Errors<a class="anchor" aria-label="anchor" href="#errors"></a>
-</h2>
-<p>Errors are <a href="https://www.rfc-editor.org/rfc/rfc9457" class="external-link">RFC 9457</a> <code>problem+json</code>, raised as classed conditions. Catch the base <code>close_api_error</code> or a specific <code>close_api_&lt;slug&gt;</code>; every condition carries <code>slug</code>, <code>status</code>, <code>title</code>, <code>detail</code>, <code>request_id</code>, and (when present) <code>retry_after</code>:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="reference/close_block_summary.html">close_block_summary</a></span><span class="op">(</span><span class="va">client</span>, <span class="st">"000000000000000"</span><span class="op">)</span>,</span>
-<span>  close_api_tokens_exhausted <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"buy more tokens"</span><span class="op">)</span>,</span>
-<span>  close_api_error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s (%d) — request %s"</span>, <span class="va">e</span><span class="op">$</span><span class="va">slug</span>, <span class="va">e</span><span class="op">$</span><span class="va">status</span>, <span class="va">e</span><span class="op">$</span><span class="va">request_id</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="op">}</span></span>
+<span>  <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"000000000000000"</span><span class="op">)</span>,</span>
+<span>  close_api_error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s (%d)"</span>, <span class="va">e</span><span class="op">$</span><span class="va">slug</span>, <span class="va">e</span><span class="op">$</span><span class="va">status</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="spatial-output">Spatial output<a class="anchor" aria-label="anchor" href="#spatial-output"></a>
-</h2>
-<p>With <code>sf</code> installed, convert any reply to an <code>sf</code> object — POIs become points, isochrones become polygons, and block replies join census-block boundaries (<code>tigris</code>):</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pts</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_as_sf.html">close_as_sf</a></span><span class="op">(</span><span class="fu"><a href="reference/close_pois_search.html">close_pois_search</a></span><span class="op">(</span><span class="va">client</span>, lat <span class="op">=</span> <span class="fl">41.823</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.412</span>,</span>
-<span>                                     radius_m <span class="op">=</span> <span class="fl">1500</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">iso</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_as_sf.html">close_as_sf</a></span><span class="op">(</span><span class="fu"><a href="reference/close_isochrone.html">close_isochrone</a></span><span class="op">(</span><span class="va">client</span>, block <span class="op">=</span> <span class="st">"440070036001010"</span>, minutes <span class="op">=</span> <span class="fl">15</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="reference">Reference<a class="anchor" aria-label="anchor" href="#reference"></a>
@@ -176,8 +160,8 @@
 <div class="section level2">
 <h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
 </h2>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># with the deps installed (httr2, jsonlite, rlang, testthat):</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># with the dependencies installed:</span></span>
 <span><span class="fu">testthat</span><span class="fu">::</span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_package.html" class="external-link">test_local</a></span><span class="op">(</span><span class="st">"."</span><span class="op">)</span>   <span class="co"># unit tests, no network (httr2 mocking)</span></span></code></pre></div>
 </div>
 </div>
@@ -210,7 +194,7 @@
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>Nathaniel Henry <br><small class="roles"> Author, maintainer </small>   </li>
-<li>Close <br><small class="roles"> Copyright holder, funder </small>   </li>
+<li>Henry Spatial Analysis <br><small class="roles"> Copyright holder, funder </small>   </li>
 </ul>
 </div>
 
@@ -221,7 +205,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Nathaniel Henry, Close.</p>
+  <p>Developed by Nathaniel Henry, Henry Spatial Analysis.</p>
 </div>
 
 <div class="pkgdown-footer-right">

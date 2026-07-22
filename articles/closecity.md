@@ -1,99 +1,111 @@
 # Get started with closecity
 
-`closecity` is a thin client over the [Close
-API](https://api.close.city) — travel times from every US census block
-to nearby points of interest, by walking, biking, and public transit.
+`closecity` reads the Close API: travel times from every US census block
+to nearby places, on foot, by bike, and by public transit. This vignette
+is a short tour. The three tutorials go further.
 
-## A client
+## Words you will see
+
+A few terms come up throughout:
+
+- **Census block.** The smallest area the Census Bureau publishes. Each
+  one has a 15-digit id, its **GEOID**.
+- **Destination type.** A category of place, such as grocery stores or
+  libraries. Every type has a numeric id.
+- **Mode.** How someone travels: walk, bike, or transit.
+- **Isochrone.** The area reachable from a point within a time limit, as
+  a polygon.
+- **Catchment.** The reverse: every block that can reach a given place.
+
+## Build a client
+
+You make every request through a client object.
 
 ``` r
 
 library(closecity)
 
-# The catalog and health routes are free; data routes need a key from
-# https://account.close.city
-close <- close_client("ck_live_your_key_here")
+# The key (ck_live_ or ck_test_) comes from https://account.close.city
+close <- close_client("ck_live_your_key")   # use your own key here
 ```
 
-## Free catalog and lookup (no key)
+The catalog and lookup routes are free, so you can also start without a
+key:
 
 ``` r
 
 close <- close_client()
-close_modes(close)$data$modes
-close_last_updated(close)$data$last_updated
-
-# Resolve a city name to its census place GEOID + centroid:
-close_places(close, "Providence")$results[[1]]
-
-# The destination-type ids the data routes filter on:
-types <- close_destination_types(close)$data$destination_types
+close$modes()$data$modes                       # walk, bike, transit
+close$last_updated()$data$last_updated
 ```
 
-Grocery is `30`, restaurants `27`, cafes `31`, libraries `43`, parks
-`63`, and frequent-transit stops `61`.
+## Look things up instead of guessing
 
-## One metered call
+Two free calls save you from memorising codes. Use
+`$destination_types()` to find the numeric id for a category, and
+`$places()` to turn a city name into a GEOID and a centre point.
 
 ``` r
 
-summary <- close_block_summary(close, "250173523004004", mode = "walk")
-for (row in summary$results) {
-  cat(row$dest_type_id, row$mode, row$travel_time, "\n")
-}
+# The catalog lists every category with its numeric id and label.
+types <- close$destination_types()$data$destination_types
+labels <- sapply(types, `[[`, "label")
+ids <- sapply(types, `[[`, "dest_type_id")
+grocery_id <- ids[labels == "grocery_stores"]
 
-# Metering is surfaced on every metered reply:
-cat(summary$tokens_charged, "charged;", summary$tokens_remaining, "left\n")
+# A city name gives you a GEOID and a centre point.
+providence <- close$places("Providence")$results[[1]]
+providence$geoid
 ```
 
-Metering is **1 token per returned row** (minimum 1 per request);
-isochrones are the exception at **10 tokens per contour**. A `304`
-revalidation is free.
+## Make a call and map it
 
-## Pagination
-
-Paginated endpoints take a `cursor`; loop them with
-[`close_records()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_records.md):
+Feature methods return an [sf](https://r-spatial.github.io/sf/) object,
+so you can map the result straight away.
 
 ``` r
 
-pois <- close_records(close_pois_search, close,
-                      lat = 41.823, lon = -71.412, radius_m = 1500, type = 31)
-length(pois)
+library(sf)
+
+groceries <- close$pois_search(lat = providence$lat, lon = providence$lon,
+                               radius_m = 1500, type = grocery_id)
+plot(st_geometry(groceries), pch = 19, col = "#202a5b")
 ```
 
-## Conditional requests (free revalidation)
+## Read every page
+
+List routes return one page at a time. `$records()` follows the pages to
+the end.
 
 ``` r
 
-first <- close_block_summary(close, "250173523004004")
-again <- close_block_summary(close, "250173523004004", if_none_match = first$etag)
-again$not_modified   # TRUE -- nothing was charged
+all_groceries <- close$records("pois_search", lat = providence$lat,
+                               lon = providence$lon, radius_m = 1500,
+                               type = grocery_id)
 ```
 
-## Errors
+## Turn spatial output off
 
-Problem+JSON responses become classed conditions:
+Set `spatial = FALSE` to work with the raw data. Block routes join
+census-block boundaries for you, using the `tigris` package to download
+them once.
+
+``` r
+
+close$spatial <- FALSE
+summary <- close$block_summary("440070036001010", mode = "walk")
+summary$results
+```
+
+## Handle errors
+
+Failed requests raise a classed condition. Catch the base
+`close_api_error`, or a specific one.
 
 ``` r
 
 tryCatch(
-  close_block_summary(close, "000000000000000"),
-  close_api_error = function(e) cat(e$status, e$slug, "\n")
+  close$block_summary("000000000000000"),
+  close_api_error = function(e) message(sprintf("%s (%d)", e$slug, e$status))
 )
 ```
-
-## Spatial output
-
-With `sf` installed, convert a reply to an `sf` object:
-
-``` r
-
-pts <- close_as_sf(close_pois_search(close, lat = 41.823, lon = -71.412,
-                                     radius_m = 1500))
-iso <- close_as_sf(close_isochrone(close, block = "440070036001010", minutes = 15))
-```
-
-POIs become points and isochrones become polygons offline; block replies
-join census-block boundaries (pass `block_geometry =` or
-`fetch = TRUE`).

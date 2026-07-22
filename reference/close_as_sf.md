@@ -1,13 +1,12 @@
-# Convert a Close reply to an `sf` object
+# Convert a Close reply to an sf object
 
-Detects the geometry from the payload: POI replies (`close_pois_search`,
-`close_block_pois`, `close_point_pois`, `close_poi`) become **points**
-from their `lat`/`lon`; an isochrone
-`close_isochrone(format = "geojson")` reply becomes **polygons**; block
-replies (`close_block_summary`, `close_blocks_query`,
-`close_place_blocks`, `close_poi_catchment`) carry only GEOIDs, so you
-join census-block boundaries via `block_geometry` (an `sf` keyed on
-`geoid_col`) or let it fetch them with `tigris` when `fetch = TRUE`.
+Detects the geometry from the payload. POI replies (from
+`$pois_search()`, `$block_pois()`, `$point_pois()`, `$poi()`) become
+points from their `lat`/`lon`. An isochrone reply with
+`format = "geojson"` becomes polygons. Block replies (`$blocks_query()`,
+`$place_blocks()`, `$poi_catchment()`) carry only GEOIDs, so the block
+boundaries are joined from `block_geometry`, or downloaded with `tigris`
+when `fetch = TRUE`.
 
 ## Usage
 
@@ -29,7 +28,7 @@ close_as_sf(
 
 - block_geometry:
 
-  Optional `sf` of block boundaries with a `geoid_col` column, joined to
+  Optional sf of block boundaries with a `geoid_col` column, joined to
   block replies on the 15-digit GEOID.
 
 - geoid_col:
@@ -39,22 +38,23 @@ close_as_sf(
 
 - crs:
 
-  Coordinate reference system for point/polygon geometry. Default 4326.
+  Coordinate reference system for point and polygon geometry. Default
+  4326.
 
 - fetch:
 
-  If `TRUE` and `block_geometry` is `NULL`, pull the needed TIGER blocks
-  with `tigris` (inferring state/county from the GEOIDs).
+  If `TRUE` and `block_geometry` is `NULL`, download the needed TIGER
+  blocks with `tigris` (inferring state and county from the GEOIDs).
 
 ## Value
 
-An `sf` data frame.
+An sf data frame.
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-close_as_sf(close_pois_search(client, lat = 41.82, lon = -71.41, radius_m = 1500))
-close_as_sf(close_isochrone(client, block = "440070036001010", minutes = 15))
+close <- close_client(spatial = FALSE)
+close_as_sf(close$pois_search(lat = 41.82, lon = -71.41, radius_m = 1500))
 } # }
 ```

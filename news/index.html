@@ -41,17 +41,17 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="closecity-100">closecity 1.0.0<a class="anchor" aria-label="anchor" href="#closecity-100"></a></h2>
 <p>First public release of the <code>closecity</code> R client for the Close API (api.close.city).</p>
-<ul><li>A <code><a href="../reference/close_client.html">close_client()</a></code> over the metered, read-only public endpoints: catalog, block/point summaries and POIs, POI search/detail/catchment, areal block queries, and isochrones.</li>
-<li>First-class metering (<code>tokens_charged</code> / <code>tokens_remaining</code>), ETag/304 conditional requests, keyset pagination via <code><a href="../reference/close_records.html">close_records()</a></code>, and typed RFC 9457 errors as classed conditions.</li>
+<ul><li>An R6 client, <code><a href="../reference/close_client.html">close_client()</a></code>, with one method per public route: catalog, place lookup, block and point summaries and POIs, POI search, detail, and catchment, areal block queries, and isochrones.</li>
+<li>Feature methods return <code>sf</code> objects by default. Set <code>spatial = FALSE</code> to work with the raw reply. Block boundaries are joined with <code>tigris</code>.</li>
+<li>First-class metering (<code>tokens_charged</code>, <code>tokens_remaining</code>), ETag/304 conditional requests, keyset pagination via <code>$records()</code>, and typed RFC 9457 errors as classed conditions.</li>
 <li>
-<code><a href="../reference/close_places.html">close_places()</a></code> place-name lookup (city/town to GEOID + centroid).</li>
-<li>Opt-in spatial output: <code><a href="../reference/close_as_sf.html">close_as_sf()</a></code> and an <code><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">sf::st_as_sf()</a></code> method (POI points, isochrone polygons, and census-block joins).</li>
+<code>$places()</code> looks up a city or town by name and returns its GEOID and centre.</li>
 </ul></div>
   </main></div>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Nathaniel Henry, Close.</p>
+  <p>Developed by Nathaniel Henry, Henry Spatial Analysis.</p>
 </div>
 
 <div class="pkgdown-footer-right">

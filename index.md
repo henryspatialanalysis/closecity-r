@@ -1,8 +1,8 @@
 # closecity
 
-R client for the Close API — travel times from every US census block to
-nearby points of interest, by walking, biking, and public transit, the
-data behind [close.city](https://close.city), over the [Close
+R client for the Close API. Get travel times from every US census block
+to nearby places, on foot, by bike, and by public transit. This is the
+data behind [close.city](https://close.city), read over the [Close
 API](https://api.close.city).
 
 **Documentation:** <https://henryspatialanalysis.github.io/closecity-r/>
@@ -15,115 +15,90 @@ API](https://api.close.city).
 remotes::install_github("henryspatialanalysis/closecity-r")
 ```
 
-## Quickstart
+## A first call
+
+You make requests through a client object. Feature results come back as
+[sf](https://r-spatial.github.io/sf/) objects, so you can map them right
+away.
 
 ``` r
 
 library(closecity)
 
-# The API key (ck_live_ / ck_test_) is created at https://account.close.city.
-client <- close_client("ck_live_your_key_here")
+# The key (ck_live_ or ck_test_) comes from https://account.close.city
+close <- close_client("ck_live_your_key")   # use your own key here
 
-# Fastest travel time to each category from a census block.
-summary <- close_block_summary(client, "410390020001010", mode = c("walk", "transit"))
-for (row in summary$results) {
-  cat(row$dest_type_id, row$mode, row$travel_time, "\n")
-}
-
-# Metering is surfaced on every metered reply.
-cat(summary$tokens_charged, "charged;", summary$tokens_remaining, "left\n")
+# Coffee shops within a 1.5 km walk of a point, as an sf of points:
+cafes <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1500, type = 31)
+plot(sf::st_geometry(cafes))
 ```
 
-Free routes (catalog, place lookup, health) need no key:
+Catalog and lookup routes are free and need no key:
 
 ``` r
 
-close_modes(close_client())$data$modes
-close_last_updated(close_client())$data$last_updated
-
-# Resolve a city name to its census place GEOID + centroid:
-close_places(close_client(), "Providence")$results[[1]]
+close <- close_client()
+close$modes()$data$modes                       # walk, bike, transit
+close$places("Providence")$results[[1]]        # a city name to its GEOID and centre
+types <- close$destination_types()$data$destination_types
 ```
 
-## Pagination
+## Words you will see
 
-List endpoints are keyset-paginated.
-[`close_records()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_records.md)
-follows the opaque cursor and returns every record:
+A few terms show up throughout the API:
+
+- **Census block.** The smallest unit the Census Bureau publishes. Each
+  one has a 15-digit id called a **GEOID**.
+- **Destination type.** A category of place, such as grocery stores or
+  libraries. Each type has a numeric id. Look them up with
+  `close$destination_types()`.
+- **Mode.** How someone travels: walk, bike, or transit.
+- **Isochrone.** The area you can reach from a point within a time
+  limit, drawn as a polygon.
+- **Catchment.** The reverse of an isochrone: every block that can reach
+  a given place.
+- **Token.** One unit of API usage. Free routes cost nothing; data
+  routes draw down a monthly allowance.
+
+## Reading many pages
+
+List routes return one page at a time. Use `$records()` to follow the
+pages to the end and return everything at once.
 
 ``` r
 
-pois <- close_records(close_pois_search, client,
-                      lat = 44.05, lon = -123.09, radius_m = 2000)
-vapply(pois, function(p) p$name, character(1))
+all_cafes <- close$records("pois_search", lat = 41.823, lon = -71.412,
+                           radius_m = 1500, type = 31)
 ```
 
-Or fetch a single page and read its metadata directly:
+## Spatial output, on or off
+
+Feature methods return sf by default. Block routes join census-block
+boundaries for you (this needs the `tigris` package, which downloads the
+boundaries once and caches them). To work with the raw data instead, set
+`spatial = FALSE`:
 
 ``` r
 
-page <- close_block_pois(client, "410390020001010", limit = 500)
-cat(length(page$results), "rows;", page$tokens_remaining, "tokens left\n")
-page$next_cursor   # pass back as `cursor =` for the next page
+close <- close_client("ck_live_your_key", spatial = FALSE)   # use your own key here
+reply <- close$block_summary("250173523004004", mode = "walk")
+reply$results
 ```
 
-Cursors are opaque and signed — never construct or modify them.
+You can also flip it at any time with `close$spatial <- FALSE`.
 
-## Conditional requests (free revalidation)
+## Handling errors
 
-Metered `GET`s return an `ETag`. Send it back to revalidate for free — a
-`304` costs no tokens, even at a zero balance:
-
-``` r
-
-first <- close_block_summary(client, "410390020001010")
-again <- close_block_summary(client, "410390020001010", if_none_match = first$etag)
-if (isTRUE(again$not_modified)) {
-  # your cached copy is still current; nothing was charged
-}
-```
-
-## Isochrones
-
-``` r
-
-iso <- close_isochrone(client, block = "410390020001010",
-                       contours = c(15, 30, 45), mode = "walk", direction = "to")
-for (f in iso$data$features) {
-  cat(f$properties$contour, f$properties$reachable_blocks, "\n")
-}
-```
-
-## Errors
-
-Errors are [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)
-`problem+json`, raised as classed conditions. Catch the base
-`close_api_error` or a specific `close_api_<slug>`; every condition
-carries `slug`, `status`, `title`, `detail`, `request_id`, and (when
-present) `retry_after`:
+Failed requests raise a classed condition. Catch the base
+`close_api_error`, or a specific one such as
+`close_api_tokens_exhausted`.
 
 ``` r
 
 tryCatch(
-  close_block_summary(client, "000000000000000"),
-  close_api_tokens_exhausted = function(e) message("buy more tokens"),
-  close_api_error = function(e) {
-    message(sprintf("%s (%d) — request %s", e$slug, e$status, e$request_id))
-  }
+  close$block_summary("000000000000000"),
+  close_api_error = function(e) message(sprintf("%s (%d)", e$slug, e$status))
 )
-```
-
-## Spatial output
-
-With `sf` installed, convert any reply to an `sf` object — POIs become
-points, isochrones become polygons, and block replies join census-block
-boundaries (`tigris`):
-
-``` r
-
-pts <- close_as_sf(close_pois_search(client, lat = 41.823, lon = -71.412,
-                                     radius_m = 1500))
-iso <- close_as_sf(close_isochrone(client, block = "440070036001010", minutes = 15))
 ```
 
 ## Reference
@@ -136,6 +111,6 @@ iso <- close_as_sf(close_isochrone(client, block = "440070036001010", minutes = 
 
 ``` r
 
-# with the deps installed (httr2, jsonlite, rlang, testthat):
+# with the dependencies installed:
 testthat::test_local(".")   # unit tests, no network (httr2 mocking)
 ```

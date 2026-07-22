@@ -4,7 +4,7 @@
 
 - **Nathaniel Henry**. Author, maintainer.
 
-- **Close**. Copyright holder, funder.
+- **Henry Spatial Analysis**. Copyright holder, funder.
 
 ## Citation
 

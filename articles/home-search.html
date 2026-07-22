@@ -75,91 +75,98 @@
 
     
     
-<p><strong>Question.</strong> In a city, which blocks are within a
-10-minute walk of a supermarket, a 5-minute walk of a restaurant, and a
-20-minute walk of a frequent-transit stop? Then, given two workplaces,
-which of those blocks sit in the overlap of both commutes? We use
-<strong>Somerville, MA</strong>.</p>
+<p>Say you are moving to a new city and want to live somewhere walkable.
+Here you find the blocks that are within a 10-minute walk of a grocery
+store, a 5-minute walk of a restaurant, and a 20-minute walk of a
+frequent-transit stop. Then you narrow those blocks to the overlap of
+two commutes. The example city is Somerville, Massachusetts.</p>
 <div class="section level2">
-<h2 id="find-the-place-and-the-type-ids">Find the place and the type ids<a class="anchor" aria-label="anchor" href="#find-the-place-and-the-type-ids"></a>
+<h2 id="set-up">Set up<a class="anchor" aria-label="anchor" href="#set-up"></a>
 </h2>
-<p>Both lookups are free (no tokens):</p>
+<p>Build a client, then read the pieces you need from the free catalog
+instead of memorising codes.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://henryspatialanalysis.github.io/closecity-r">closecity</a></span><span class="op">)</span></span>
-<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key_here"</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">geoid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_places.html">close_places</a></span><span class="op">(</span><span class="va">close</span>, <span class="st">"Somerville"</span><span class="op">)</span><span class="op">$</span><span class="va">results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">geoid</span></span>
-<span><span class="va">GROCERY</span> <span class="op">&lt;-</span> <span class="fl">30</span>; <span class="va">RESTAURANT</span> <span class="op">&lt;-</span> <span class="fl">27</span>; <span class="va">FREQ_TRANSIT</span> <span class="op">&lt;-</span> <span class="fl">61</span></span></code></pre></div>
+<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key"</span><span class="op">)</span>   <span class="co"># use your own key here</span></span>
+<span></span>
+<span><span class="co"># The catalog lists every category with its numeric id. Pull the ids you need.</span></span>
+<span><span class="va">types</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">destination_types</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">destination_types</span></span>
+<span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">types</span>, <span class="va">`[[`</span>, <span class="st">"label"</span><span class="op">)</span></span>
+<span><span class="va">ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">types</span>, <span class="va">`[[`</span>, <span class="st">"dest_type_id"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">grocery</span> <span class="op">&lt;-</span> <span class="va">ids</span><span class="op">[</span><span class="va">labels</span> <span class="op">==</span> <span class="st">"grocery_stores"</span><span class="op">]</span></span>
+<span><span class="va">restaurant</span> <span class="op">&lt;-</span> <span class="va">ids</span><span class="op">[</span><span class="va">labels</span> <span class="op">==</span> <span class="st">"restaurants"</span><span class="op">]</span></span>
+<span><span class="va">transit</span> <span class="op">&lt;-</span> <span class="va">ids</span><span class="op">[</span><span class="va">labels</span> <span class="op">==</span> <span class="st">"frequent_transit"</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Turn the city name into a GEOID and a centre point.</span></span>
+<span><span class="va">city</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span><span class="st">"Somerville"</span><span class="op">)</span><span class="op">$</span><span class="va">results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="pull-the-per-block-walk-times">Pull the per-block walk times<a class="anchor" aria-label="anchor" href="#pull-the-per-block-walk-times"></a>
+<h2 id="see-what-is-around">See what is around<a class="anchor" aria-label="anchor" href="#see-what-is-around"></a>
 </h2>
+<p>Look at the raw ingredients first. Each search returns points, so
+plot the three amenities as three layers.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rows</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_records.html">close_records</a></span><span class="op">(</span><span class="va">close_place_blocks</span>, <span class="va">close</span>, <span class="va">geoid</span>, mode <span class="op">=</span> <span class="st">"walk"</span>,</span>
-<span>                      type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">GROCERY</span>, <span class="va">RESTAURANT</span>, <span class="va">FREQ_TRANSIT</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">groceries</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span>lat <span class="op">=</span> <span class="va">city</span><span class="op">$</span><span class="va">lat</span>, lon <span class="op">=</span> <span class="va">city</span><span class="op">$</span><span class="va">lon</span>,</span>
+<span>                               radius_m <span class="op">=</span> <span class="fl">3000</span>, type <span class="op">=</span> <span class="va">grocery</span><span class="op">)</span></span>
+<span><span class="va">restaurants</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span>lat <span class="op">=</span> <span class="va">city</span><span class="op">$</span><span class="va">lat</span>, lon <span class="op">=</span> <span class="va">city</span><span class="op">$</span><span class="va">lon</span>,</span>
+<span>                                 radius_m <span class="op">=</span> <span class="fl">3000</span>, type <span class="op">=</span> <span class="va">restaurant</span><span class="op">)</span></span>
+<span><span class="va">stops</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span>lat <span class="op">=</span> <span class="va">city</span><span class="op">$</span><span class="va">lat</span>, lon <span class="op">=</span> <span class="va">city</span><span class="op">$</span><span class="va">lon</span>,</span>
+<span>                           radius_m <span class="op">=</span> <span class="fl">3000</span>, type <span class="op">=</span> <span class="va">transit</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Pivot to one record per block.</span></span>
-<span><span class="va">by_block</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">r</span> <span class="kw">in</span> <span class="va">rows</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">g</span> <span class="op">&lt;-</span> <span class="va">r</span><span class="op">$</span><span class="va">geoid</span></span>
-<span>  <span class="va">by_block</span><span class="op">[[</span><span class="va">g</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">r</span><span class="op">$</span><span class="va">dest_type_id</span><span class="op">)</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">r</span><span class="op">$</span><span class="va">travel_time</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="va">meets</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">g</span> <span class="op">&lt;-</span> <span class="va">t</span><span class="op">[[</span><span class="st">"30"</span><span class="op">]</span><span class="op">]</span>; <span class="va">r</span> <span class="op">&lt;-</span> <span class="va">t</span><span class="op">[[</span><span class="st">"27"</span><span class="op">]</span><span class="op">]</span>; <span class="va">ft</span> <span class="op">&lt;-</span> <span class="va">t</span><span class="op">[[</span><span class="st">"61"</span><span class="op">]</span><span class="op">]</span></span>
-<span>  <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">g</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="va">g</span> <span class="op">&lt;=</span> <span class="fl">10</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="va">r</span> <span class="op">&lt;=</span> <span class="fl">5</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">ft</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="va">ft</span> <span class="op">&lt;=</span> <span class="fl">20</span></span>
-<span><span class="op">}</span></span>
-<span><span class="va">candidates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Filter</a></span><span class="op">(</span><span class="va">meets</span>, <span class="va">by_block</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">candidates</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">restaurants</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#c6cbe0"</span>, pch <span class="op">=</span> <span class="fl">19</span>, cex <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">groceries</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#058040"</span>, pch <span class="op">=</span> <span class="fl">19</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">stops</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#f36e21"</span>, pch <span class="op">=</span> <span class="fl">17</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="map-the-candidates">Map the candidates<a class="anchor" aria-label="anchor" href="#map-the-candidates"></a>
+<h2 id="find-the-blocks-that-qualify">Find the blocks that qualify<a class="anchor" aria-label="anchor" href="#find-the-blocks-that-qualify"></a>
 </h2>
-<p>Block replies carry only GEOIDs, so join census-block boundaries —
-with <code>sf</code> and <code>tigris</code> installed,
-<code>close_as_sf(..., fetch = TRUE)</code> pulls them:</p>
+<p>Pull the per-block walk times for the whole city. The result is an sf
+table with one row per (block, category); block boundaries come from
+<code>tigris</code>, downloaded once and cached.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
-<span><span class="va">blocks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_as_sf.html">close_as_sf</a></span><span class="op">(</span><span class="fu"><a href="../reference/close_place_blocks.html">close_place_blocks</a></span><span class="op">(</span><span class="va">close</span>, <span class="va">geoid</span>, mode <span class="op">=</span> <span class="st">"walk"</span>,</span>
-<span>                                         type <span class="op">=</span> <span class="va">GROCERY</span><span class="op">)</span>, fetch <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">hits</span> <span class="op">&lt;-</span> <span class="va">blocks</span><span class="op">[</span><span class="va">blocks</span><span class="op">$</span><span class="va">geoid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">candidates</span>, <span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">hits</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#f36e21"</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="narrow-to-the-overlap-of-two-commutes">Narrow to the overlap of two commutes<a class="anchor" aria-label="anchor" href="#narrow-to-the-overlap-of-two-commutes"></a>
-</h2>
-<p>A 20-minute transit isochrone from each workplace is 10 tokens per
-contour:</p>
+<code class="sourceCode R"><span><span class="va">blocks</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">place_blocks</span><span class="op">(</span><span class="va">city</span><span class="op">$</span><span class="va">geoid</span>, mode <span class="op">=</span> <span class="st">"walk"</span>,</span>
+<span>                             type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">grocery</span>, <span class="va">restaurant</span>, <span class="va">transit</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Each amenity has its own rule, so pick the blocks that pass each one,
+then keep the blocks that pass all three.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">kendall</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_as_sf.html">close_as_sf</a></span><span class="op">(</span><span class="fu"><a href="../reference/close_isochrone.html">close_isochrone</a></span><span class="op">(</span><span class="va">close</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.0865</span>, lat <span class="op">=</span> <span class="fl">42.3625</span>,</span>
-<span>                                        mode <span class="op">=</span> <span class="st">"transit"</span>, direction <span class="op">=</span> <span class="st">"from"</span>,</span>
-<span>                                        minutes <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">downtown</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_as_sf.html">close_as_sf</a></span><span class="op">(</span><span class="fu"><a href="../reference/close_isochrone.html">close_isochrone</a></span><span class="op">(</span><span class="va">close</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.0589</span>, lat <span class="op">=</span> <span class="fl">42.3555</span>,</span>
-<span>                                        mode <span class="op">=</span> <span class="st">"transit"</span>, direction <span class="op">=</span> <span class="st">"from"</span>,</span>
-<span>                                        minutes <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">near_grocery</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">blocks</span><span class="op">$</span><span class="va">geoid</span><span class="op">[</span><span class="va">blocks</span><span class="op">$</span><span class="va">dest_type_id</span> <span class="op">==</span> <span class="va">grocery</span> <span class="op">&amp;</span></span>
+<span>                                      <span class="va">blocks</span><span class="op">$</span><span class="va">travel_time</span> <span class="op">&lt;=</span> <span class="fl">10</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">near_restaurant</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">blocks</span><span class="op">$</span><span class="va">geoid</span><span class="op">[</span><span class="va">blocks</span><span class="op">$</span><span class="va">dest_type_id</span> <span class="op">==</span> <span class="va">restaurant</span> <span class="op">&amp;</span></span>
+<span>                                         <span class="va">blocks</span><span class="op">$</span><span class="va">travel_time</span> <span class="op">&lt;=</span> <span class="fl">5</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">near_transit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">blocks</span><span class="op">$</span><span class="va">geoid</span><span class="op">[</span><span class="va">blocks</span><span class="op">$</span><span class="va">dest_type_id</span> <span class="op">==</span> <span class="va">transit</span> <span class="op">&amp;</span></span>
+<span>                                      <span class="va">blocks</span><span class="op">$</span><span class="va">travel_time</span> <span class="op">&lt;=</span> <span class="fl">20</span><span class="op">]</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">commute_overlap</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_binary_ops.html" class="external-link">st_intersection</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_combine.html" class="external-link">st_union</a></span><span class="op">(</span><span class="va">kendall</span><span class="op">)</span>, <span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_combine.html" class="external-link">st_union</a></span><span class="op">(</span><span class="va">downtown</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">chosen</span> <span class="op">&lt;-</span> <span class="va">hits</span><span class="op">[</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_binary_pred.html" class="external-link">st_intersects</a></span><span class="op">(</span><span class="va">hits</span>, <span class="va">commute_overlap</span>, sparse <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, <span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">chosen</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#058040"</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span></code></pre></div>
-<p>The blocks in <code>chosen</code> are walkable to groceries, food,
-and frequent transit <strong>and</strong> a reasonable transit commute
-for both workers.</p>
+<span><span class="va">candidates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect</a></span><span class="op">(</span><span class="va">near_grocery</span>, <span class="va">near_restaurant</span><span class="op">)</span>, <span class="va">near_transit</span><span class="op">)</span></span>
+<span><span class="va">winners</span> <span class="op">&lt;-</span> <span class="va">blocks</span><span class="op">[</span><span class="va">blocks</span><span class="op">$</span><span class="va">geoid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">candidates</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">blocks</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#eef0f7"</span>, border <span class="op">=</span> <span class="st">"white"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">winners</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#f36e21"</span>, border <span class="op">=</span> <span class="cn">NA</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="token-cost">Token cost<a class="anchor" aria-label="anchor" href="#token-cost"></a>
+<h2 id="narrow-to-a-shared-commute">Narrow to a shared commute<a class="anchor" aria-label="anchor" href="#narrow-to-a-shared-commute"></a>
 </h2>
-<ul>
-<li>
-<code>close_places</code> + <code>close_destination_types</code>:
-free.</li>
-<li>
-<code>close_place_blocks</code> over Somerville (~800 blocks x 3
-categories): ~2,400 tokens.</li>
-<li>Two transit isochrones (1 contour each): ~20 tokens.</li>
-</ul>
-<p>Comfortably inside a 5,000-token month. For a larger city, swap
-<code><a href="../reference/close_place_blocks.html">close_place_blocks()</a></code> for a bounded disc:
-<code>close_blocks_query(close, center = list(lon = , lat = ), radius_m = 2500, ...)</code>.</p>
+<p>Suppose two of you work in different places. A transit isochrone from
+each workplace shows how far each commute reaches. Both come back as
+polygons.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">work_a</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">isochrone</span><span class="op">(</span>lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.0865</span>, lat <span class="op">=</span> <span class="fl">42.3625</span>, mode <span class="op">=</span> <span class="st">"transit"</span>,</span>
+<span>                          direction <span class="op">=</span> <span class="st">"from"</span>, minutes <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
+<span><span class="va">work_b</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">isochrone</span><span class="op">(</span>lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.0589</span>, lat <span class="op">=</span> <span class="fl">42.3555</span>, mode <span class="op">=</span> <span class="st">"transit"</span>,</span>
+<span>                          direction <span class="op">=</span> <span class="st">"from"</span>, minutes <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">work_a</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#05804033"</span>, border <span class="op">=</span> <span class="st">"#058040"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">work_b</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#f36e2133"</span>, border <span class="op">=</span> <span class="st">"#f36e21"</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>Keep the winning blocks that also sit inside both commutes. That
+short list is where to look.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">both_commutes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_binary_ops.html" class="external-link">st_intersection</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_combine.html" class="external-link">st_union</a></span><span class="op">(</span><span class="va">work_a</span><span class="op">)</span>, <span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_combine.html" class="external-link">st_union</a></span><span class="op">(</span><span class="va">work_b</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">shortlist</span> <span class="op">&lt;-</span> <span class="va">winners</span><span class="op">[</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_binary_pred.html" class="external-link">st_intersects</a></span><span class="op">(</span><span class="va">winners</span>, <span class="va">both_commutes</span>, sparse <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">winners</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#eef0f7"</span>, border <span class="op">=</span> <span class="st">"white"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">shortlist</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#058040"</span>, border <span class="op">=</span> <span class="cn">NA</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -168,7 +175,7 @@ categories): ~2,400 tokens.</li>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Nathaniel Henry, Close.</p>
+  <p>Developed by Nathaniel Henry, Henry Spatial Analysis.</p>
 </div>
 
 <div class="pkgdown-footer-right">

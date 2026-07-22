@@ -1,90 +1,111 @@
 # Looking for a home
 
-**Question.** In a city, which blocks are within a 10-minute walk of a
-supermarket, a 5-minute walk of a restaurant, and a 20-minute walk of a
-frequent-transit stop? Then, given two workplaces, which of those blocks
-sit in the overlap of both commutes? We use **Somerville, MA**.
+Say you are moving to a new city and want to live somewhere walkable.
+Here you find the blocks that are within a 10-minute walk of a grocery
+store, a 5-minute walk of a restaurant, and a 20-minute walk of a
+frequent-transit stop. Then you narrow those blocks to the overlap of
+two commutes. The example city is Somerville, Massachusetts.
 
-## Find the place and the type ids
+## Set up
 
-Both lookups are free (no tokens):
+Build a client, then read the pieces you need from the free catalog
+instead of memorising codes.
 
 ``` r
 
 library(closecity)
-close <- close_client("ck_live_your_key_here")
-
-geoid <- close_places(close, "Somerville")$results[[1]]$geoid
-GROCERY <- 30; RESTAURANT <- 27; FREQ_TRANSIT <- 61
-```
-
-## Pull the per-block walk times
-
-``` r
-
-rows <- close_records(close_place_blocks, close, geoid, mode = "walk",
-                      type = c(GROCERY, RESTAURANT, FREQ_TRANSIT))
-
-# Pivot to one record per block.
-by_block <- list()
-for (r in rows) {
-  g <- r$geoid
-  by_block[[g]][[as.character(r$dest_type_id)]] <- r$travel_time
-}
-
-meets <- function(t) {
-  g <- t[["30"]]; r <- t[["27"]]; ft <- t[["61"]]
-  !is.null(g) && g <= 10 && !is.null(r) && r <= 5 && !is.null(ft) && ft <= 20
-}
-candidates <- names(Filter(meets, by_block))
-length(candidates)
-```
-
-## Map the candidates
-
-Block replies carry only GEOIDs, so join census-block boundaries — with
-`sf` and `tigris` installed, `close_as_sf(..., fetch = TRUE)` pulls
-them:
-
-``` r
-
 library(sf)
-blocks <- close_as_sf(close_place_blocks(close, geoid, mode = "walk",
-                                         type = GROCERY), fetch = TRUE)
-hits <- blocks[blocks$geoid %in% candidates, ]
-plot(st_geometry(hits), col = "#f36e21", border = NA)
+
+close <- close_client("ck_live_your_key")   # use your own key here
+
+# The catalog lists every category with its numeric id. Pull the ids you need.
+types <- close$destination_types()$data$destination_types
+labels <- sapply(types, `[[`, "label")
+ids <- sapply(types, `[[`, "dest_type_id")
+
+grocery <- ids[labels == "grocery_stores"]
+restaurant <- ids[labels == "restaurants"]
+transit <- ids[labels == "frequent_transit"]
+
+# Turn the city name into a GEOID and a centre point.
+city <- close$places("Somerville")$results[[1]]
 ```
 
-## Narrow to the overlap of two commutes
+## See what is around
 
-A 20-minute transit isochrone from each workplace is 10 tokens per
-contour:
+Look at the raw ingredients first. Each search returns points, so plot
+the three amenities as three layers.
 
 ``` r
 
-kendall  <- close_as_sf(close_isochrone(close, lon = -71.0865, lat = 42.3625,
-                                        mode = "transit", direction = "from",
-                                        minutes = 20))
-downtown <- close_as_sf(close_isochrone(close, lon = -71.0589, lat = 42.3555,
-                                        mode = "transit", direction = "from",
-                                        minutes = 20))
+groceries <- close$pois_search(lat = city$lat, lon = city$lon,
+                               radius_m = 3000, type = grocery)
+restaurants <- close$pois_search(lat = city$lat, lon = city$lon,
+                                 radius_m = 3000, type = restaurant)
+stops <- close$pois_search(lat = city$lat, lon = city$lon,
+                           radius_m = 3000, type = transit)
 
-commute_overlap <- st_intersection(st_union(kendall), st_union(downtown))
-chosen <- hits[st_intersects(hits, commute_overlap, sparse = FALSE)[, 1], ]
-plot(st_geometry(chosen), col = "#058040", border = NA)
+plot(st_geometry(restaurants), col = "#c6cbe0", pch = 19, cex = 0.6)
+plot(st_geometry(groceries), col = "#058040", pch = 19, add = TRUE)
+plot(st_geometry(stops), col = "#f36e21", pch = 17, add = TRUE)
 ```
 
-The blocks in `chosen` are walkable to groceries, food, and frequent
-transit **and** a reasonable transit commute for both workers.
+## Find the blocks that qualify
 
-## Token cost
+Pull the per-block walk times for the whole city. The result is an sf
+table with one row per (block, category); block boundaries come from
+`tigris`, downloaded once and cached.
 
-- `close_places` + `close_destination_types`: free.
-- `close_place_blocks` over Somerville (~800 blocks x 3 categories):
-  ~2,400 tokens.
-- Two transit isochrones (1 contour each): ~20 tokens.
+``` r
 
-Comfortably inside a 5,000-token month. For a larger city, swap
-[`close_place_blocks()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_place_blocks.md)
-for a bounded disc:
-`close_blocks_query(close, center = list(lon = , lat = ), radius_m = 2500, ...)`.
+blocks <- close$place_blocks(city$geoid, mode = "walk",
+                             type = c(grocery, restaurant, transit))
+```
+
+Each amenity has its own rule, so pick the blocks that pass each one,
+then keep the blocks that pass all three.
+
+``` r
+
+near_grocery <- unique(blocks$geoid[blocks$dest_type_id == grocery &
+                                      blocks$travel_time <= 10])
+near_restaurant <- unique(blocks$geoid[blocks$dest_type_id == restaurant &
+                                         blocks$travel_time <= 5])
+near_transit <- unique(blocks$geoid[blocks$dest_type_id == transit &
+                                      blocks$travel_time <= 20])
+
+candidates <- intersect(intersect(near_grocery, near_restaurant), near_transit)
+winners <- blocks[blocks$geoid %in% candidates, ]
+
+plot(st_geometry(blocks), col = "#eef0f7", border = "white")
+plot(st_geometry(winners), col = "#f36e21", border = NA, add = TRUE)
+```
+
+## Narrow to a shared commute
+
+Suppose two of you work in different places. A transit isochrone from
+each workplace shows how far each commute reaches. Both come back as
+polygons.
+
+``` r
+
+work_a <- close$isochrone(lon = -71.0865, lat = 42.3625, mode = "transit",
+                          direction = "from", minutes = 20)
+work_b <- close$isochrone(lon = -71.0589, lat = 42.3555, mode = "transit",
+                          direction = "from", minutes = 20)
+
+plot(st_geometry(work_a), col = "#05804033", border = "#058040")
+plot(st_geometry(work_b), col = "#f36e2133", border = "#f36e21", add = TRUE)
+```
+
+Keep the winning blocks that also sit inside both commutes. That short
+list is where to look.
+
+``` r
+
+both_commutes <- st_intersection(st_union(work_a), st_union(work_b))
+shortlist <- winners[st_intersects(winners, both_commutes, sparse = FALSE)[, 1], ]
+
+plot(st_geometry(winners), col = "#eef0f7", border = "white")
+plot(st_geometry(shortlist), col = "#058040", border = NA, add = TRUE)
+```

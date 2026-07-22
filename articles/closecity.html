@@ -75,91 +75,109 @@
 
     
     
-<p><code>closecity</code> is a thin client over the <a href="https://api.close.city" class="external-link">Close API</a> — travel times from every US
-census block to nearby points of interest, by walking, biking, and
-public transit.</p>
+<p><code>closecity</code> reads the Close API: travel times from every
+US census block to nearby places, on foot, by bike, and by public
+transit. This vignette is a short tour. The three tutorials go
+further.</p>
 <div class="section level2">
-<h2 id="a-client">A client<a class="anchor" aria-label="anchor" href="#a-client"></a>
+<h2 id="words-you-will-see">Words you will see<a class="anchor" aria-label="anchor" href="#words-you-will-see"></a>
 </h2>
+<p>A few terms come up throughout:</p>
+<ul>
+<li>
+<strong>Census block.</strong> The smallest area the Census Bureau
+publishes. Each one has a 15-digit id, its <strong>GEOID</strong>.</li>
+<li>
+<strong>Destination type.</strong> A category of place, such as
+grocery stores or libraries. Every type has a numeric id.</li>
+<li>
+<strong>Mode.</strong> How someone travels: walk, bike, or
+transit.</li>
+<li>
+<strong>Isochrone.</strong> The area reachable from a point within a
+time limit, as a polygon.</li>
+<li>
+<strong>Catchment.</strong> The reverse: every block that can reach
+a given place.</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="build-a-client">Build a client<a class="anchor" aria-label="anchor" href="#build-a-client"></a>
+</h2>
+<p>You make every request through a client object.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://henryspatialanalysis.github.io/closecity-r">closecity</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># The catalog and health routes are free; data routes need a key from</span></span>
-<span><span class="co"># https://account.close.city</span></span>
-<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key_here"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="free-catalog-and-lookup-no-key">Free catalog and lookup (no key)<a class="anchor" aria-label="anchor" href="#free-catalog-and-lookup-no-key"></a>
-</h2>
+<span><span class="co"># The key (ck_live_ or ck_test_) comes from https://account.close.city</span></span>
+<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key"</span><span class="op">)</span>   <span class="co"># use your own key here</span></span></code></pre></div>
+<p>The catalog and lookup routes are free, so you can also start without
+a key:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_client.html">close_client</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/close_modes.html">close_modes</a></span><span class="op">(</span><span class="va">close</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">modes</span></span>
-<span><span class="fu"><a href="../reference/close_last_updated.html">close_last_updated</a></span><span class="op">(</span><span class="va">close</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">last_updated</span></span>
-<span></span>
-<span><span class="co"># Resolve a city name to its census place GEOID + centroid:</span></span>
-<span><span class="fu"><a href="../reference/close_places.html">close_places</a></span><span class="op">(</span><span class="va">close</span>, <span class="st">"Providence"</span><span class="op">)</span><span class="op">$</span><span class="va">results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
-<span></span>
-<span><span class="co"># The destination-type ids the data routes filter on:</span></span>
-<span><span class="va">types</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_destination_types.html">close_destination_types</a></span><span class="op">(</span><span class="va">close</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">destination_types</span></span></code></pre></div>
-<p>Grocery is <code>30</code>, restaurants <code>27</code>, cafes
-<code>31</code>, libraries <code>43</code>, parks <code>63</code>, and
-frequent-transit stops <code>61</code>.</p>
+<span><span class="va">close</span><span class="op">$</span><span class="fu">modes</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">modes</span>                       <span class="co"># walk, bike, transit</span></span>
+<span><span class="va">close</span><span class="op">$</span><span class="fu">last_updated</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">last_updated</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="one-metered-call">One metered call<a class="anchor" aria-label="anchor" href="#one-metered-call"></a>
+<h2 id="look-things-up-instead-of-guessing">Look things up instead of guessing<a class="anchor" aria-label="anchor" href="#look-things-up-instead-of-guessing"></a>
 </h2>
+<p>Two free calls save you from memorising codes. Use
+<code>$destination_types()</code> to find the numeric id for a category,
+and <code>$places()</code> to turn a city name into a GEOID and a centre
+point.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_block_summary.html">close_block_summary</a></span><span class="op">(</span><span class="va">close</span>, <span class="st">"250173523004004"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">row</span> <span class="kw">in</span> <span class="va">summary</span><span class="op">$</span><span class="va">results</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">row</span><span class="op">$</span><span class="va">dest_type_id</span>, <span class="va">row</span><span class="op">$</span><span class="va">mode</span>, <span class="va">row</span><span class="op">$</span><span class="va">travel_time</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
+<code class="sourceCode R"><span><span class="co"># The catalog lists every category with its numeric id and label.</span></span>
+<span><span class="va">types</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">destination_types</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">destination_types</span></span>
+<span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">types</span>, <span class="va">`[[`</span>, <span class="st">"label"</span><span class="op">)</span></span>
+<span><span class="va">ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">types</span>, <span class="va">`[[`</span>, <span class="st">"dest_type_id"</span><span class="op">)</span></span>
+<span><span class="va">grocery_id</span> <span class="op">&lt;-</span> <span class="va">ids</span><span class="op">[</span><span class="va">labels</span> <span class="op">==</span> <span class="st">"grocery_stores"</span><span class="op">]</span></span>
 <span></span>
-<span><span class="co"># Metering is surfaced on every metered reply:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">summary</span><span class="op">$</span><span class="va">tokens_charged</span>, <span class="st">"charged;"</span>, <span class="va">summary</span><span class="op">$</span><span class="va">tokens_remaining</span>, <span class="st">"left\n"</span><span class="op">)</span></span></code></pre></div>
-<p>Metering is <strong>1 token per returned row</strong> (minimum 1 per
-request); isochrones are the exception at <strong>10 tokens per
-contour</strong>. A <code>304</code> revalidation is free.</p>
+<span><span class="co"># A city name gives you a GEOID and a centre point.</span></span>
+<span><span class="va">providence</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span><span class="st">"Providence"</span><span class="op">)</span><span class="op">$</span><span class="va">results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">providence</span><span class="op">$</span><span class="va">geoid</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="pagination">Pagination<a class="anchor" aria-label="anchor" href="#pagination"></a>
+<h2 id="make-a-call-and-map-it">Make a call and map it<a class="anchor" aria-label="anchor" href="#make-a-call-and-map-it"></a>
 </h2>
-<p>Paginated endpoints take a <code>cursor</code>; loop them with
-<code><a href="../reference/close_records.html">close_records()</a></code>:</p>
+<p>Feature methods return an <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> object, so you can map the
+result straight away.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pois</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_records.html">close_records</a></span><span class="op">(</span><span class="va">close_pois_search</span>, <span class="va">close</span>,</span>
-<span>                      lat <span class="op">=</span> <span class="fl">41.823</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.412</span>, radius_m <span class="op">=</span> <span class="fl">1500</span>, type <span class="op">=</span> <span class="fl">31</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">pois</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">groceries</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span>lat <span class="op">=</span> <span class="va">providence</span><span class="op">$</span><span class="va">lat</span>, lon <span class="op">=</span> <span class="va">providence</span><span class="op">$</span><span class="va">lon</span>,</span>
+<span>                               radius_m <span class="op">=</span> <span class="fl">1500</span>, type <span class="op">=</span> <span class="va">grocery_id</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">groceries</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="st">"#202a5b"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="conditional-requests-free-revalidation">Conditional requests (free revalidation)<a class="anchor" aria-label="anchor" href="#conditional-requests-free-revalidation"></a>
+<h2 id="read-every-page">Read every page<a class="anchor" aria-label="anchor" href="#read-every-page"></a>
 </h2>
+<p>List routes return one page at a time. <code>$records()</code>
+follows the pages to the end.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">first</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_block_summary.html">close_block_summary</a></span><span class="op">(</span><span class="va">close</span>, <span class="st">"250173523004004"</span><span class="op">)</span></span>
-<span><span class="va">again</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_block_summary.html">close_block_summary</a></span><span class="op">(</span><span class="va">close</span>, <span class="st">"250173523004004"</span>, if_none_match <span class="op">=</span> <span class="va">first</span><span class="op">$</span><span class="va">etag</span><span class="op">)</span></span>
-<span><span class="va">again</span><span class="op">$</span><span class="va">not_modified</span>   <span class="co"># TRUE -- nothing was charged</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">all_groceries</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">records</span><span class="op">(</span><span class="st">"pois_search"</span>, lat <span class="op">=</span> <span class="va">providence</span><span class="op">$</span><span class="va">lat</span>,</span>
+<span>                               lon <span class="op">=</span> <span class="va">providence</span><span class="op">$</span><span class="va">lon</span>, radius_m <span class="op">=</span> <span class="fl">1500</span>,</span>
+<span>                               type <span class="op">=</span> <span class="va">grocery_id</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="errors">Errors<a class="anchor" aria-label="anchor" href="#errors"></a>
+<h2 id="turn-spatial-output-off">Turn spatial output off<a class="anchor" aria-label="anchor" href="#turn-spatial-output-off"></a>
 </h2>
-<p>Problem+JSON responses become classed conditions:</p>
+<p>Set <code>spatial = FALSE</code> to work with the raw data. Block
+routes join census-block boundaries for you, using the
+<code>tigris</code> package to download them once.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="../reference/close_block_summary.html">close_block_summary</a></span><span class="op">(</span><span class="va">close</span>, <span class="st">"000000000000000"</span><span class="op">)</span>,</span>
-<span>  close_api_error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">e</span><span class="op">$</span><span class="va">status</span>, <span class="va">e</span><span class="op">$</span><span class="va">slug</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="va">spatial</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
+<span><span class="va">summary</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"440070036001010"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
+<span><span class="va">summary</span><span class="op">$</span><span class="va">results</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="spatial-output">Spatial output<a class="anchor" aria-label="anchor" href="#spatial-output"></a>
+<h2 id="handle-errors">Handle errors<a class="anchor" aria-label="anchor" href="#handle-errors"></a>
 </h2>
-<p>With <code>sf</code> installed, convert a reply to an <code>sf</code>
-object:</p>
+<p>Failed requests raise a classed condition. Catch the base
+<code>close_api_error</code>, or a specific one.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_as_sf.html">close_as_sf</a></span><span class="op">(</span><span class="fu"><a href="../reference/close_pois_search.html">close_pois_search</a></span><span class="op">(</span><span class="va">close</span>, lat <span class="op">=</span> <span class="fl">41.823</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.412</span>,</span>
-<span>                                     radius_m <span class="op">=</span> <span class="fl">1500</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">iso</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_as_sf.html">close_as_sf</a></span><span class="op">(</span><span class="fu"><a href="../reference/close_isochrone.html">close_isochrone</a></span><span class="op">(</span><span class="va">close</span>, block <span class="op">=</span> <span class="st">"440070036001010"</span>, minutes <span class="op">=</span> <span class="fl">15</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>POIs become points and isochrones become polygons offline; block
-replies join census-block boundaries (pass <code>block_geometry =</code>
-or <code>fetch = TRUE</code>).</p>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
+<span>  <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"000000000000000"</span><span class="op">)</span>,</span>
+<span>  close_api_error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s (%d)"</span>, <span class="va">e</span><span class="op">$</span><span class="va">slug</span>, <span class="va">e</span><span class="op">$</span><span class="va">status</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -168,7 +186,7 @@ or <code>fetch = TRUE</code>).</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Nathaniel Henry, Close.</p>
+  <p>Developed by Nathaniel Henry, Henry Spatial Analysis.</p>
 </div>
 
 <div class="pkgdown-footer-right">
