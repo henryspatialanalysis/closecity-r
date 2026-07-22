@@ -71,7 +71,8 @@ time, or override it per call with the method's \code{output} argument.}
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{api_key}}{Your API key, or NULL for the free routes.}
+      \item{\code{api_key}}{Your API key, or NULL for the free routes. When NULL, the
+\code{CLOSECITY_KEY} environment variable is used if set.}
       \item{\code{base_url}}{API base URL.}
       \item{\code{timeout}}{Request timeout, in seconds.}
       \item{\code{output}}{One of \code{'spatial'}, \code{'tabular'}, or \code{'raw'}.}
@@ -243,7 +244,7 @@ when \code{output} is \code{'raw'}.
 \if{latex}{\out{\hypertarget{method-CloseClient-block_pois}{}}}
 \subsection{\code{CloseClient$block_pois()}}{
   Nearby points of interest and their travel time from a block,
-one row per (POI, mode). Read every page with \verb{$records()}.
+one row per (POI, mode). Reads every page by default.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$block_pois(
@@ -254,6 +255,7 @@ one row per (POI, mode). Read every page with \verb{$records()}.
   max_minutes = NULL,
   limit = NULL,
   cursor = NULL,
+  paginate = TRUE,
   output = NULL
 )}
     \if{html}{\out{</div>}}
@@ -267,7 +269,10 @@ one row per (POI, mode). Read every page with \verb{$records()}.
       \item{\code{dest_id}}{Specific destination id(s) to keep.}
       \item{\code{max_minutes}}{Upper bound on travel time (up to 30).}
       \item{\code{limit}}{Rows per page (up to 1000).}
-      \item{\code{cursor}}{Page cursor from a previous reply's \code{next_cursor}.}
+      \item{\code{cursor}}{Page cursor from a previous reply's \code{next_cursor}; supplying
+one fetches only that page.}
+      \item{\code{paginate}}{Follow \code{next_cursor} and return every page (the default);
+set \code{FALSE} for the first page only.}
       \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
@@ -319,7 +324,7 @@ broadcast to a \code{geoid} column.
 \if{latex}{\out{\hypertarget{method-CloseClient-point_pois}{}}}
 \subsection{\code{CloseClient$point_pois()}}{
   Like \verb{$block_pois()}, but from the block containing a lat/lon
-point. Read every page with \verb{$records()}.
+point. Reads every page by default.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$point_pois(
@@ -331,6 +336,7 @@ point. Read every page with \verb{$records()}.
   max_minutes = NULL,
   limit = NULL,
   cursor = NULL,
+  paginate = TRUE,
   output = NULL
 )}
     \if{html}{\out{</div>}}
@@ -345,7 +351,9 @@ point. Read every page with \verb{$records()}.
       \item{\code{dest_id}}{Specific destination id(s) to keep.}
       \item{\code{max_minutes}}{Upper bound on travel time (up to 30).}
       \item{\code{limit}}{Rows per page (up to 1000).}
-      \item{\code{cursor}}{Page cursor.}
+      \item{\code{cursor}}{Page cursor; supplying one fetches only that page.}
+      \item{\code{paginate}}{Follow \code{next_cursor} and return every page (the default);
+set \code{FALSE} for the first page only.}
       \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
@@ -361,7 +369,7 @@ point. Read every page with \verb{$records()}.
 \if{latex}{\out{\hypertarget{method-CloseClient-pois_search}{}}}
 \subsection{\code{CloseClient$pois_search()}}{
   Search points of interest by bounding box, or by a circle
-(\code{lat} + \code{lon} + \code{radius_m}). Read every page with \verb{$records()}.
+(\code{lat} + \code{lon} + \code{radius_m}). Reads every page by default.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$pois_search(
@@ -373,6 +381,7 @@ point. Read every page with \verb{$records()}.
   q = NULL,
   limit = NULL,
   cursor = NULL,
+  paginate = TRUE,
   output = NULL
 )}
     \if{html}{\out{</div>}}
@@ -386,7 +395,9 @@ point. Read every page with \verb{$records()}.
       \item{\code{type}}{Destination type id(s) to keep.}
       \item{\code{q}}{Name text to match.}
       \item{\code{limit}}{Rows per page (up to 1000).}
-      \item{\code{cursor}}{Page cursor.}
+      \item{\code{cursor}}{Page cursor; supplying one fetches only that page.}
+      \item{\code{paginate}}{Follow \code{next_cursor} and return every page (the default);
+set \code{FALSE} for the first page only.}
       \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
@@ -427,7 +438,7 @@ point. Read every page with \verb{$records()}.
 \if{latex}{\out{\hypertarget{method-CloseClient-poi_catchment}{}}}
 \subsection{\code{CloseClient$poi_catchment()}}{
   Every census block that can reach a point of interest, one row
-per (block, mode). Read every page with \verb{$records()}.
+per (block, mode). Reads every page by default.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$poi_catchment(
@@ -437,6 +448,7 @@ per (block, mode). Read every page with \verb{$records()}.
   max_minutes = NULL,
   limit = NULL,
   cursor = NULL,
+  paginate = TRUE,
   output = NULL
 )}
     \if{html}{\out{</div>}}
@@ -449,7 +461,9 @@ per (block, mode). Read every page with \verb{$records()}.
       \item{\code{block}}{Specific block id(s) to keep.}
       \item{\code{max_minutes}}{Upper bound on travel time (up to 30).}
       \item{\code{limit}}{Rows per page (up to 1000).}
-      \item{\code{cursor}}{Page cursor.}
+      \item{\code{cursor}}{Page cursor; supplying one fetches only that page.}
+      \item{\code{paginate}}{Follow \code{next_cursor} and return every page (the default);
+set \code{FALSE} for the first page only.}
       \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
@@ -466,8 +480,7 @@ per (block, mode). Read every page with \verb{$records()}.
 \subsection{\code{CloseClient$blocks_query()}}{
   Blocks inside a GeoJSON polygon, or a circle (\code{center} +
 \code{radius_m}), one row per (block, category, mode). Rows carry the numeric
-\code{mode_id} (join \verb{$modes()} to label it). Read every page with
-\verb{$records()}.
+\code{mode_id} (join \verb{$modes()} to label it). Reads every page by default.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$blocks_query(
@@ -479,6 +492,7 @@ per (block, mode). Read every page with \verb{$records()}.
   include_population = NULL,
   limit = NULL,
   cursor = NULL,
+  paginate = TRUE,
   output = NULL
 )}
     \if{html}{\out{</div>}}
@@ -493,7 +507,9 @@ per (block, mode). Read every page with \verb{$records()}.
       \item{\code{mode}}{Travel mode(s) to keep.}
       \item{\code{include_population}}{Add each block's population to its rows.}
       \item{\code{limit}}{Rows per page (up to 1000).}
-      \item{\code{cursor}}{Page cursor.}
+      \item{\code{cursor}}{Page cursor; supplying one fetches only that page.}
+      \item{\code{paginate}}{Follow \code{next_cursor} and return every page (the default);
+set \code{FALSE} for the first page only.}
       \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
@@ -510,7 +526,7 @@ per (block, mode). Read every page with \verb{$records()}.
 \subsection{\code{CloseClient$place_blocks()}}{
   Per-block travel times for every block in a place (a city or
 town), by place GEOID. Rows carry the numeric \code{mode_id} (join \verb{$modes()}
-to label it). Read every page with \verb{$records()}.
+to label it). Reads every page by default.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$place_blocks(
@@ -520,6 +536,7 @@ to label it). Read every page with \verb{$records()}.
   include_population = NULL,
   limit = NULL,
   cursor = NULL,
+  paginate = TRUE,
   output = NULL
 )}
     \if{html}{\out{</div>}}
@@ -532,7 +549,9 @@ to label it). Read every page with \verb{$records()}.
       \item{\code{type}}{Destination type id(s) to keep.}
       \item{\code{include_population}}{Add each block's population to its rows.}
       \item{\code{limit}}{Rows per page (up to 1000).}
-      \item{\code{cursor}}{Page cursor.}
+      \item{\code{cursor}}{Page cursor; supplying one fetches only that page.}
+      \item{\code{paginate}}{Follow \code{next_cursor} and return every page (the default);
+set \code{FALSE} for the first page only.}
       \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
@@ -617,7 +636,8 @@ Always a raw \link{close_reply}.
 \if{latex}{\out{\hypertarget{method-CloseClient-records}{}}}
 \subsection{\code{CloseClient$records()}}{
   Read every record from a paginated method, following the cursor
-to the last page.
+to the last page. The paginated methods now read every page by default, so
+this is rarely needed; it remains for explicit control and back-compat.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$records(endpoint, ..., output = NULL)}

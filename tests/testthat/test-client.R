@@ -57,6 +57,7 @@ test_that("bearer auth is sent and token headers surface", {
 
 
 test_that("free routes need no key", {
+  withr::local_envvar(CLOSECITY_KEY = "")
   mock <- function(req) {
     expect_null(req$headers$Authorization)
     json_response(body = list(status = "ok", version = "0.1.0"))
@@ -66,6 +67,35 @@ test_that("free routes need no key", {
   })
   expect_equal(reply$data$status, "ok")
   expect_null(reply$tokens_charged)
+})
+
+
+test_that("CLOSECITY_KEY supplies the key when none is passed", {
+  withr::local_envvar(CLOSECITY_KEY = "ck_live_env")
+  captured <- NULL
+  mock <- function(req) {
+    captured <<- req
+    json_response(body = list(modes = list()))
+  }
+  httr2::with_mocked_responses(mock, {
+    close_client(output = "raw")$modes()
+  })
+  expect_false(is.null(captured$headers$Authorization))
+})
+
+
+test_that("a 401 without a key carries an actionable CLOSECITY_KEY hint", {
+  withr::local_envvar(CLOSECITY_KEY = "")
+  mock <- function(req) problem_response(401, "missing-key", "Provide an API key.")
+  err <- tryCatch(
+    httr2::with_mocked_responses(mock, {
+      close_client(output = "raw")$block_summary("250173523004004")
+    }),
+    close_api_error = function(e) e
+  )
+  expect_s3_class(err, "close_api_error")
+  expect_false(is.null(err$hint))
+  expect_true(grepl("CLOSECITY_KEY", conditionMessage(err)))
 })
 
 
@@ -112,6 +142,44 @@ test_that("blocks_query is a POST carrying the cursor in the body", {
   expect_equal(bodies[[1]]$mode, list("walk"))
   expect_equal(bodies[[1]]$type, list(30))
   expect_equal(bodies[[2]]$cursor, "C2")
+})
+
+
+test_that("paginated methods read every page by default", {
+  pages <- list(
+    `NA` = list(results = list(list(dest_id = 1), list(dest_id = 2)),
+                next_cursor = "CUR2"),
+    CUR2 = list(results = list(list(dest_id = 3)), next_cursor = NULL)
+  )
+  seen <- c()
+  mock <- function(req) {
+    cur <- httr2::url_parse(req$url)$query$cursor
+    key <- if (is.null(cur)) "NA" else cur
+    seen <<- c(seen, key)
+    json_response(body = pages[[key]])
+  }
+  got <- httr2::with_mocked_responses(mock, {
+    client$pois_search(lat = 44, lon = -123, radius_m = 1000)
+  })
+  # output = "raw": a combined close_reply carrying every page's rows.
+  expect_equal(length(got$results), 3)
+  expect_equal(seen, c("NA", "CUR2"))
+})
+
+
+test_that("paginate = FALSE fetches only the first page", {
+  seen <- c()
+  mock <- function(req) {
+    cur <- httr2::url_parse(req$url)$query$cursor
+    seen <<- c(seen, if (is.null(cur)) "NA" else cur)
+    json_response(body = list(results = list(list(dest_id = 1)),
+                              next_cursor = "CUR2"))
+  }
+  got <- httr2::with_mocked_responses(mock, {
+    client$pois_search(lat = 44, lon = -123, radius_m = 1000, paginate = FALSE)
+  })
+  expect_equal(length(got$results), 1)
+  expect_equal(seen, "NA")
 })
 
 

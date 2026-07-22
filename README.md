@@ -26,6 +26,9 @@ away.
 
 ``` r
 library(closecity)
+# The key (ck_live_) comes from https://account.close.city (5,000 free tokens,
+# no card). Or set the CLOSECITY_KEY environment variable and call
+# close_client() with no argument.
 close <- close_client("ck_live_your_key")   # use your own key here
 ```
 
@@ -469,6 +472,10 @@ tryCatch(
 )
 #> block-not-found (404)
 ```
+
+The client does not retry automatically. On a rate-limit or service-unavailable
+error, wait `e$retry_after` seconds (from the `Retry-After` header) and retry the
+request yourself.
 
 ## Reference
 

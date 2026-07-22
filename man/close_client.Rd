@@ -13,7 +13,8 @@ close_client(
 }
 \arguments{
 \item{api_key}{(\code{character(1)}, default NULL)\cr Your API key, or NULL for the
-free routes.}
+free routes. When NULL, the \code{CLOSECITY_KEY} environment variable is used if
+set.}
 
 \item{base_url}{(\code{character(1)})\cr API base URL.}
 
@@ -30,7 +31,7 @@ A \link{CloseClient}. Make calls through its methods.
 \description{
 Builds a \link{CloseClient}. The catalog and health routes are free, so a key is
 optional. Every data route needs one (a \code{ck_live_} key), created at
-https://account.close.city.
+https://account.close.city (5,000 free tokens on signup, no card).
 }
 \examples{
 \dontrun{

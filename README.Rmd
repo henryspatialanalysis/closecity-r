@@ -37,6 +37,9 @@ You make requests through a client object. Feature results come back as
 
 ```r
 library(closecity)
+# The key (ck_live_) comes from https://account.close.city (5,000 free tokens,
+# no card). Or set the CLOSECITY_KEY environment variable and call
+# close_client() with no argument.
 close <- close_client("ck_live_your_key")   # use your own key here
 ```
 
@@ -93,6 +96,10 @@ tryCatch(
   close_api_error = function(e) message(sprintf("%s (%d)", e$slug, e$status))
 )
 ```
+
+The client does not retry automatically. On a rate-limit or service-unavailable
+error, wait `e$retry_after` seconds (from the `Retry-After` header) and retry the
+request yourself.
 
 ## Reference
 
