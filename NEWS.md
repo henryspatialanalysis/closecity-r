@@ -1,3 +1,13 @@
+# closecity 1.4.0
+
+* `$place_boundary()` — the boundary polygon of a census place, as a one-row `sf`.
+  Free (no API key); handy as a `boundary` layer for `close_map()`.
+* `close_map()` gains layered context and smarter defaults: it auto-zooms to the
+  data, shows every attribute on hover, defaults to the ColorBrewer `YlGnBu`
+  scale (blue = most accessible), and takes a `boundary` outline and
+  semi-transparent `background` layers (e.g. a city boundary, commute isochrones,
+  or a walkshed under its POIs).
+
 # closecity 1.3.0
 
 * `$place_pois()` — every point of interest within a census place (city or

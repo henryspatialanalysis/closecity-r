@@ -9,12 +9,17 @@ close_map(
   color = "#e8590c",
   highlight = NULL,
   fill = NULL,
-  palette = "Viridis",
-  reverse = TRUE,
-  label = "name",
+  palette = "YlGnBu",
+  reverse = FALSE,
+  label = NULL,
   size = 9,
-  zoom = 10,
-  opacity = 0.65
+  opacity = 0.65,
+  boundary = NULL,
+  background = NULL,
+  background_color = "#3b6fb0",
+  background_opacity = 0.3,
+  buffer = 0.15,
+  zoom = NULL
 )
 }
 \arguments{
@@ -28,34 +33,52 @@ render grey (\verb{#888}) and the rest use \code{color} — so you can show ever
 in a study area and pick out the matches, rather than dropping the others.}
 
 \item{fill}{Optional. The name of a numeric column to shade features by, on a
-continuous scale with a legend (e.g. travel time, or an access score). Use
-this OR \code{highlight}, not both.}
+continuous ColorBrewer scale with a legend (e.g. travel time, or an access
+score). Use this OR \code{highlight}, not both.}
 
-\item{palette}{A plotly colorscale name for \code{fill} (default \code{"Viridis"}).}
+\item{palette}{A plotly ColorBrewer colorscale name for \code{fill} (default
+\code{"YlGnBu"}).}
 
-\item{reverse}{Reverse the \code{fill} colorscale (default \code{TRUE}, so smaller
-values — e.g. shorter travel times — are the bright end).}
+\item{reverse}{Reverse the \code{fill} colorscale (default \code{FALSE}, so the blue end
+of \code{YlGnBu} marks the high values). Pass \code{TRUE} when high values mean \emph{less}
+access, e.g. travel time, so blue still marks the most-accessible end.}
 
-\item{label}{Column shown on hover (default \code{"name"}).}
+\item{label}{Optional. A column shown first (bold) in the hover; the rest of
+the attributes follow.}
 
 \item{size}{Marker size, for point maps.}
 
-\item{zoom}{Initial zoom level.}
-
 \item{opacity}{Fill opacity, for polygon maps.}
+
+\item{boundary}{Optional. A polygon \link[sf:sf]{sf} drawn as a grey outline
+underneath the data — e.g. a city boundary from \code{place_boundary()}.}
+
+\item{background}{Optional. A polygon \link[sf:sf]{sf}, or a list of them, drawn
+as semi-transparent fills underneath the data — e.g. commute isochrones, or
+a walkshed under its POIs.}
+
+\item{background_color}{Fill colour(s) for \code{background}, recycled across the
+layers.}
+
+\item{background_opacity}{Fill opacity for \code{background} layers.}
+
+\item{buffer}{Fraction of the data extent to pad the view by (default 0.15).}
+
+\item{zoom}{Deprecated/ignored; the view auto-zooms to the data.}
 }
 \value{
-A \link[plotly:plot_ly]{plotly} htmlwidget.
+A plotly map object.
 }
 \description{
 Draw the \link[sf:sf]{sf} object a client method returns as an interactive map on
 a CARTO Positron basemap. Points (POIs, places) render as bright hoverable
 markers; polygons (census blocks) are filled, optionally greying the features
-that do not meet a criterion so the ones that matter stand out.
+that do not meet a criterion so the ones that matter stand out. The view
+auto-zooms to fit every layer with a margin, and hover shows all attributes.
 }
 \examples{
 \dontrun{
 close <- close_client()
-close_map(close$place_pois("4459000", type = 30), color = "#e8590c")
+close_map(close$place_pois(geoid = "4459000", type = 30), color = "#e8590c")
 }
 }

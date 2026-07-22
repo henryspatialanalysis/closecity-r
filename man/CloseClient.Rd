@@ -48,6 +48,7 @@ time, or override it per call with the method's \code{output} argument.}
     \item \href{#method-CloseClient-blocks_query}{\code{CloseClient$blocks_query()}}
     \item \href{#method-CloseClient-place_blocks}{\code{CloseClient$place_blocks()}}
     \item \href{#method-CloseClient-place_pois}{\code{CloseClient$place_pois()}}
+    \item \href{#method-CloseClient-place_boundary}{\code{CloseClient$place_boundary()}}
     \item \href{#method-CloseClient-isochrone}{\code{CloseClient$isochrone()}}
     \item \href{#method-CloseClient-isochrone_meta}{\code{CloseClient$isochrone_meta()}}
     \item \href{#method-CloseClient-records}{\code{CloseClient$records()}}
@@ -601,6 +602,32 @@ set \code{FALSE} for the first page only.}
   \subsection{Returns}{
     An \link[sf:sf]{sf} of points (a data frame in tabular mode, a
 \link{close_reply} when \code{output} is \code{'raw'}).
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CloseClient-place_boundary"></a>}}
+\if{latex}{\out{\hypertarget{method-CloseClient-place_boundary}{}}}
+\subsection{\code{CloseClient$place_boundary()}}{
+  The boundary polygon of a census place, as a one-row
+\link[sf:sf]{sf} — handy as a \code{boundary} layer for \code{\link[=close_map]{close_map()}} when mapping
+a city's blocks or POIs. Free (no API key).
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CloseClient$place_boundary(geoid, output = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{geoid}}{Census place GEOID.}
+      \item{\code{output}}{Override the client's output mode for this call.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A one-row \link[sf:sf]{sf} polygon (a \link{close_reply} when \code{output} is
+\code{'raw'}).
   }
 }
 

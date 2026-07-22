@@ -2,14 +2,70 @@
 # tutorials (and users) can see results without wiring up a plotting stack.
 # Built on plotly over a CARTO Positron basemap: points become bright hoverable
 # markers, block polygons are filled and can highlight the features that meet a
-# criterion. GDAL-free (plotly + geojsonsf), unlike leaflet/mapgl.
+# criterion. The view auto-zooms to the data, hover shows every attribute, and a
+# city boundary outline or semi-transparent background layers can sit underneath.
+# GDAL-free (plotly + geojsonsf), unlike leaflet/mapgl.
+
+# hex + alpha -> "rgba(r, g, b, a)" for plotly fill/line colours.
+.close_rgba <- function(hex, alpha) {
+  v <- grDevices::col2rgb(hex)
+  sprintf("rgba(%d, %d, %d, %s)", v[1], v[2], v[3], format(alpha))
+}
+
+# A centre and zoom that frame every layer's bounding box, plus a margin.
+.close_center_zoom <- function(boxes, buffer) {
+  minx <- min(vapply(boxes, function(b) b[["xmin"]], numeric(1)))
+  miny <- min(vapply(boxes, function(b) b[["ymin"]], numeric(1)))
+  maxx <- max(vapply(boxes, function(b) b[["xmax"]], numeric(1)))
+  maxy <- max(vapply(boxes, function(b) b[["ymax"]], numeric(1)))
+  span <- max(maxx - minx, maxy - miny, 0.005) * (1 + 2 * buffer)
+  list(
+    center = list(lon = mean(c(minx, maxx)), lat = mean(c(miny, maxy))),
+    zoom = max(1, min(16, log2(360 / span) - 0.5))
+  )
+}
+
+# Exterior/ring coordinates of a polygon layer as one lon/lat path, NA-split so
+# plotly draws each ring as its own subpath.
+.close_polygon_lines <- function(x) {
+  co <- sf::st_coordinates(sf::st_geometry(x))
+  grp_cols <- setdiff(colnames(co), c("X", "Y"))
+  key <- do.call(paste, c(as.data.frame(co)[grp_cols], sep = "-"))
+  lon <- numeric(0); lat <- numeric(0)
+  for (k in unique(key)) {
+    idx <- key == k
+    lon <- c(lon, co[idx, "X"], NA)
+    lat <- c(lat, co[idx, "Y"], NA)
+  }
+  list(lon = lon, lat = lat)
+}
+
+# One hover string per row: every non-geometry attribute, `label` first (bold).
+# Robust to list/nested columns (e.g. a POI `address`), which get flattened to a
+# single comma-joined string.
+.close_hover <- function(x, label) {
+  df <- sf::st_drop_geometry(x)
+  cols <- names(df)
+  if (!is.null(label) && label %in% cols) cols <- c(label, setdiff(cols, label))
+  vapply(seq_len(nrow(df)), function(i) {
+    parts <- vapply(cols, function(c) {
+      val <- df[[c]][[i]]
+      if (is.numeric(val)) val <- round(val, 5)
+      val <- toString(unlist(val))
+      if (!is.null(label) && c == label) sprintf("<b>%s</b>", val)
+      else sprintf("%s: %s", c, val)
+    }, character(1))
+    paste(parts, collapse = "<br>")
+  }, character(1))
+}
 
 #' Interactive map of Close spatial results
 #'
 #' Draw the [sf][sf::sf] object a client method returns as an interactive map on
 #' a CARTO Positron basemap. Points (POIs, places) render as bright hoverable
 #' markers; polygons (census blocks) are filled, optionally greying the features
-#' that do not meet a criterion so the ones that matter stand out.
+#' that do not meet a criterion so the ones that matter stand out. The view
+#' auto-zooms to fit every layer with a margin, and hover shows all attributes.
 #'
 #' @param x An [sf][sf::sf] from a client method — points or polygons.
 #' @param color Marker/fill colour for flat features (or for highlighted ones).
@@ -18,29 +74,77 @@
 #'   render grey (`#888`) and the rest use `color` — so you can show every block
 #'   in a study area and pick out the matches, rather than dropping the others.
 #' @param fill Optional. The name of a numeric column to shade features by, on a
-#'   continuous scale with a legend (e.g. travel time, or an access score). Use
-#'   this OR `highlight`, not both.
-#' @param palette A plotly colorscale name for `fill` (default `"Viridis"`).
-#' @param reverse Reverse the `fill` colorscale (default `TRUE`, so smaller
-#'   values — e.g. shorter travel times — are the bright end).
-#' @param label Column shown on hover (default `"name"`).
+#'   continuous ColorBrewer scale with a legend (e.g. travel time, or an access
+#'   score). Use this OR `highlight`, not both.
+#' @param palette A plotly ColorBrewer colorscale name for `fill` (default
+#'   `"YlGnBu"`).
+#' @param reverse Reverse the `fill` colorscale (default `FALSE`, so the blue end
+#'   of `YlGnBu` marks the high values). Pass `TRUE` when high values mean *less*
+#'   access, e.g. travel time, so blue still marks the most-accessible end.
+#' @param label Optional. A column shown first (bold) in the hover; the rest of
+#'   the attributes follow.
 #' @param size Marker size, for point maps.
-#' @param zoom Initial zoom level.
 #' @param opacity Fill opacity, for polygon maps.
-#' @return A [plotly][plotly::plot_ly] htmlwidget.
+#' @param boundary Optional. A polygon [sf][sf::sf] drawn as a grey outline
+#'   underneath the data — e.g. a city boundary from `place_boundary()`.
+#' @param background Optional. A polygon [sf][sf::sf], or a list of them, drawn
+#'   as semi-transparent fills underneath the data — e.g. commute isochrones, or
+#'   a walkshed under its POIs.
+#' @param background_color Fill colour(s) for `background`, recycled across the
+#'   layers.
+#' @param background_opacity Fill opacity for `background` layers.
+#' @param buffer Fraction of the data extent to pad the view by (default 0.15).
+#' @param zoom Deprecated/ignored; the view auto-zooms to the data.
+#' @return A plotly map object.
 #' @examples
 #' \dontrun{
 #' close <- close_client()
-#' close_map(close$place_pois("4459000", type = 30), color = "#e8590c")
+#' close_map(close$place_pois(geoid = "4459000", type = 30), color = "#e8590c")
 #' }
 #' @export
 close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
-                      palette = "Viridis", reverse = TRUE, label = "name",
-                      size = 9, zoom = 10, opacity = 0.65) {
+                      palette = "YlGnBu", reverse = FALSE, label = NULL,
+                      size = 9, opacity = 0.65, boundary = NULL,
+                      background = NULL, background_color = "#3b6fb0",
+                      background_opacity = 0.3, buffer = 0.15, zoom = NULL) {
   if (!requireNamespace("plotly", quietly = TRUE)) {
     stop("close_map() needs the plotly package: install.packages('plotly')")
   }
   x <- sf::st_transform(x, 4326)
+  boxes <- list(sf::st_bbox(x))
+  p <- plotly::plot_ly()
+
+  # Semi-transparent background fills, drawn first (underneath everything).
+  if (!is.null(background)) {
+    if (inherits(background, c("sf", "sfc", "sfg"))) background <- list(background)
+    cols <- rep(background_color, length.out = length(background))
+    for (i in seq_along(background)) {
+      geom <- sf::st_transform(sf::st_geometry(background[[i]]), 4326)
+      boxes <- c(boxes, list(sf::st_bbox(geom)))
+      xy <- .close_polygon_lines(geom)
+      p <- plotly::add_trace(
+        p, type = "scattermapbox", mode = "lines", lon = xy$lon, lat = xy$lat,
+        fill = "toself", fillcolor = .close_rgba(cols[i], background_opacity),
+        line = list(color = .close_rgba(cols[i], min(1, background_opacity + 0.3)),
+                    width = 1),
+        hoverinfo = "skip", showlegend = FALSE
+      )
+    }
+  }
+
+  # City-boundary outline (no fill), above the background fills.
+  if (!is.null(boundary)) {
+    geom <- sf::st_transform(sf::st_geometry(boundary), 4326)
+    boxes <- c(boxes, list(sf::st_bbox(geom)))
+    xy <- .close_polygon_lines(geom)
+    p <- plotly::add_trace(
+      p, type = "scattermapbox", mode = "lines", lon = xy$lon, lat = xy$lat,
+      line = list(color = "#666666", width = 1.5),
+      hoverinfo = "skip", showlegend = FALSE
+    )
+  }
+
+  hover <- .close_hover(x, label)
   hl <- NULL
   if (!is.null(highlight)) {
     hl <- if (is.character(highlight) && length(highlight) == 1L &&
@@ -48,10 +152,6 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
           else as.logical(highlight)
   }
   fv <- if (!is.null(fill) && fill %in% names(x)) as.numeric(x[[fill]]) else NULL
-  bb <- sf::st_bbox(x)
-  centre <- list(lon = mean(c(bb[["xmin"]], bb[["xmax"]])),
-                 lat = mean(c(bb[["ymin"]], bb[["ymax"]])))
-  hover <- if (label %in% names(x)) as.character(x[[label]]) else NULL
 
   if (any(grepl("POINT", as.character(sf::st_geometry_type(x))))) {
     xy <- sf::st_coordinates(x)
@@ -63,10 +163,10 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
       cols <- if (is.null(hl)) color else ifelse(hl, color, "#888888")
       marker <- list(size = size, color = cols)
     }
-    p <- plotly::plot_ly(
-      lat = xy[, 2], lon = xy[, 1], type = "scattermapbox", mode = "markers",
-      marker = marker, text = hover,
-      hoverinfo = if (is.null(hover)) "none" else "text"
+    p <- plotly::add_trace(
+      p, type = "scattermapbox", mode = "markers",
+      lon = xy[, 1], lat = xy[, 2], marker = marker,
+      text = hover, hoverinfo = "text", showlegend = FALSE
     )
   } else {
     x[["feature_id"]] <- as.character(seq_len(nrow(x)))
@@ -77,23 +177,24 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
       type = "choroplethmapbox", geojson = gj, locations = x[["feature_id"]],
       featureidkey = "properties.feature_id",
       marker = list(opacity = opacity, line = list(width = 0)),
-      text = hover, hoverinfo = if (is.null(hover)) "none" else "text"
+      text = hover, hoverinfo = "text", showlegend = FALSE
     )
     if (!is.null(fv)) {
-      args <- c(common, list(z = fv, colorscale = palette,
-                             reversescale = reverse, showscale = TRUE,
-                             colorbar = list(title = fill)))
+      args <- c(common, list(z = fv, colorscale = palette, reversescale = reverse,
+                             showscale = TRUE, colorbar = list(title = fill)))
     } else {
       z <- if (is.null(hl)) rep(1, nrow(x)) else as.integer(hl)
       scale <- if (is.null(hl)) list(list(0, color), list(1, color))
                else list(list(0, "#888888"), list(1, color))
       args <- c(common, list(z = z, colorscale = scale, showscale = FALSE))
     }
-    p <- do.call(plotly::plot_ly, args)
+    p <- do.call(function(...) plotly::add_trace(p, ...), args)
   }
+
+  cz <- .close_center_zoom(boxes, buffer)
   plotly::layout(
     p,
-    mapbox = list(style = "carto-positron", zoom = zoom, center = centre),
+    mapbox = list(style = "carto-positron", zoom = cz$zoom, center = cz$center),
     margin = list(l = 0, r = 0, t = 0, b = 0)
   )
 }

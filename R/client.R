@@ -411,6 +411,19 @@ CloseClient <- R6::R6Class(
       )
     },
 
+    #' @description The boundary polygon of a census place, as a one-row
+    #'   [sf][sf::sf] — handy as a `boundary` layer for [close_map()] when mapping
+    #'   a city's blocks or POIs. Free (no API key).
+    #' @param geoid Census place GEOID.
+    #' @param output Override the client's output mode for this call.
+    #' @return A one-row [sf][sf::sf] polygon (a [close_reply] when `output` is
+    #'   `'raw'`).
+    place_boundary = function(geoid, output = NULL){
+      reply <- private$get(sprintf('/v1/places/%s/boundary', geoid), NULL)
+      if(identical(private$resolve_output(output), 'raw')) return(reply)
+      close_as_sf(reply)
+    },
+
     #' @description Travel-time contours from a block or a lat/lon point. Give
     #'   `minutes` for one threshold, or `contours` for up to four.
     #' @param block Origin block GEOID (or give `lon` + `lat`).

@@ -34,3 +34,26 @@ test_that("close_map draws a polygon map with a highlight column", {
   m <- close_map(make_polys(), color = "#2f9e44", highlight = "near")
   expect_s3_class(m, "plotly")
 })
+
+
+test_that("close_map shades by a numeric fill column", {
+  skip_if_not_installed("plotly")
+  skip_if_not_installed("geojsonsf")
+  polys <- make_polys()
+  polys$score <- c(2, 5)
+  m <- close_map(polys, fill = "score", palette = "YlGnBu")
+  expect_s3_class(m, "plotly")
+})
+
+
+test_that("close_map draws boundary and background layers under the data", {
+  skip_if_not_installed("plotly")
+  skip_if_not_installed("geojsonsf")
+  polys <- make_polys()
+  boundary <- sf::st_union(polys)            # an sfc, not an sf
+  m <- close_map(make_points(), boundary = boundary,
+                 background = list(polys), background_color = "#3b6fb0")
+  built <- plotly::plotly_build(m)
+  # one background fill + one boundary outline + the point layer
+  expect_equal(length(built$x$data), 3L)
+})

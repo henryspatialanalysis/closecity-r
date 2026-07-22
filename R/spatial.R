@@ -39,6 +39,9 @@ close_as_sf <- function(
   if(.close_is_isochrone(data)){
     return(.close_stamp_attrs(.close_sf_isochrone(data, crs), data, meta))
   }
+  if(identical(data$type, 'Feature') && !is.null(data$geometry)){
+    return(.close_stamp_attrs(.close_sf_feature(data, crs), data, meta))
+  }
   parts <- .close_rows_and_envelope(data)
   rows <- parts$rows
   envelope <- parts$envelope
@@ -69,6 +72,16 @@ close_as_sf <- function(
 # features, so wrap them in a FeatureCollection and let sf parse the geometry.
 .close_sf_isochrone <- function(data, crs){
   fc <- list(type = 'FeatureCollection', features = data$features)
+  txt <- jsonlite::toJSON(fc, auto_unbox = TRUE, null = 'null', digits = NA)
+  gj <- sf::read_sf(txt)
+  if(is.na(sf::st_crs(gj))) sf::st_crs(gj) <- crs
+  gj
+}
+
+# A single GeoJSON Feature (e.g. a place boundary): wrap it in a one-feature
+# FeatureCollection so sf reads its geometry and folds `properties` into columns.
+.close_sf_feature <- function(data, crs){
+  fc <- list(type = 'FeatureCollection', features = list(data))
   txt <- jsonlite::toJSON(fc, auto_unbox = TRUE, null = 'null', digits = NA)
   gj <- sf::read_sf(txt)
   if(is.na(sf::st_crs(gj))) sf::st_crs(gj) <- crs
