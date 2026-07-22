@@ -95,7 +95,22 @@ close_as_sf <- function(x, block_geometry = NULL, geoid_col = "GEOID20",
            "blocks with tigris.", call. = FALSE)
     }
   }
-  merge(block_geometry, df, by.x = geoid_col, by.y = "geoid", all.y = TRUE)
+  # Rename the block-geometry key to "geoid" so the join keeps a "geoid" column:
+  # merge() names the shared column after `by.x`, so joining GEOID20 to geoid would
+  # leave only GEOID20 and drop the "geoid" that the reply's rows carry.
+  names(block_geometry)[names(block_geometry) == geoid_col] <- "geoid"
+  # TIGER blocks arrive in NAD83 (EPSG:4269); reproject so they match the POI and
+  # isochrone geometry (EPSG:4326) and can be combined without a CRS mismatch.
+  if (!is.na(sf::st_crs(block_geometry)) &&
+      sf::st_crs(block_geometry) != sf::st_crs(crs)) {
+    block_geometry <- sf::st_transform(block_geometry, crs)
+  }
+  out <- merge(block_geometry, df, by = "geoid", all.y = TRUE)
+  # Drop rows whose GEOID had no TIGER match (e.g. water blocks); they have empty
+  # geometry and would break plotting and spatial joins.
+  keep <- !sf::st_is_empty(sf::st_geometry(out))
+  keep[is.na(keep)] <- FALSE
+  out[keep, ]
 }
 
 .close_fetch_blocks <- function(geoids, geoid_col) {

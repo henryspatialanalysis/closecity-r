@@ -71,7 +71,9 @@ test_that("block rows need geometry and join on a supplied sf", {
   expect_s3_class(out, "sf")
   expect_equal(nrow(out), 2)
   expect_true(all(grepl("POLYGON", as.character(sf::st_geometry_type(out)))))
-  expect_equal(out$travel_time[out$GEOID20 == "100"], 6.5)
+  # The join normalises the key to "geoid" so the reply's own column survives.
+  expect_true("geoid" %in% names(out))
+  expect_equal(out$travel_time[out$geoid == "100"], 6.5)
 })
 
 test_that("sf::st_as_sf S3 method dispatches to close_as_sf", {
