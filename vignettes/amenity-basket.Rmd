@@ -11,101 +11,121 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 ```
 
-**Question.** If we want every resident to be able to walk to a basket of six
-everyday amenities, what share of the population is already covered — and which five
-new amenities, sited where, would raise that share the most? This is the
-population-weighted "15-minute city" method from
+A city planner wants every resident to be able to walk to a basket of six everyday
+amenities: a grocery store, a library, a park, a frequent-transit stop, a restaurant,
+and a cafe. This tutorial measures how many residents already have that, and shows
+where the gaps are. The idea follows
 [this analysis](https://nathenry.com/writing/2023-02-07-seattle-walkability.html),
-applied to **Richmond, VA**.
+here applied to Richmond, Virginia.
+
+## Set up
+
+Read the six category ids from the free catalog, and turn the city name into a
+centre point.
 
 ```{r}
 library(closecity)
-close <- close_client("ck_live_your_key_here")
-
-basket <- c(grocery = 30, library = 43, park = 63,
-            frequent_transit = 61, restaurant = 27, cafe = 31)
-threshold <- 15  # minutes, walking
-```
-
-## Pull per-block walk times and population
-
-```{r}
-richmond <- close_places(close, "Richmond")$results[[1]]
-center <- list(lon = richmond$lon, lat = richmond$lat)
-
-rows <- close_records(close_blocks_query, close, center = center, radius_m = 2500,
-                      mode = "walk", type = unname(basket),
-                      include_population = TRUE)
-
-times <- list(); pop <- c()
-for (r in rows) {
-  times[[r$geoid]][[as.character(r$dest_type_id)]] <- r$travel_time
-  pop[r$geoid] <- if (is.null(r$population)) 0 else r$population
-}
-```
-
-## Current coverage
-
-All local and free:
-
-```{r}
-covered <- function(g, type_id) {
-  t <- times[[g]][[as.character(type_id)]]
-  !is.null(t) && t <= threshold
-}
-total <- sum(pop)
-
-for (nm in names(basket)) {
-  share <- sum(pop[vapply(names(times), covered, logical(1), basket[[nm]])]) / total
-  cat(sprintf("%-18s %4.0f%%\n", nm, 100 * share))
-}
-
-fully <- Filter(function(g) all(vapply(basket, function(ti) covered(g, ti),
-                                       logical(1))), names(times))
-cat(sprintf("\nAll six: %.0f%% of residents\n", 100 * sum(pop[unlist(fully)]) / total))
-```
-
-Parks and restaurants are widespread; **grocery** and **frequent transit** are the
-binding constraints.
-
-## Which amenities to add, and where
-
-A new facility of a type placed at a block covers everything within a 15-minute walk
-of it — a `direction = "from"` walk isochrone (10 tokens each). We greedily pick the
-five sites that turn the most currently-uncovered residents into fully-covered ones:
-
-```{r}
 library(sf)
-blocks <- close_as_sf(close_blocks_query(close, center = center, radius_m = 2500,
-                                         mode = "walk", type = 30), fetch = TRUE)
-cent <- st_coordinates(st_point_on_surface(blocks))
-rownames(cent) <- blocks$geoid
 
-missing1 <- function(g) {                # blocks missing exactly one amenity
-  miss <- Filter(function(ti) !covered(g, ti), basket)
-  if (length(miss) == 1) names(basket)[match(miss[[1]], basket)] else NA
-}
+close <- close_client("ck_live_your_key")   # use your own key here
 
-candidates <- Filter(function(g) !is.na(missing1(g)) && g %in% blocks$geoid,
-                     names(times))
-candidates <- head(candidates[order(-pop[unlist(candidates)])], 25)
+types <- close$destination_types()$data$destination_types
+labels <- sapply(types, `[[`, "label")
+ids <- sapply(types, `[[`, "dest_type_id")
 
-walkshed <- function(g) {
-  iso <- close_isochrone(close, lon = cent[g, 1], lat = cent[g, 2], mode = "walk",
-                         direction = "from", minutes = threshold, format = "blocks")
-  vapply(iso$data$blocks, function(b) b$geoid, character(1))
+basket <- c(
+  grocery = ids[labels == "grocery_stores"],
+  library = ids[labels == "libraries"],
+  park = ids[labels == "parks"],
+  transit = ids[labels == "frequent_transit"],
+  restaurant = ids[labels == "restaurants"],
+  cafe = ids[labels == "cafes"]
+)
+
+city <- close$places("Richmond")$results[[1]]
+```
+
+## Pull the blocks, with population
+
+One call gets the walk time from every block near downtown to each of the six
+categories, along with each block's population. The result is an sf table.
+
+```{r}
+blocks <- close$blocks_query(
+  center = list(lon = city$lon, lat = city$lat), radius_m = 2500,
+  mode = "walk", type = unname(basket), include_population = TRUE
+)
+
+# One row per block, for population and for mapping.
+one_per_block <- blocks[!duplicated(blocks$geoid), ]
+total_pop <- sum(one_per_block$population)
+```
+
+## Coverage, one amenity at a time
+
+For each amenity, a block counts as covered when it is within a 15-minute walk. Add
+up the population of the covered blocks.
+
+```{r}
+for (name in names(basket)) {
+  covered <- unique(blocks$geoid[blocks$dest_type_id == basket[name] &
+                                   blocks$travel_time <= 15])
+  pop <- sum(one_per_block$population[one_per_block$geoid %in% covered])
+  cat(sprintf("%-11s %3.0f%%\n", name, 100 * pop / total_pop))
 }
 ```
 
-Loop the greedy selection over the candidate walksheds, subtracting each chosen
-site's newly-covered residents before picking the next — the top five are your
-ranked, mapped interventions.
+Parks and restaurants tend to be everywhere; groceries and frequent transit are
+usually the hardest to reach. Map one amenity to see the pattern.
 
-## Token cost
+```{r}
+near_transit <- unique(blocks$geoid[blocks$dest_type_id == basket["transit"] &
+                                      blocks$travel_time <= 15])
+one_per_block$has_transit <- one_per_block$geoid %in% near_transit
 
-- `close_places`: free. `close_blocks_query` disc (~700 blocks x 6 categories):
-  ~4,000 tokens.
-- Up to 25 candidate isochrones (1 contour each, 10 tokens): ~250 tokens.
+plot(one_per_block["has_transit"], pal = c("#eef0f7", "#058040"), border = NA)
+```
 
-Around 4,300 tokens -- inside a 5,000-token month. Shrink `radius_m` or the candidate
-count to trade coverage for budget.
+## Who can reach all six
+
+A block is fully covered only if all six amenities are within 15 minutes. Start with
+every block and remove the ones that miss any amenity.
+
+```{r}
+covered_all <- one_per_block$geoid
+for (name in names(basket)) {
+  covered <- unique(blocks$geoid[blocks$dest_type_id == basket[name] &
+                                   blocks$travel_time <= 15])
+  covered_all <- intersect(covered_all, covered)
+}
+
+basket_pop <- sum(one_per_block$population[one_per_block$geoid %in% covered_all])
+cat(sprintf("All six amenities: %.0f%% of residents\n", 100 * basket_pop / total_pop))
+
+one_per_block$full_basket <- one_per_block$geoid %in% covered_all
+plot(one_per_block["full_basket"], pal = c("#eef0f7", "#f36e21"), border = NA)
+```
+
+## Which amenity to add first
+
+Look at the residents who are not yet fully covered, and count how many of them are
+missing each amenity. The amenity that the most people lack is the one to add first.
+
+```{r}
+uncovered <- setdiff(one_per_block$geoid, covered_all)
+
+for (name in names(basket)) {
+  covered <- unique(blocks$geoid[blocks$dest_type_id == basket[name] &
+                                   blocks$travel_time <= 15])
+  lacking <- setdiff(uncovered, covered)
+  pop <- sum(one_per_block$population[one_per_block$geoid %in% lacking])
+  cat(sprintf("%-11s %6.0f residents would gain access\n", name, pop))
+}
+```
+
+Map the uncovered blocks to see where new amenities would do the most good.
+
+```{r}
+one_per_block$uncovered <- one_per_block$geoid %in% uncovered
+plot(one_per_block["uncovered"], pal = c("#eef0f7", "#202a5b"), border = NA)
+```

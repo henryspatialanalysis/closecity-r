@@ -1,6 +1,7 @@
-# Driven over httr2's response mocking, so no network is touched. Pins the same
-# mechanics as the Python suite: bearer auth, token-header surfacing, opaque
-# cursor pagination, ETag/304 revalidation, and problem+json -> condition.
+# Driven over httr2's response mocking, so no network is touched. Pins the
+# mechanics the client exists to get right: bearer auth, token-header surfacing,
+# opaque cursor pagination, ETag/304 revalidation, and problem+json -> condition.
+# The client is built with spatial = FALSE so methods return the raw close_reply.
 
 json_response <- function(status = 200, body = list(), headers = list()) {
   headers[["Content-Type"]] <- "application/json"
@@ -22,7 +23,15 @@ problem_response <- function(status, slug, title, extra = list()) {
   )
 }
 
-client <- close_client("ck_test_abc", base_url = "https://api.close.city")
+client <- close_client("ck_test_abc", base_url = "https://api.close.city",
+                       spatial = FALSE)
+
+
+test_that("close_client() builds an R6 CloseClient", {
+  expect_s3_class(client, "CloseClient")
+  expect_s3_class(client, "R6")
+  expect_false(client$spatial)
+})
 
 
 test_that("bearer auth is sent and token headers surface", {
@@ -36,10 +45,9 @@ test_that("bearer auth is sent and token headers surface", {
     )
   }
   reply <- httr2::with_mocked_responses(mock, {
-    close_block_summary(client, "410390020001010")
+    client$block_summary("250173523004004")
   })
-  # httr2 redacts the Authorization value for safety, so assert presence (the
-  # free-route test below asserts it is absent without a key).
+  # httr2 redacts the Authorization value, so assert presence.
   expect_false(is.null(captured$headers$Authorization))
   expect_equal(reply$tokens_charged, 1)
   expect_equal(reply$tokens_remaining, 4999)
@@ -53,13 +61,15 @@ test_that("free routes need no key", {
     expect_null(req$headers$Authorization)
     json_response(body = list(status = "ok", version = "0.1.0"))
   }
-  reply <- httr2::with_mocked_responses(mock, close_health(close_client()))
+  reply <- httr2::with_mocked_responses(mock, {
+    close_client(spatial = FALSE)$health()
+  })
   expect_equal(reply$data$status, "ok")
   expect_null(reply$tokens_charged)
 })
 
 
-test_that("close_records follows the cursor across pages", {
+test_that("$records() follows the cursor across pages", {
   pages <- list(
     `NA` = list(results = list(list(dest_id = 1), list(dest_id = 2)),
                 next_cursor = "CUR2"),
@@ -73,7 +83,7 @@ test_that("close_records follows the cursor across pages", {
     json_response(body = pages[[key]])
   }
   got <- httr2::with_mocked_responses(mock, {
-    close_records(close_pois_search, client, lat = 44, lon = -123, radius_m = 1000)
+    client$records("pois_search", lat = 44, lon = -123, radius_m = 1000)
   })
   expect_equal(vapply(got, function(r) r$dest_id, numeric(1)), c(1, 2, 3))
   expect_equal(seen, c("NA", "CUR2"))
@@ -85,16 +95,14 @@ test_that("blocks_query is a POST carrying the cursor in the body", {
   methods <- c()
   mock <- function(req) {
     methods <<- c(methods, req$method)
-    # req_body_json stores the pre-serialised R object at req$body$data.
     parsed <- req$body$data
     bodies[[length(bodies) + 1]] <<- parsed
     nxt <- if (is.null(parsed$cursor)) "C2" else NULL
     json_response(body = list(results = list(list(geoid = "g")), next_cursor = nxt))
   }
   got <- httr2::with_mocked_responses(mock, {
-    close_records(close_blocks_query, client,
-                  center = list(lon = -123, lat = 44), radius_m = 1000,
-                  include_population = TRUE)
+    client$records("blocks_query", center = list(lon = -123, lat = 44),
+                   radius_m = 1000, include_population = TRUE)
   })
   expect_equal(methods, c("POST", "POST"))
   expect_equal(length(got), 2)
@@ -109,7 +117,7 @@ test_that("If-None-Match yields a free 304 not-modified reply", {
     httr2::response(status_code = 304, headers = list(ETag = "\"etag-1\""))
   }
   reply <- httr2::with_mocked_responses(mock, {
-    close_block_summary(client, "410390020001010", if_none_match = "\"etag-1\"")
+    client$block_summary("250173523004004", if_none_match = "\"etag-1\"")
   })
   expect_true(reply$not_modified)
   expect_null(reply$data)
@@ -123,10 +131,11 @@ test_that("problem+json becomes a classed condition", {
     list(429, "tokens-exhausted"), list(400, "invalid-parameters")
   )
   for (case in cases) {
-    status <- case[[1]]; slug <- case[[2]]
+    status <- case[[1]]
+    slug <- case[[2]]
     mock <- function(req) problem_response(status, slug, "boom")
     err <- tryCatch(
-      httr2::with_mocked_responses(mock, close_poi(client, 999)),
+      httr2::with_mocked_responses(mock, client$poi(999)),
       close_api_error = function(e) e
     )
     expect_s3_class(err, "close_api_error")
@@ -138,9 +147,9 @@ test_that("problem+json becomes a classed condition", {
 })
 
 
-test_that("rate-limited exposes retry_after and validation extras", {
+test_that("rate-limited exposes retry_after", {
   mock <- function(req) {
-    resp <- httr2::response(
+    httr2::response(
       status_code = 429,
       headers = list(`Content-Type` = "application/problem+json",
                      `Retry-After` = "30", `X-Request-Id` = "req-9"),
@@ -148,10 +157,9 @@ test_that("rate-limited exposes retry_after and validation extras", {
         type = "https://api.close.city/problems/rate-limited",
         title = "Slow down", status = 429), auto_unbox = TRUE))
     )
-    resp
   }
   err <- tryCatch(
-    httr2::with_mocked_responses(mock, close_modes(client)),
+    httr2::with_mocked_responses(mock, client$modes()),
     close_api_error = function(e) e
   )
   expect_equal(err$retry_after, 30)
@@ -165,7 +173,7 @@ test_that("isochrone contours vector is collapsed to CSV", {
     json_response(body = list(type = "FeatureCollection", features = list()))
   }
   httr2::with_mocked_responses(mock, {
-    close_isochrone(client, block = "410390020001010", contours = c(15, 30, 45))
+    client$isochrone(block = "250173523004004", contours = c(15, 30, 45))
   })
   expect_equal(seen, "15,30,45")
 })

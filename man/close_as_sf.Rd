@@ -2,7 +2,7 @@
 % Please edit documentation in R/spatial.R
 \name{close_as_sf}
 \alias{close_as_sf}
-\title{Convert a Close reply to an \code{sf} object}
+\title{Convert a Close reply to an sf object}
 \usage{
 close_as_sf(
   x,
@@ -15,32 +15,32 @@ close_as_sf(
 \arguments{
 \item{x}{A \code{close_reply} (or the same list shape).}
 
-\item{block_geometry}{Optional \code{sf} of block boundaries with a \code{geoid_col}
+\item{block_geometry}{Optional sf of block boundaries with a \code{geoid_col}
 column, joined to block replies on the 15-digit GEOID.}
 
 \item{geoid_col}{Name of the GEOID column in \code{block_geometry}. Default
 \code{"GEOID20"} (TIGER 2020 blocks).}
 
-\item{crs}{Coordinate reference system for point/polygon geometry. Default 4326.}
+\item{crs}{Coordinate reference system for point and polygon geometry. Default
+4326.}
 
-\item{fetch}{If \code{TRUE} and \code{block_geometry} is \code{NULL}, pull the needed TIGER
-blocks with \code{tigris} (inferring state/county from the GEOIDs).}
+\item{fetch}{If \code{TRUE} and \code{block_geometry} is \code{NULL}, download the needed TIGER
+blocks with \code{tigris} (inferring state and county from the GEOIDs).}
 }
 \value{
-An \code{sf} data frame.
+An sf data frame.
 }
 \description{
-Detects the geometry from the payload: POI replies (\code{close_pois_search},
-\code{close_block_pois}, \code{close_point_pois}, \code{close_poi}) become \strong{points} from
-their \code{lat}/\code{lon}; an isochrone \code{close_isochrone(format = "geojson")} reply
-becomes \strong{polygons}; block replies (\code{close_block_summary}, \code{close_blocks_query},
-\code{close_place_blocks}, \code{close_poi_catchment}) carry only GEOIDs, so you join
-census-block boundaries via \code{block_geometry} (an \code{sf} keyed on \code{geoid_col}) or
-let it fetch them with \code{tigris} when \code{fetch = TRUE}.
+Detects the geometry from the payload. POI replies (from \verb{$pois_search()},
+\verb{$block_pois()}, \verb{$point_pois()}, \verb{$poi()}) become points from their \code{lat}/\code{lon}.
+An isochrone reply with \code{format = "geojson"} becomes polygons. Block replies
+(\verb{$blocks_query()}, \verb{$place_blocks()}, \verb{$poi_catchment()}) carry only GEOIDs, so
+the block boundaries are joined from \code{block_geometry}, or downloaded with
+\code{tigris} when \code{fetch = TRUE}.
 }
 \examples{
 \dontrun{
-close_as_sf(close_pois_search(client, lat = 41.82, lon = -71.41, radius_m = 1500))
-close_as_sf(close_isochrone(client, block = "440070036001010", minutes = 15))
+close <- close_client(spatial = FALSE)
+close_as_sf(close$pois_search(lat = 41.82, lon = -71.41, radius_m = 1500))
 }
 }

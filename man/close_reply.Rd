@@ -2,26 +2,26 @@
 % Please edit documentation in R/client.R
 \name{close_reply}
 \alias{close_reply}
-\title{The reply object returned by every endpoint}
+\title{The reply object}
 \description{
-Every endpoint returns a \code{close_reply}: an S3-classed list carrying the parsed
-body plus the metering and caching metadata as first-class fields.
+When \code{spatial} is FALSE, every method returns a \code{close_reply}: a list with the
+parsed body plus the metering and caching information as named fields.
 }
 \section{Fields}{
 
 \describe{
-\item{\code{data}}{The parsed JSON body (a list), or \code{NULL} on a 304.}
-\item{\code{results}}{The \code{results} array for list endpoints (else an empty list).}
-\item{\code{next_cursor}}{Keyset cursor for the next page, or \code{NULL}.}
-\item{\code{tokens_charged}, \code{tokens_remaining}}{Token accounting; \code{NULL} on free
-and member-unmetered replies.}
-\item{\code{etag}}{Response ETag, to pass back as \code{if_none_match} for a free 304.}
+\item{\code{data}}{The parsed body (a list), or \code{NULL} for a 304.}
+\item{\code{results}}{The \code{results} array for list routes (else an empty list).}
+\item{\code{next_cursor}}{The cursor for the next page, or \code{NULL}.}
+\item{\code{tokens_charged}, \code{tokens_remaining}}{Token counts; \code{NULL} on free
+routes.}
+\item{\code{etag}}{The response ETag, to pass back as \code{if_none_match}.}
 \item{\code{status}}{HTTP status code.}
-\item{\code{not_modified}}{\code{TRUE} for a free 304 revalidation (\code{data} is \code{NULL}).}
-\item{\code{request_id}}{Server request id, useful for support.}
+\item{\code{not_modified}}{\code{TRUE} for a 304 (\code{data} is \code{NULL}).}
+\item{\code{request_id}}{Server request id, handy for support.}
 }
 }
 
 \seealso{
-\code{\link[=close_as_sf]{close_as_sf()}} to convert a POI/isochrone/block reply to \code{sf}.
+\code{\link[=close_as_sf]{close_as_sf()}} to turn a reply into an sf object by hand.
 }

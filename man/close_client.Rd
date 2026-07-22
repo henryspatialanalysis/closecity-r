@@ -4,19 +4,34 @@
 \alias{close_client}
 \title{Create a Close API client}
 \usage{
-close_client(api_key = NULL, base_url = DEFAULT_BASE_URL, timeout = 30)
+close_client(
+  api_key = NULL,
+  base_url = DEFAULT_BASE_URL,
+  timeout = 30,
+  spatial = TRUE
+)
 }
 \arguments{
-\item{api_key}{API key (ck_live_ / ck_test_), created at
-https://account.close.city. Optional: the catalog and health routes are free.}
+\item{api_key}{Your API key, or NULL for the free routes.}
 
 \item{base_url}{API base URL.}
 
-\item{timeout}{Request timeout in seconds.}
+\item{timeout}{Request timeout, in seconds.}
+
+\item{spatial}{Return feature results as \link[sf:sf]{sf} objects? Defaults to
+TRUE. Set FALSE to work with the raw \link{close_reply} instead.}
 }
 \value{
-A \code{close_client} object to pass to the endpoint functions.
+A \link{CloseClient}. Make calls through its methods.
 }
 \description{
-Create a Close API client
+Builds a \link{CloseClient}. The catalog and health routes are free, so a key is
+optional. Every data route needs one (a \code{ck_live_} or \code{ck_test_} key), created
+at https://account.close.city.
+}
+\examples{
+\dontrun{
+close <- close_client("ck_live_your_key")   # use your own key here
+close$block_summary("250173523004004", mode = "walk")
+}
 }

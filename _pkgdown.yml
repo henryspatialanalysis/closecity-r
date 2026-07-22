@@ -32,25 +32,16 @@ navbar:
 
 reference:
 - title: Client
-  desc: Create a client and understand the reply it returns.
+  desc: >
+    The client is an R6 object with one method per route. Build it with
+    close_client(); make calls through its methods.
   contents:
   - close_client
+  - CloseClient
+- title: Spatial output and replies
+  desc: >
+    Feature methods return sf objects by default. Turn that off to work with the
+    raw reply.
+  contents:
+  - close_as_sf
   - close_reply
-- title: Catalog and lookup (free)
-  desc: Keyless metadata and place-name lookup.
-  contents: has_concept("catalog endpoints")
-- title: Travel times from a block
-  contents: has_concept("block endpoints")
-- title: Travel times from a point
-  contents: has_concept("point endpoints")
-- title: Points of interest
-  contents: has_concept("POI endpoints")
-- title: Areal queries
-  contents: has_concept("areal endpoints")
-- title: Isochrones
-  contents: has_concept("isochrone endpoints")
-- title: Pagination
-  contents: has_concept("pagination")
-- title: Spatial output
-  desc: Convert a reply to an sf object.
-  contents: close_as_sf
