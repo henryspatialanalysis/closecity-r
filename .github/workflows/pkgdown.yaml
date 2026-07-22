@@ -46,6 +46,8 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
-          clean: false
+          # clean: true so reference pages orphaned by the R6 refactor (the old
+          # close_*() functional API) are purged from gh-pages, not left behind.
+          clean: true
           branch: gh-pages
           folder: docs
