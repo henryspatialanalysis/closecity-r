@@ -1,0 +1,10 @@
+# pkgdown build output (rebuilt + deployed to gh-pages by CI)
+docs/
+
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+inst/doc/

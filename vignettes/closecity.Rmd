@@ -1,0 +1,100 @@
+---
+title: "Get started with closecity"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with closecity}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+`closecity` is a thin client over the [Close API](https://api.close.city) — travel
+times from every US census block to nearby points of interest, by walking, biking,
+and public transit.
+
+## A client
+
+```{r}
+library(closecity)
+
+# The catalog and health routes are free; data routes need a key from
+# https://account.close.city
+close <- close_client("ck_live_your_key_here")
+```
+
+## Free catalog and lookup (no key)
+
+```{r}
+close <- close_client()
+close_modes(close)$data$modes
+close_last_updated(close)$data$last_updated
+
+# Resolve a city name to its census place GEOID + centroid:
+close_places(close, "Providence")$results[[1]]
+
+# The destination-type ids the data routes filter on:
+types <- close_destination_types(close)$data$destination_types
+```
+
+Grocery is `30`, restaurants `27`, cafes `31`, libraries `43`, parks `63`, and
+frequent-transit stops `61`.
+
+## One metered call
+
+```{r}
+summary <- close_block_summary(close, "250173523004004", mode = "walk")
+for (row in summary$results) {
+  cat(row$dest_type_id, row$mode, row$travel_time, "\n")
+}
+
+# Metering is surfaced on every metered reply:
+cat(summary$tokens_charged, "charged;", summary$tokens_remaining, "left\n")
+```
+
+Metering is **1 token per returned row** (minimum 1 per request); isochrones are the
+exception at **1 token per contour**. A `304` revalidation is free.
+
+## Pagination
+
+Paginated endpoints take a `cursor`; loop them with `close_records()`:
+
+```{r}
+pois <- close_records(close_pois_search, close,
+                      lat = 41.823, lon = -71.412, radius_m = 1500, type = 31)
+length(pois)
+```
+
+## Conditional requests (free revalidation)
+
+```{r}
+first <- close_block_summary(close, "250173523004004")
+again <- close_block_summary(close, "250173523004004", if_none_match = first$etag)
+again$not_modified   # TRUE -- nothing was charged
+```
+
+## Errors
+
+Problem+JSON responses become classed conditions:
+
+```{r}
+tryCatch(
+  close_block_summary(close, "000000000000000"),
+  close_api_error = function(e) cat(e$status, e$slug, "\n")
+)
+```
+
+## Spatial output
+
+With `sf` installed, convert a reply to an `sf` object:
+
+```{r}
+pts <- close_as_sf(close_pois_search(close, lat = 41.823, lon = -71.412,
+                                     radius_m = 1500))
+iso <- close_as_sf(close_isochrone(close, block = "440070036001010", minutes = 15))
+```
+
+POIs become points and isochrones become polygons offline; block replies join
+census-block boundaries (pass `block_geometry =` or `fetch = TRUE`).

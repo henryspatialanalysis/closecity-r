@@ -1,0 +1,34 @@
+Package: closecity
+Title: Client for the Close API (api.close.city)
+Version: 1.0.0
+Authors@R: c(
+    person("Nathaniel", "Henry", role = c("aut", "cre"),
+           email = "nat@henryspatialanalysis.com"),
+    person("Close", role = c("cph", "fnd")))
+Description: Access travel times from every US census block to nearby points of
+    interest, by walking, biking, and public transit, over the Close API. Wraps
+    the metered, read-only public endpoints with keyset pagination, ETag/304
+    conditional requests, token accounting, typed RFC 9457 error handling, and
+    optional 'sf' output.
+License: MIT + file LICENSE
+Encoding: UTF-8
+URL: https://henryspatialanalysis.github.io/closecity-r,
+    https://github.com/henryspatialanalysis/closecity-r
+BugReports: https://github.com/henryspatialanalysis/closecity-r/issues
+Depends: R (>= 3.6)
+Imports:
+    httr2 (>= 1.0.0),
+    jsonlite,
+    rlang
+Suggests:
+    testthat (>= 3.0.0),
+    webfakes,
+    sf,
+    tigris,
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+Config/Needs/website: pkgdown
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0
+VignetteBuilder: knitr

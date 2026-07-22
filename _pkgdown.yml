@@ -1,0 +1,56 @@
+url: https://henryspatialanalysis.github.io/closecity-r
+
+template:
+  bootstrap: 5
+  bslib:
+    base_font: {google: "Figtree"}
+    heading_font: {google: "Merriweather"}
+    code_font: {google: "Inconsolata"}
+    primary: "#202a5b"
+
+navbar:
+  bg: primary
+  structure:
+    left: [intro, articles, reference]
+    right: [search, close, github]
+  components:
+    intro:
+      text: Get started
+      href: articles/closecity.html
+    articles:
+      text: Tutorials
+      menu:
+      - text: Looking for a home
+        href: articles/home-search.html
+      - text: The amenity basket
+        href: articles/amenity-basket.html
+      - text: Competitor walksheds
+        href: articles/competitor-walksheds.html
+    close:
+      text: close.city
+      href: https://close.city
+
+reference:
+- title: Client
+  desc: Create a client and understand the reply it returns.
+  contents:
+  - close_client
+  - close_reply
+- title: Catalog and lookup (free)
+  desc: Keyless metadata and place-name lookup.
+  contents: has_concept("catalog endpoints")
+- title: Travel times from a block
+  contents: has_concept("block endpoints")
+- title: Travel times from a point
+  contents: has_concept("point endpoints")
+- title: Points of interest
+  contents: has_concept("POI endpoints")
+- title: Areal queries
+  contents: has_concept("areal endpoints")
+- title: Isochrones
+  contents: has_concept("isochrone endpoints")
+- title: Pagination
+  contents: has_concept("pagination")
+- title: Spatial output
+  desc: Convert a reply to an sf object.
+  contents: close_as_sf
