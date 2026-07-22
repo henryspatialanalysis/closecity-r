@@ -65,14 +65,15 @@ plot(st_geometry(stops), col = "#f36e21", pch = 17, add = TRUE)
 
 ## Find the blocks that qualify
 
-Pull the per-block walk times for the blocks around the city centre. The result is an
-sf table with one row per (block, category); block boundaries come from `tigris`,
-downloaded once and cached.
+Somerville is a census place, so one call by place GEOID pulls the per-block walk
+times for every block in the city. `$records()` reads every page and returns one sf
+table with one row per (block, category); block boundaries come from `tigris`,
+downloaded once and cached. To search an arbitrary area instead, use
+`$blocks_query()` with a centre and radius or a polygon.
 
 ```{r}
-blocks <- close$blocks_query(center = list(lon = city$lon, lat = city$lat),
-                             radius_m = 3000, mode = "walk",
-                             type = c(grocery, restaurant, transit))
+blocks <- close$records("place_blocks", city$geoid, mode = "walk",
+                        type = c(grocery, restaurant, transit))
 ```
 
 Each amenity has its own rule, so pick the blocks that pass each one, then keep the

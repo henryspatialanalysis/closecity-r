@@ -52,9 +52,16 @@ target. Public repo: `henryspatialanalysis/closecity-r`. The Python sibling is
   4326 so they match POI/isochrone geometry. `sf` spatial ops error on mismatched CRS.
 - **Blocks TIGER lacks** (e.g. water blocks) get empty geometry from the join; the
   converter drops them (NA-safe) so plotting and spatial joins work.
-- **`place_blocks()` (`/v1/places/{geoid}/blocks`) is BROKEN server-side:** it times
-  out (15s Lambda) for every real place. Tutorials use `blocks_query(center, radius_m)`
-  instead. Leave the wrapper, but do not build examples on it until the API is fixed.
+- **`place_blocks()` works since 2026-07-22** (server-side query fix in wtm.api). The
+  home-search vignette now uses it for whole-city pulls; `blocks_query` remains the
+  tool for a radius or polygon. A rarely-queried big place can take a few seconds on
+  the first call while the database cache warms; it is not broken again.
+- **Bare feature methods return ONE page.** A reply's `$results` is a single page
+  (default 100 blocks); only `close$records("method", ...)` walks `next_cursor` to
+  the end. The home-search vignette hit this: its old bare `$blocks_query()` call
+  silently mapped only the first ~100 blocks. The amenity-basket vignette still
+  reads one page (flagged, not yet fixed); its printed coverage percentages would
+  shift on a full read.
 
 ## Local live doc build (this EFS host)
 
