@@ -13,6 +13,9 @@ close_map(
   x,
   color = "#e8590c",
   highlight = NULL,
+  fill = NULL,
+  palette = "Viridis",
+  reverse = TRUE,
   label = "name",
   size = 9,
   zoom = 10,
@@ -29,7 +32,7 @@ close_map(
 
 - color:
 
-  Marker/fill colour for features (or for highlighted features).
+  Marker/fill colour for flat features (or for highlighted ones).
 
 - highlight:
 
@@ -38,6 +41,21 @@ close_map(
   render grey (`#888`) and the rest use `color` — so you can show every
   block in a study area and pick out the matches, rather than dropping
   the others.
+
+- fill:
+
+  Optional. The name of a numeric column to shade features by, on a
+  continuous scale with a legend (e.g. travel time, or an access score).
+  Use this OR `highlight`, not both.
+
+- palette:
+
+  A plotly colorscale name for `fill` (default `"Viridis"`).
+
+- reverse:
+
+  Reverse the `fill` colorscale (default `TRUE`, so smaller values —
+  e.g. shorter travel times — are the bright end).
 
 - label:
 
