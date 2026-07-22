@@ -25,6 +25,7 @@ Imports:
     sf
 Suggests:
     testthat (>= 3.0.0),
+    withr,
     webfakes,
     tigris,
     knitr,
