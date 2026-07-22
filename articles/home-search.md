@@ -57,7 +57,7 @@ plot(st_geometry(hits), col = "#f36e21", border = NA)
 
 ## Narrow to the overlap of two commutes
 
-A 20-minute transit isochrone from each workplace is one token per
+A 20-minute transit isochrone from each workplace is 10 tokens per
 contour:
 
 ``` r
@@ -82,7 +82,7 @@ transit **and** a reasonable transit commute for both workers.
 - `close_places` + `close_destination_types`: free.
 - `close_place_blocks` over Somerville (~800 blocks x 3 categories):
   ~2,400 tokens.
-- Two transit isochrones: ~2 tokens.
+- Two transit isochrones (1 contour each): ~20 tokens.
 
 Comfortably inside a 5,000-token month. For a larger city, swap
 [`close_place_blocks()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_place_blocks.md)

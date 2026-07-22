@@ -117,7 +117,7 @@ frequent-transit stops <code>61</code>.</p>
 <span><span class="co"># Metering is surfaced on every metered reply:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">summary</span><span class="op">$</span><span class="va">tokens_charged</span>, <span class="st">"charged;"</span>, <span class="va">summary</span><span class="op">$</span><span class="va">tokens_remaining</span>, <span class="st">"left\n"</span><span class="op">)</span></span></code></pre></div>
 <p>Metering is <strong>1 token per returned row</strong> (minimum 1 per
-request); isochrones are the exception at <strong>1 token per
+request); isochrones are the exception at <strong>10 tokens per
 contour</strong>. A <code>304</code> revalidation is free.</p>
 </div>
 <div class="section level2">

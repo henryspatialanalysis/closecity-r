@@ -128,7 +128,7 @@ with <code>sf</code> and <code>tigris</code> installed,
 <div class="section level2">
 <h2 id="narrow-to-the-overlap-of-two-commutes">Narrow to the overlap of two commutes<a class="anchor" aria-label="anchor" href="#narrow-to-the-overlap-of-two-commutes"></a>
 </h2>
-<p>A 20-minute transit isochrone from each workplace is one token per
+<p>A 20-minute transit isochrone from each workplace is 10 tokens per
 contour:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">kendall</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_as_sf.html">close_as_sf</a></span><span class="op">(</span><span class="fu"><a href="../reference/close_isochrone.html">close_isochrone</a></span><span class="op">(</span><span class="va">close</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.0865</span>, lat <span class="op">=</span> <span class="fl">42.3625</span>,</span>
@@ -155,7 +155,7 @@ free.</li>
 <li>
 <code>close_place_blocks</code> over Somerville (~800 blocks x 3
 categories): ~2,400 tokens.</li>
-<li>Two transit isochrones: ~2 tokens.</li>
+<li>Two transit isochrones (1 contour each): ~20 tokens.</li>
 </ul>
 <p>Comfortably inside a 5,000-token month. For a larger city, swap
 <code><a href="../reference/close_place_blocks.html">close_place_blocks()</a></code> for a bounded disc:
