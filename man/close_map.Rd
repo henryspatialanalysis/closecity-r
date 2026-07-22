@@ -8,6 +8,9 @@ close_map(
   x,
   color = "#e8590c",
   highlight = NULL,
+  fill = NULL,
+  palette = "Viridis",
+  reverse = TRUE,
   label = "name",
   size = 9,
   zoom = 10,
@@ -17,12 +20,21 @@ close_map(
 \arguments{
 \item{x}{An \link[sf:sf]{sf} from a client method — points or polygons.}
 
-\item{color}{Marker/fill colour for features (or for highlighted features).}
+\item{color}{Marker/fill colour for flat features (or for highlighted ones).}
 
 \item{highlight}{Optional. A logical vector (length \code{nrow(x)}) or the name of
 a logical/0-1 column in \code{x}. When supplied, features that do not meet it
 render grey (\verb{#888}) and the rest use \code{color} — so you can show every block
 in a study area and pick out the matches, rather than dropping the others.}
+
+\item{fill}{Optional. The name of a numeric column to shade features by, on a
+continuous scale with a legend (e.g. travel time, or an access score). Use
+this OR \code{highlight}, not both.}
+
+\item{palette}{A plotly colorscale name for \code{fill} (default \code{"Viridis"}).}
+
+\item{reverse}{Reverse the \code{fill} colorscale (default \code{TRUE}, so smaller
+values — e.g. shorter travel times — are the bright end).}
 
 \item{label}{Column shown on hover (default \code{"name"}).}
 
