@@ -83,10 +83,10 @@ for (i in 2:6) {
               cafes$name[i], length(shared),
               100 * length(shared) / nrow(our_shed)))
 }
-#> Schaste                       82 shared blocks (82% of ours)
-#> White Electric                53 shared blocks (53% of ours)
-#> Starbucks                     50 shared blocks (50% of ours)
-#> Little City Coffee & Kitchen  12 shared blocks (12% of ours)
+#> Schaste                      120 shared blocks (83% of ours)
+#> White Electric                79 shared blocks (54% of ours)
+#> Starbucks                     83 shared blocks (57% of ours)
+#> Little City Coffee & Kitchen  22 shared blocks (15% of ours)
 #> Cafe La France                 1 shared blocks (1% of ours)
 ```
 

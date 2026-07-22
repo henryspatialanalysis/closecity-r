@@ -62,9 +62,9 @@ reply.
 close$output <- "tabular"
 groceries <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1200)
 attr(groceries, "tokens_charged")
-#> [1] 100
+#> [1] 323
 attr(groceries, "tokens_remaining")
-#> [1] 999853046
+#> [1] 999822211
 ```
 
 When you only want the numbers, `output = "tabular"` skips the

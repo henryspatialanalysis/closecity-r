@@ -4,7 +4,7 @@ Builds a
 [CloseClient](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.md).
 The catalog and health routes are free, so a key is optional. Every data
 route needs one (a `ck_live_` key), created at
-https://account.close.city.
+https://account.close.city (5,000 free tokens on signup, no card).
 
 ## Usage
 
@@ -22,7 +22,8 @@ close_client(
 - api_key:
 
   (`character(1)`, default NULL)  
-  Your API key, or NULL for the free routes.
+  Your API key, or NULL for the free routes. When NULL, the
+  `CLOSECITY_KEY` environment variable is used if set.
 
 - base_url:
 

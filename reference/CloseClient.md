@@ -81,7 +81,8 @@ Create a client. Prefer
 
 - `api_key`:
 
-  Your API key, or NULL for the free routes.
+  Your API key, or NULL for the free routes. When NULL, the
+  `CLOSECITY_KEY` environment variable is used if set.
 
 - `base_url`:
 
@@ -275,7 +276,7 @@ when `output` is `'raw'`.
 ### `CloseClient$block_pois()`
 
 Nearby points of interest and their travel time from a block, one row
-per (POI, mode). Read every page with `$records()`.
+per (POI, mode). Reads every page by default.
 
 #### Usage
 
@@ -287,6 +288,7 @@ per (POI, mode). Read every page with `$records()`.
       max_minutes = NULL,
       limit = NULL,
       cursor = NULL,
+      paginate = TRUE,
       output = NULL
     )
 
@@ -318,7 +320,13 @@ per (POI, mode). Read every page with `$records()`.
 
 - `cursor`:
 
-  Page cursor from a previous reply's `next_cursor`.
+  Page cursor from a previous reply's `next_cursor`; supplying one
+  fetches only that page.
+
+- `paginate`:
+
+  Follow `next_cursor` and return every page (the default); set `FALSE`
+  for the first page only.
 
 - `output`:
 
@@ -387,7 +395,7 @@ when `output` is `'raw'`.
 ### `CloseClient$point_pois()`
 
 Like `$block_pois()`, but from the block containing a lat/lon point.
-Read every page with `$records()`.
+Reads every page by default.
 
 #### Usage
 
@@ -400,6 +408,7 @@ Read every page with `$records()`.
       max_minutes = NULL,
       limit = NULL,
       cursor = NULL,
+      paginate = TRUE,
       output = NULL
     )
 
@@ -435,7 +444,12 @@ Read every page with `$records()`.
 
 - `cursor`:
 
-  Page cursor.
+  Page cursor; supplying one fetches only that page.
+
+- `paginate`:
+
+  Follow `next_cursor` and return every page (the default); set `FALSE`
+  for the first page only.
 
 - `output`:
 
@@ -453,7 +467,7 @@ when `output` is `'raw'`).
 ### `CloseClient$pois_search()`
 
 Search points of interest by bounding box, or by a circle (`lat` +
-`lon` + `radius_m`). Read every page with `$records()`.
+`lon` + `radius_m`). Reads every page by default.
 
 #### Usage
 
@@ -466,6 +480,7 @@ Search points of interest by bounding box, or by a circle (`lat` +
       q = NULL,
       limit = NULL,
       cursor = NULL,
+      paginate = TRUE,
       output = NULL
     )
 
@@ -497,7 +512,12 @@ Search points of interest by bounding box, or by a circle (`lat` +
 
 - `cursor`:
 
-  Page cursor.
+  Page cursor; supplying one fetches only that page.
+
+- `paginate`:
+
+  Follow `next_cursor` and return every page (the default); set `FALSE`
+  for the first page only.
 
 - `output`:
 
@@ -546,7 +566,7 @@ when `output` is `'raw'`).
 ### `CloseClient$poi_catchment()`
 
 Every census block that can reach a point of interest, one row per
-(block, mode). Read every page with `$records()`.
+(block, mode). Reads every page by default.
 
 #### Usage
 
@@ -557,6 +577,7 @@ Every census block that can reach a point of interest, one row per
       max_minutes = NULL,
       limit = NULL,
       cursor = NULL,
+      paginate = TRUE,
       output = NULL
     )
 
@@ -584,7 +605,12 @@ Every census block that can reach a point of interest, one row per
 
 - `cursor`:
 
-  Page cursor.
+  Page cursor; supplying one fetches only that page.
+
+- `paginate`:
+
+  Follow `next_cursor` and return every page (the default); set `FALSE`
+  for the first page only.
 
 - `output`:
 
@@ -603,7 +629,7 @@ when `output` is `'raw'`).
 
 Blocks inside a GeoJSON polygon, or a circle (`center` + `radius_m`),
 one row per (block, category, mode). Rows carry the numeric `mode_id`
-(join `$modes()` to label it). Read every page with `$records()`.
+(join `$modes()` to label it). Reads every page by default.
 
 #### Usage
 
@@ -616,6 +642,7 @@ one row per (block, category, mode). Rows carry the numeric `mode_id`
       include_population = NULL,
       limit = NULL,
       cursor = NULL,
+      paginate = TRUE,
       output = NULL
     )
 
@@ -651,7 +678,12 @@ one row per (block, category, mode). Rows carry the numeric `mode_id`
 
 - `cursor`:
 
-  Page cursor.
+  Page cursor; supplying one fetches only that page.
+
+- `paginate`:
+
+  Follow `next_cursor` and return every page (the default); set `FALSE`
+  for the first page only.
 
 - `output`:
 
@@ -670,7 +702,7 @@ when `output` is `'raw'`).
 
 Per-block travel times for every block in a place (a city or town), by
 place GEOID. Rows carry the numeric `mode_id` (join `$modes()` to label
-it). Read every page with `$records()`.
+it). Reads every page by default.
 
 #### Usage
 
@@ -681,6 +713,7 @@ it). Read every page with `$records()`.
       include_population = NULL,
       limit = NULL,
       cursor = NULL,
+      paginate = TRUE,
       output = NULL
     )
 
@@ -708,7 +741,12 @@ it). Read every page with `$records()`.
 
 - `cursor`:
 
-  Page cursor.
+  Page cursor; supplying one fetches only that page.
+
+- `paginate`:
+
+  Follow `next_cursor` and return every page (the default); set `FALSE`
+  for the first page only.
 
 - `output`:
 
@@ -822,7 +860,8 @@ A
 ### `CloseClient$records()`
 
 Read every record from a paginated method, following the cursor to the
-last page.
+last page. The paginated methods now read every page by default, so this
+is rarely needed; it remains for explicit control and back-compat.
 
 #### Usage
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">closecity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,13 @@
       <small>Source: <a href="https://github.com/henryspatialanalysis/closecity-r/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.2.0" id="closecity-120">closecity 1.2.0<a class="anchor" aria-label="anchor" href="#closecity-120"></a></h2>
+<ul><li>
+<code><a href="../reference/close_client.html">close_client()</a></code> reads the <code>CLOSECITY_KEY</code> environment variable when no <code>api_key</code> is given. A 401 with no key set carries an actionable hint pointing at <code>CLOSECITY_KEY</code> and the free-signup page.</li>
+<li>Paginated methods (<code>$pois_search()</code>, <code>$block_pois()</code>, <code>$point_pois()</code>, <code>$poi_catchment()</code>, <code>$blocks_query()</code>, <code>$place_blocks()</code>) read every page by default, matching the Python client. Pass <code>paginate = FALSE</code> for the first page only, or an explicit <code>cursor</code> for a single page. <code>$records()</code> is kept as an equivalent explicit form.</li>
+<li>The client does not retry: on a rate-limit or service-unavailable error, wait <code>e$retry_after</code> seconds and retry the request yourself.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="closecity-110">closecity 1.1.0<a class="anchor" aria-label="anchor" href="#closecity-110"></a></h2>
 <p>Tabular results by default, across every route.</p>

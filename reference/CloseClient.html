@@ -13,7 +13,7 @@ applies, a data frame otherwise, or a close_reply when output is 'raw'."><meta p
 
     <a class="navbar-brand me-2" href="../index.html">closecity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -104,7 +104,8 @@ time, or override it per call with the method's <code>output</code> argument.</p
 </div><p></p><div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>api_key</code></dt>
-<dd><p>Your API key, or NULL for the free routes.</p></dd>
+<dd><p>Your API key, or NULL for the free routes. When NULL, the
+<code>CLOSECITY_KEY</code> environment variable is used if set.</p></dd>
 
       <dt><code>base_url</code></dt>
 <dd><p>API base URL.</p></dd>
@@ -273,7 +274,7 @@ when <code>output</code> is <code>'raw'</code>.</p>
 <p></p><hr><a id="method-CloseClient-block_pois"></a><div class="section">
 <h3 id="closeclient-block-pois-"><code>CloseClient$block_pois()</code><a class="anchor" aria-label="anchor" href="#closeclient-block-pois-"></a></h3>
 <p>Nearby points of interest and their travel time from a block,
-one row per (POI, mode). Read every page with <code>$records()</code>.</p><div class="section">
+one row per (POI, mode). Reads every page by default.</p><div class="section">
 <h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">block_pois</span><span class="op">(</span></span>
 <span>  <span class="va">geoid</span>,</span>
@@ -283,6 +284,7 @@ one row per (POI, mode). Read every page with <code>$records()</code>.</p><div c
 <span>  max_minutes <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  limit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cursor <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  paginate <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  output <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
@@ -306,7 +308,12 @@ one row per (POI, mode). Read every page with <code>$records()</code>.</p><div c
 <dd><p>Rows per page (up to 1000).</p></dd>
 
       <dt><code>cursor</code></dt>
-<dd><p>Page cursor from a previous reply's <code>next_cursor</code>.</p></dd>
+<dd><p>Page cursor from a previous reply's <code>next_cursor</code>; supplying
+one fetches only that page.</p></dd>
+
+      <dt><code>paginate</code></dt>
+<dd><p>Follow <code>next_cursor</code> and return every page (the default);
+set <code>FALSE</code> for the first page only.</p></dd>
 
       <dt><code>output</code></dt>
 <dd><p>Override the client's output mode for this call.</p></dd>
@@ -367,7 +374,7 @@ broadcast to a <code>geoid</code> column.</p><div class="section">
 <p></p><hr><a id="method-CloseClient-point_pois"></a><div class="section">
 <h3 id="closeclient-point-pois-"><code>CloseClient$point_pois()</code><a class="anchor" aria-label="anchor" href="#closeclient-point-pois-"></a></h3>
 <p>Like <code>$block_pois()</code>, but from the block containing a lat/lon
-point. Read every page with <code>$records()</code>.</p><div class="section">
+point. Reads every page by default.</p><div class="section">
 <h4 id="usage-10">Usage<a class="anchor" aria-label="anchor" href="#usage-10"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">point_pois</span><span class="op">(</span></span>
 <span>  <span class="va">lat</span>,</span>
@@ -378,6 +385,7 @@ point. Read every page with <code>$records()</code>.</p><div class="section">
 <span>  max_minutes <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  limit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cursor <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  paginate <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  output <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
@@ -404,7 +412,11 @@ point. Read every page with <code>$records()</code>.</p><div class="section">
 <dd><p>Rows per page (up to 1000).</p></dd>
 
       <dt><code>cursor</code></dt>
-<dd><p>Page cursor.</p></dd>
+<dd><p>Page cursor; supplying one fetches only that page.</p></dd>
+
+      <dt><code>paginate</code></dt>
+<dd><p>Follow <code>next_cursor</code> and return every page (the default);
+set <code>FALSE</code> for the first page only.</p></dd>
 
       <dt><code>output</code></dt>
 <dd><p>Override the client's output mode for this call.</p></dd>
@@ -422,7 +434,7 @@ point. Read every page with <code>$records()</code>.</p><div class="section">
 <p></p><hr><a id="method-CloseClient-pois_search"></a><div class="section">
 <h3 id="closeclient-pois-search-"><code>CloseClient$pois_search()</code><a class="anchor" aria-label="anchor" href="#closeclient-pois-search-"></a></h3>
 <p>Search points of interest by bounding box, or by a circle
-(<code>lat</code> + <code>lon</code> + <code>radius_m</code>). Read every page with <code>$records()</code>.</p><div class="section">
+(<code>lat</code> + <code>lon</code> + <code>radius_m</code>). Reads every page by default.</p><div class="section">
 <h4 id="usage-11">Usage<a class="anchor" aria-label="anchor" href="#usage-11"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span></span>
 <span>  lat <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -433,6 +445,7 @@ point. Read every page with <code>$records()</code>.</p><div class="section">
 <span>  q <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  limit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cursor <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  paginate <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  output <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
@@ -456,7 +469,11 @@ point. Read every page with <code>$records()</code>.</p><div class="section">
 <dd><p>Rows per page (up to 1000).</p></dd>
 
       <dt><code>cursor</code></dt>
-<dd><p>Page cursor.</p></dd>
+<dd><p>Page cursor; supplying one fetches only that page.</p></dd>
+
+      <dt><code>paginate</code></dt>
+<dd><p>Follow <code>next_cursor</code> and return every page (the default);
+set <code>FALSE</code> for the first page only.</p></dd>
 
       <dt><code>output</code></dt>
 <dd><p>Override the client's output mode for this call.</p></dd>
@@ -500,7 +517,7 @@ point. Read every page with <code>$records()</code>.</p><div class="section">
 <p></p><hr><a id="method-CloseClient-poi_catchment"></a><div class="section">
 <h3 id="closeclient-poi-catchment-"><code>CloseClient$poi_catchment()</code><a class="anchor" aria-label="anchor" href="#closeclient-poi-catchment-"></a></h3>
 <p>Every census block that can reach a point of interest, one row
-per (block, mode). Read every page with <code>$records()</code>.</p><div class="section">
+per (block, mode). Reads every page by default.</p><div class="section">
 <h4 id="usage-13">Usage<a class="anchor" aria-label="anchor" href="#usage-13"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">poi_catchment</span><span class="op">(</span></span>
 <span>  <span class="va">dest_id</span>,</span>
@@ -509,6 +526,7 @@ per (block, mode). Read every page with <code>$records()</code>.</p><div class="
 <span>  max_minutes <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  limit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cursor <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  paginate <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  output <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
@@ -529,7 +547,11 @@ per (block, mode). Read every page with <code>$records()</code>.</p><div class="
 <dd><p>Rows per page (up to 1000).</p></dd>
 
       <dt><code>cursor</code></dt>
-<dd><p>Page cursor.</p></dd>
+<dd><p>Page cursor; supplying one fetches only that page.</p></dd>
+
+      <dt><code>paginate</code></dt>
+<dd><p>Follow <code>next_cursor</code> and return every page (the default);
+set <code>FALSE</code> for the first page only.</p></dd>
 
       <dt><code>output</code></dt>
 <dd><p>Override the client's output mode for this call.</p></dd>
@@ -548,8 +570,7 @@ per (block, mode). Read every page with <code>$records()</code>.</p><div class="
 <h3 id="closeclient-blocks-query-"><code>CloseClient$blocks_query()</code><a class="anchor" aria-label="anchor" href="#closeclient-blocks-query-"></a></h3>
 <p>Blocks inside a GeoJSON polygon, or a circle (<code>center</code> +
 <code>radius_m</code>), one row per (block, category, mode). Rows carry the numeric
-<code>mode_id</code> (join <code>$modes()</code> to label it). Read every page with
-<code>$records()</code>.</p><div class="section">
+<code>mode_id</code> (join <code>$modes()</code> to label it). Reads every page by default.</p><div class="section">
 <h4 id="usage-14">Usage<a class="anchor" aria-label="anchor" href="#usage-14"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">blocks_query</span><span class="op">(</span></span>
 <span>  polygon <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -560,6 +581,7 @@ per (block, mode). Read every page with <code>$records()</code>.</p><div class="
 <span>  include_population <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  limit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cursor <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  paginate <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  output <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
@@ -586,7 +608,11 @@ per (block, mode). Read every page with <code>$records()</code>.</p><div class="
 <dd><p>Rows per page (up to 1000).</p></dd>
 
       <dt><code>cursor</code></dt>
-<dd><p>Page cursor.</p></dd>
+<dd><p>Page cursor; supplying one fetches only that page.</p></dd>
+
+      <dt><code>paginate</code></dt>
+<dd><p>Follow <code>next_cursor</code> and return every page (the default);
+set <code>FALSE</code> for the first page only.</p></dd>
 
       <dt><code>output</code></dt>
 <dd><p>Override the client's output mode for this call.</p></dd>
@@ -605,7 +631,7 @@ per (block, mode). Read every page with <code>$records()</code>.</p><div class="
 <h3 id="closeclient-place-blocks-"><code>CloseClient$place_blocks()</code><a class="anchor" aria-label="anchor" href="#closeclient-place-blocks-"></a></h3>
 <p>Per-block travel times for every block in a place (a city or
 town), by place GEOID. Rows carry the numeric <code>mode_id</code> (join <code>$modes()</code>
-to label it). Read every page with <code>$records()</code>.</p><div class="section">
+to label it). Reads every page by default.</p><div class="section">
 <h4 id="usage-15">Usage<a class="anchor" aria-label="anchor" href="#usage-15"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">place_blocks</span><span class="op">(</span></span>
 <span>  <span class="va">geoid</span>,</span>
@@ -614,6 +640,7 @@ to label it). Read every page with <code>$records()</code>.</p><div class="secti
 <span>  include_population <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  limit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cursor <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  paginate <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  output <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
@@ -634,7 +661,11 @@ to label it). Read every page with <code>$records()</code>.</p><div class="secti
 <dd><p>Rows per page (up to 1000).</p></dd>
 
       <dt><code>cursor</code></dt>
-<dd><p>Page cursor.</p></dd>
+<dd><p>Page cursor; supplying one fetches only that page.</p></dd>
+
+      <dt><code>paginate</code></dt>
+<dd><p>Follow <code>next_cursor</code> and return every page (the default);
+set <code>FALSE</code> for the first page only.</p></dd>
 
       <dt><code>output</code></dt>
 <dd><p>Override the client's output mode for this call.</p></dd>
@@ -733,7 +764,8 @@ Always a raw <a href="close_reply.html">close_reply</a>.</p><div class="section"
 <p></p><hr><a id="method-CloseClient-records"></a><div class="section">
 <h3 id="closeclient-records-"><code>CloseClient$records()</code><a class="anchor" aria-label="anchor" href="#closeclient-records-"></a></h3>
 <p>Read every record from a paginated method, following the cursor
-to the last page.</p><div class="section">
+to the last page. The paginated methods now read every page by default, so
+this is rarely needed; it remains for explicit control and back-compat.</p><div class="section">
 <h4 id="usage-18">Usage<a class="anchor" aria-label="anchor" href="#usage-18"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">records</span><span class="op">(</span><span class="va">endpoint</span>, <span class="va">...</span>, output <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">

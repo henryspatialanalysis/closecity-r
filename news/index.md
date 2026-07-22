@@ -1,5 +1,19 @@
 # Changelog
 
+## closecity 1.2.0
+
+- [`close_client()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_client.md)
+  reads the `CLOSECITY_KEY` environment variable when no `api_key` is
+  given. A 401 with no key set carries an actionable hint pointing at
+  `CLOSECITY_KEY` and the free-signup page.
+- Paginated methods (`$pois_search()`, `$block_pois()`, `$point_pois()`,
+  `$poi_catchment()`, `$blocks_query()`, `$place_blocks()`) read every
+  page by default, matching the Python client. Pass `paginate = FALSE`
+  for the first page only, or an explicit `cursor` for a single page.
+  `$records()` is kept as an equivalent explicit form.
+- The client does not retry: on a rate-limit or service-unavailable
+  error, wait `e$retry_after` seconds and retry the request yourself.
+
 ## closecity 1.1.0
 
 Tabular results by default, across every route.
