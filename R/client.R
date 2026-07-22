@@ -1,6 +1,6 @@
 # The client is an R6 object that holds your connection settings and gives you one
 # method per public route. Build it with close_client(), then make calls through
-# its methods, e.g. close$block_summary("250173523004004", mode = "walk").
+# its methods, e.g. close$block_summary("440070008001068", mode = "walk").
 #
 # By default the feature methods (POIs, catchments, areal blocks, isochrones)
 # return an sf object, ready to map. Set spatial = FALSE (on the client, or per
@@ -24,7 +24,7 @@ PROBLEM_SLUG_PREFIX <- "https://api.close.city/problems/"
 #' @examples
 #' \dontrun{
 #' close <- close_client("ck_live_your_key")   # use your own key here
-#' close$block_summary("250173523004004", mode = "walk")
+#' close$block_summary("440070008001068", mode = "walk")
 #' }
 #' @export
 close_client <- function(api_key = NULL, base_url = DEFAULT_BASE_URL,
@@ -227,8 +227,9 @@ CloseClient <- R6::R6Class(
       private$as_spatial(private$post_json(
         "/v1/blocks/query",
         list(polygon = polygon, center = center, radius_m = radius_m,
-             type = type, mode = mode, include_population = include_population,
-             limit = limit, cursor = cursor)
+             type = .close_as_array(type), mode = .close_as_array(mode),
+             include_population = include_population, limit = limit,
+             cursor = cursor)
       ))
     },
 
@@ -431,6 +432,10 @@ CloseClient <- R6::R6Class(
 }
 
 .drop_null <- function(x) x[!vapply(x, is.null, logical(1))]
+
+# Force a value to a JSON array (so a single mode/type still serialises as [x]).
+# The POST /v1/blocks/query body requires list fields, unlike the GET routes.
+.close_as_array <- function(x) if (is.null(x)) NULL else as.list(x)
 
 `%||%` <- function(a, b) if (is.null(a)) b else a
 

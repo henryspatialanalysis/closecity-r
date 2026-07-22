@@ -102,11 +102,15 @@ test_that("blocks_query is a POST carrying the cursor in the body", {
   }
   got <- httr2::with_mocked_responses(mock, {
     client$records("blocks_query", center = list(lon = -123, lat = 44),
-                   radius_m = 1000, include_population = TRUE)
+                   radius_m = 1000, mode = "walk", type = 30,
+                   include_population = TRUE)
   })
   expect_equal(methods, c("POST", "POST"))
   expect_equal(length(got), 2)
   expect_true(bodies[[1]]$include_population)
+  # Scalar mode/type are wrapped as arrays (the POST body needs lists).
+  expect_equal(bodies[[1]]$mode, list("walk"))
+  expect_equal(bodies[[1]]$type, list(30))
   expect_equal(bodies[[2]]$cursor, "C2")
 })
 
