@@ -24,68 +24,50 @@ away.
 ``` r
 
 library(closecity)
-
-# The key (ck_live_ or ck_test_) comes from https://account.close.city
 close <- close_client("ck_live_your_key")   # use your own key here
+```
 
-# Coffee shops within a 1.5 km walk of a point, as an sf of points:
-cafes <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1500, type = 31)
-plot(sf::st_geometry(cafes))
+``` r
+
+# Grocery stores within a 1.5 km walk of a point (type 30 is grocery stores):
+groceries <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1500, type = 30)
+plot(sf::st_geometry(groceries), pch = 19, col = "#202a5b")
 ```
 
 Catalog and lookup routes are free and need no key:
 
 ``` r
 
-close <- close_client()
 close$modes()$data$modes                       # walk, bike, transit
 close$places("Providence")$results[[1]]        # a city name to its GEOID and centre
-types <- close$destination_types()$data$destination_types
 ```
 
 ## Words you will see
 
-A few terms show up throughout the API:
-
-- **Census block.** The smallest unit the Census Bureau publishes. Each
+- **Census block.** The smallest area the Census Bureau publishes. Each
   one has a 15-digit id called a **GEOID**.
 - **Destination type.** A category of place, such as grocery stores or
   libraries. Each type has a numeric id. Look them up with
   `close$destination_types()`.
 - **Mode.** How someone travels: walk, bike, or transit.
 - **Isochrone.** The area you can reach from a point within a time
-  limit, drawn as a polygon.
+  limit, as a polygon.
 - **Catchment.** The reverse of an isochrone: every block that can reach
-  a given place.
-- **Token.** One unit of API usage. Free routes cost nothing; data
-  routes draw down a monthly allowance.
-
-## Reading many pages
-
-List routes return one page at a time. Use `$records()` to follow the
-pages to the end and return everything at once.
-
-``` r
-
-all_cafes <- close$records("pois_search", lat = 41.823, lon = -71.412,
-                           radius_m = 1500, type = 31)
-```
+  a place.
 
 ## Spatial output, on or off
 
 Feature methods return sf by default. Block routes join census-block
 boundaries for you (this needs the `tigris` package, which downloads the
 boundaries once and caches them). To work with the raw data instead, set
-`spatial = FALSE`:
+the client’s `spatial` flag to FALSE:
 
 ``` r
 
-close <- close_client("ck_live_your_key", spatial = FALSE)   # use your own key here
+close$spatial <- FALSE
 reply <- close$block_summary("250173523004004", mode = "walk")
 reply$results
 ```
-
-You can also flip it at any time with `close$spatial <- FALSE`.
 
 ## Handling errors
 
@@ -106,11 +88,3 @@ tryCatch(
 - Documentation: <https://henryspatialanalysis.github.io/closecity-r/>
 - Interactive API: <https://api.close.city/docs>
 - Machine-readable contract: <https://api.close.city/openapi.json>
-
-## Development
-
-``` r
-
-# with the dependencies installed:
-testthat::test_local(".")   # unit tests, no network (httr2 mocking)
-```

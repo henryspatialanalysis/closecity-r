@@ -15,8 +15,10 @@ instead of memorising codes.
 
 library(closecity)
 library(sf)
-
 close <- close_client("ck_live_your_key")   # use your own key here
+```
+
+``` r
 
 # The catalog lists every category with its numeric id. Pull the ids you need.
 types <- close$destination_types()$data$destination_types

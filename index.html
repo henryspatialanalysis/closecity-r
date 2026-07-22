@@ -84,56 +84,40 @@
 <p>You make requests through a client object. Feature results come back as <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> objects, so you can map them right away.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://henryspatialanalysis.github.io/closecity-r">closecity</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># The key (ck_live_ or ck_test_) comes from https://account.close.city</span></span>
-<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key"</span><span class="op">)</span>   <span class="co"># use your own key here</span></span>
-<span></span>
-<span><span class="co"># Coffee shops within a 1.5 km walk of a point, as an sf of points:</span></span>
-<span><span class="va">cafes</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span>lat <span class="op">=</span> <span class="fl">41.823</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.412</span>, radius_m <span class="op">=</span> <span class="fl">1500</span>, type <span class="op">=</span> <span class="fl">31</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">cafes</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Catalog and lookup routes are free and need no key:</p>
+<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key"</span><span class="op">)</span>   <span class="co"># use your own key here</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">close</span><span class="op">$</span><span class="fu">modes</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">modes</span>                       <span class="co"># walk, bike, transit</span></span>
-<span><span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span><span class="st">"Providence"</span><span class="op">)</span><span class="op">$</span><span class="va">results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>        <span class="co"># a city name to its GEOID and centre</span></span>
-<span><span class="va">types</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">destination_types</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">destination_types</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Grocery stores within a 1.5 km walk of a point (type 30 is grocery stores):</span></span>
+<span><span class="va">groceries</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span>lat <span class="op">=</span> <span class="fl">41.823</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.412</span>, radius_m <span class="op">=</span> <span class="fl">1500</span>, type <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">groceries</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="st">"#202a5b"</span><span class="op">)</span></span></code></pre></div>
+<p>Catalog and lookup routes are free and need no key:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="fu">modes</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">modes</span>                       <span class="co"># walk, bike, transit</span></span>
+<span><span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span><span class="st">"Providence"</span><span class="op">)</span><span class="op">$</span><span class="va">results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>        <span class="co"># a city name to its GEOID and centre</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="words-you-will-see">Words you will see<a class="anchor" aria-label="anchor" href="#words-you-will-see"></a>
 </h2>
-<p>A few terms show up throughout the API:</p>
 <ul>
 <li>
-<strong>Census block.</strong> The smallest unit the Census Bureau publishes. Each one has a 15-digit id called a <strong>GEOID</strong>.</li>
+<strong>Census block.</strong> The smallest area the Census Bureau publishes. Each one has a 15-digit id called a <strong>GEOID</strong>.</li>
 <li>
 <strong>Destination type.</strong> A category of place, such as grocery stores or libraries. Each type has a numeric id. Look them up with <code>close$destination_types()</code>.</li>
 <li>
 <strong>Mode.</strong> How someone travels: walk, bike, or transit.</li>
 <li>
-<strong>Isochrone.</strong> The area you can reach from a point within a time limit, drawn as a polygon.</li>
+<strong>Isochrone.</strong> The area you can reach from a point within a time limit, as a polygon.</li>
 <li>
-<strong>Catchment.</strong> The reverse of an isochrone: every block that can reach a given place.</li>
-<li>
-<strong>Token.</strong> One unit of API usage. Free routes cost nothing; data routes draw down a monthly allowance.</li>
+<strong>Catchment.</strong> The reverse of an isochrone: every block that can reach a place.</li>
 </ul>
-</div>
-<div class="section level2">
-<h2 id="reading-many-pages">Reading many pages<a class="anchor" aria-label="anchor" href="#reading-many-pages"></a>
-</h2>
-<p>List routes return one page at a time. Use <code>$records()</code> to follow the pages to the end and return everything at once.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">all_cafes</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">records</span><span class="op">(</span><span class="st">"pois_search"</span>, lat <span class="op">=</span> <span class="fl">41.823</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.412</span>,</span>
-<span>                           radius_m <span class="op">=</span> <span class="fl">1500</span>, type <span class="op">=</span> <span class="fl">31</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="spatial-output-on-or-off">Spatial output, on or off<a class="anchor" aria-label="anchor" href="#spatial-output-on-or-off"></a>
 </h2>
-<p>Feature methods return sf by default. Block routes join census-block boundaries for you (this needs the <code>tigris</code> package, which downloads the boundaries once and caches them). To work with the raw data instead, set <code>spatial = FALSE</code>:</p>
+<p>Feature methods return sf by default. Block routes join census-block boundaries for you (this needs the <code>tigris</code> package, which downloads the boundaries once and caches them). To work with the raw data instead, set the client’s <code>spatial</code> flag to FALSE:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key"</span>, spatial <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>   <span class="co"># use your own key here</span></span>
+<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="va">spatial</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
 <span><span class="va">reply</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"250173523004004"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
 <span><span class="va">reply</span><span class="op">$</span><span class="va">results</span></span></code></pre></div>
-<p>You can also flip it at any time with <code>close$spatial &lt;- FALSE</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="handling-errors">Handling errors<a class="anchor" aria-label="anchor" href="#handling-errors"></a>
@@ -156,13 +140,6 @@
 <li>Machine-readable contract: <a href="https://api.close.city/openapi.json" class="external-link uri">https://api.close.city/openapi.json</a>
 </li>
 </ul>
-</div>
-<div class="section level2">
-<h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
-</h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># with the dependencies installed:</span></span>
-<span><span class="fu">testthat</span><span class="fu">::</span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_package.html" class="external-link">test_local</a></span><span class="op">(</span><span class="st">"."</span><span class="op">)</span>   <span class="co"># unit tests, no network (httr2 mocking)</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

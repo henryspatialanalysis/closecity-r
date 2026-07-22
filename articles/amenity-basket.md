@@ -17,8 +17,10 @@ into a centre point.
 
 library(closecity)
 library(sf)
-
 close <- close_client("ck_live_your_key")   # use your own key here
+```
+
+``` r
 
 types <- close$destination_types()$data$destination_types
 labels <- sapply(types, `[[`, "label")
