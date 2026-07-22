@@ -15,6 +15,9 @@ jobs:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # Set this repo secret to render live output and maps in the README and
+      # vignettes. Without it, the examples are shown but not run.
+      CLOSECITY_KEY: ${{ secrets.CLOSECITY_KEY }}
     permissions:
       contents: write
     steps:
@@ -28,8 +31,12 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, local::.
+          extra-packages: any::pkgdown, any::rmarkdown, local::.
           needs: website
+
+      - name: Render README
+        run: rmarkdown::render("README.Rmd")
+        shell: Rscript {0}
 
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)

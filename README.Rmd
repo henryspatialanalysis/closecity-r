@@ -1,19 +1,31 @@
+---
+output:
+  github_document:
+    md_extensions: -smart
+---
 
 <!-- README.md is generated from README.Rmd. Edit the .Rmd, then run
      devtools::build_readme() (with CLOSECITY_KEY set to render live output). -->
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.path = "man/figures/README-",
+                      eval = nzchar(Sys.getenv("CLOSECITY_KEY")))
+library(closecity)
+library(sf)
+close <- close_client(Sys.getenv("CLOSECITY_KEY"))
+```
+
 # closecity <img src="man/figures/logo.png" align="right" height="120" alt="" />
 
-R client for the Close API. Get travel times from every US census block
-to nearby places, on foot, by bike, and by public transit. This is the
-data behind [close.city](https://close.city), read over the [Close
-API](https://api.close.city).
+R client for the Close API. Get travel times from every US census block to nearby
+places, on foot, by bike, and by public transit. This is the data behind
+[close.city](https://close.city), read over the [Close API](https://api.close.city).
 
 **Documentation:** <https://henryspatialanalysis.github.io/closecity-r/>
 
 ## Install
 
-``` r
+```r
 # install.packages("remotes")
 remotes::install_github("henryspatialanalysis/closecity-r")
 ```
@@ -21,15 +33,14 @@ remotes::install_github("henryspatialanalysis/closecity-r")
 ## A first call
 
 You make requests through a client object. Feature results come back as
-[sf](https://r-spatial.github.io/sf/) objects, so you can map them right
-away.
+[sf](https://r-spatial.github.io/sf/) objects, so you can map them right away.
 
-``` r
+```r
 library(closecity)
 close <- close_client("ck_live_your_key")   # use your own key here
 ```
 
-``` r
+```{r first-call}
 # Grocery stores within a 1.5 km walk of a point (type 30 is grocery stores):
 groceries <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1500, type = 30)
 plot(sf::st_geometry(groceries), pch = 19, col = "#202a5b")
@@ -37,32 +48,29 @@ plot(sf::st_geometry(groceries), pch = 19, col = "#202a5b")
 
 Catalog and lookup routes are free and need no key:
 
-``` r
+```{r}
 close$modes()$data$modes                       # walk, bike, transit
 close$places("Providence")$results[[1]]        # a city name to its GEOID and centre
 ```
 
 ## Words you will see
 
-- **Census block.** The smallest area the Census Bureau publishes. Each
-  one has a 15-digit id called a **GEOID**.
-- **Destination type.** A category of place, such as grocery stores or
-  libraries. Each type has a numeric id. Look them up with
-  `close$destination_types()`.
+- **Census block.** The smallest area the Census Bureau publishes. Each one has a
+  15-digit id called a **GEOID**.
+- **Destination type.** A category of place, such as grocery stores or libraries.
+  Each type has a numeric id. Look them up with `close$destination_types()`.
 - **Mode.** How someone travels: walk, bike, or transit.
-- **Isochrone.** The area you can reach from a point within a time
-  limit, as a polygon.
-- **Catchment.** The reverse of an isochrone: every block that can reach
-  a place.
+- **Isochrone.** The area you can reach from a point within a time limit, as a
+  polygon.
+- **Catchment.** The reverse of an isochrone: every block that can reach a place.
 
 ## Spatial output, on or off
 
-Feature methods return sf by default. Block routes join census-block
-boundaries for you (this needs the `tigris` package, which downloads the
-boundaries once and caches them). To work with the raw data instead, set
-the client's `spatial` flag to FALSE:
+Feature methods return sf by default. Block routes join census-block boundaries for
+you (this needs the `tigris` package, which downloads the boundaries once and caches
+them). To work with the raw data instead, set the client's `spatial` flag to FALSE:
 
-``` r
+```{r}
 close$spatial <- FALSE
 reply <- close$block_summary("250173523004004", mode = "walk")
 reply$results
@@ -70,11 +78,10 @@ reply$results
 
 ## Handling errors
 
-Failed requests raise a classed condition. Catch the base
-`close_api_error`, or a specific one such as
-`close_api_tokens_exhausted`.
+Failed requests raise a classed condition. Catch the base `close_api_error`, or a
+specific one such as `close_api_tokens_exhausted`.
 
-``` r
+```{r}
 tryCatch(
   close$block_summary("000000000000000"),
   close_api_error = function(e) message(sprintf("%s (%d)", e$slug, e$status))

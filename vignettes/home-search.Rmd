@@ -8,7 +8,11 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      eval = nzchar(Sys.getenv("CLOSECITY_KEY")))
+library(closecity)
+library(sf)
+close <- close_client(Sys.getenv("CLOSECITY_KEY"))
 ```
 
 Say you are moving to a new city and want to live somewhere walkable. Here you find
@@ -21,12 +25,13 @@ blocks to the overlap of two commutes. The example city is Somerville, Massachus
 Build a client, then read the pieces you need from the free catalog instead of
 memorising codes.
 
-```{r}
+```r
 library(closecity)
 library(sf)
-
 close <- close_client("ck_live_your_key")   # use your own key here
+```
 
+```{r}
 # The catalog lists every category with its numeric id. Pull the ids you need.
 types <- close$destination_types()$data$destination_types
 labels <- sapply(types, `[[`, "label")

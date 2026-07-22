@@ -8,7 +8,11 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      eval = nzchar(Sys.getenv("CLOSECITY_KEY")))
+library(closecity)
+library(sf)
+close <- close_client(Sys.getenv("CLOSECITY_KEY"))
 ```
 
 A coffee shop wants to know which competitors draw from the same neighbourhood it
@@ -20,12 +24,13 @@ example city is Providence, Rhode Island.
 
 Read the cafe category id from the free catalog and find the city centre.
 
-```{r}
+```r
 library(closecity)
 library(sf)
-
 close <- close_client("ck_live_your_key")   # use your own key here
+```
 
+```{r}
 types <- close$destination_types()$data$destination_types
 labels <- sapply(types, `[[`, "label")
 ids <- sapply(types, `[[`, "dest_type_id")
