@@ -1,6 +1,6 @@
 # The reply object
 
-When `spatial` is FALSE, every method returns a `close_reply`: a list
+When `output` is `'raw'`, every method returns a `close_reply`: a list
 with the parsed body plus the metering and caching information as named
 fields.
 
@@ -40,5 +40,7 @@ fields.
 
 ## See also
 
+[`close_as_df()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_as_df.md)
+and
 [`close_as_sf()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_as_sf.md)
-to turn a reply into an sf object by hand.
+to convert a reply by hand.

@@ -8,5 +8,9 @@
   closecity](https://henryspatialanalysis.github.io/closecity-r/articles/closecity.md):
 - [Competitor
   walksheds](https://henryspatialanalysis.github.io/closecity-r/articles/competitor-walksheds.md):
+- [Your first walkability
+  map](https://henryspatialanalysis.github.io/closecity-r/articles/first-map.md):
 - [Looking for a
   home](https://henryspatialanalysis.github.io/closecity-r/articles/home-search.md):
+- [Efficient token
+  use](https://henryspatialanalysis.github.io/closecity-r/articles/token-use.md):

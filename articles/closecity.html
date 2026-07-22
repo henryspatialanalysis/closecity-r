@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">closecity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,9 +41,12 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorials" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorials</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
-<li><a class="dropdown-item" href="../articles/home-search.html">Looking for a home</a></li>
+<li><a class="dropdown-item" href="../articles/first-map.html">Your first walkability map</a></li>
+    <li><a class="dropdown-item" href="../articles/home-search.html">Looking for a home</a></li>
     <li><a class="dropdown-item" href="../articles/amenity-basket.html">The amenity basket</a></li>
     <li><a class="dropdown-item" href="../articles/competitor-walksheds.html">Competitor walksheds</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/token-use.html">Efficient token use</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -111,59 +114,31 @@ a given place.</li>
 <p>The catalog and lookup routes are free, so
 <code><a href="../reference/close_client.html">close_client()</a></code> with no key also works for those.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="fu">modes</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">modes</span></span>
-<span><span class="co">#&gt; [[1]]</span></span>
-<span><span class="co">#&gt; [[1]]$mode_id</span></span>
-<span><span class="co">#&gt; [1] 1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[1]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[1]]$description</span></span>
-<span><span class="co">#&gt; [1] "Walking"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]</span></span>
-<span><span class="co">#&gt; [[2]]$mode_id</span></span>
-<span><span class="co">#&gt; [1] 2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]$mode</span></span>
-<span><span class="co">#&gt; [1] "bike"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]$description</span></span>
-<span><span class="co">#&gt; [1] "Biking"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[3]]</span></span>
-<span><span class="co">#&gt; [[3]]$mode_id</span></span>
-<span><span class="co">#&gt; [1] 3</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[3]]$mode</span></span>
-<span><span class="co">#&gt; [1] "transit"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[3]]$description</span></span>
-<span><span class="co">#&gt; [1] "Public transit"</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="fu">modes</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   mode_id    mode    description</span></span>
+<span><span class="co">#&gt; 1       1    walk        Walking</span></span>
+<span><span class="co">#&gt; 2       2    bike         Biking</span></span>
+<span><span class="co">#&gt; 3       3 transit Public transit</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="look-things-up-instead-of-guessing">Look things up instead of guessing<a class="anchor" aria-label="anchor" href="#look-things-up-instead-of-guessing"></a>
 </h2>
-<p>Two free calls save you from memorising codes. Read the numeric id
+<p>Two free calls save you from memorising codes. Both come back as data
+frames, so you filter and index them the usual way: read the numeric id
 for a category from the catalog, and turn a city name into a GEOID and a
 centre point.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">types</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">destination_types</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">destination_types</span></span>
-<span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">types</span>, <span class="va">`[[`</span>, <span class="st">"label"</span><span class="op">)</span></span>
-<span><span class="va">ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">types</span>, <span class="va">`[[`</span>, <span class="st">"dest_type_id"</span><span class="op">)</span></span>
-<span><span class="va">grocery_id</span> <span class="op">&lt;-</span> <span class="va">ids</span><span class="op">[</span><span class="va">labels</span> <span class="op">==</span> <span class="st">"grocery_stores"</span><span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="va">types</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">destination_types</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">grocery_id</span> <span class="op">&lt;-</span> <span class="va">types</span><span class="op">$</span><span class="va">dest_type_id</span><span class="op">[</span><span class="va">types</span><span class="op">$</span><span class="va">label</span> <span class="op">==</span> <span class="st">"grocery_stores"</span><span class="op">]</span></span>
 <span></span>
-<span><span class="va">providence</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span><span class="st">"Providence"</span><span class="op">)</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">places</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">providence</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span><span class="st">"Providence"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
 <span><span class="va">providence</span><span class="op">$</span><span class="va">geoid</span></span>
 <span><span class="co">#&gt; [1] "4459000"</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="make-a-call-and-map-it">Make a call and map it<a class="anchor" aria-label="anchor" href="#make-a-call-and-map-it"></a>
 </h2>
-<p>Feature methods return an <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> object, so you can map the
+<p>Routes with geometry return an <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> object, so you can map the
 result straight away.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">groceries</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span>lat <span class="op">=</span> <span class="va">providence</span><span class="op">$</span><span class="va">lat</span>, lon <span class="op">=</span> <span class="va">providence</span><span class="op">$</span><span class="va">lon</span>,</span>
@@ -172,13 +147,16 @@ result straight away.</p>
 <p><img src="closecity_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 <div class="section level2">
-<h2 id="turn-spatial-output-off">Turn spatial output off<a class="anchor" aria-label="anchor" href="#turn-spatial-output-off"></a>
+<h2 id="choose-an-output">Choose an output<a class="anchor" aria-label="anchor" href="#choose-an-output"></a>
 </h2>
-<p>Set the client’s <code>spatial</code> flag to FALSE to work with the
-raw data. Block routes join census-block boundaries for you, using the
-<code>tigris</code> package.</p>
+<p>Every route returns tabular data by default. The <code>output</code>
+setting controls the shape: <code>"spatial"</code> (the default) gives
+an sf object where geometry applies and a data frame otherwise;
+<code>"tabular"</code> gives a data frame everywhere and never downloads
+block boundaries; <code>"raw"</code> gives the underlying reply. Set it
+on the client, or pass <code>output =</code> to a single call.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="va">spatial</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
+<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="va">output</span> <span class="op">&lt;-</span> <span class="st">"raw"</span></span>
 <span><span class="va">summary</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
 <span><span class="va">summary</span><span class="op">$</span><span class="va">results</span></span>
 <span><span class="co">#&gt; [[1]]</span></span>

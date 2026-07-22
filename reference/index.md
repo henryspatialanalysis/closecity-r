@@ -10,12 +10,15 @@ close_client(); make calls through its methods.
 - [`CloseClient`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.md)
   : Close API client
 
-## Spatial output and replies
+## Output modes and replies
 
-Feature methods return sf objects by default. Turn that off to work with
-the raw reply.
+Routes return tabular data by default: an sf object where geometry
+applies, a data frame otherwise. Convert a raw reply by hand, or read
+its fields.
 
 - [`close_as_sf()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_as_sf.md)
   : Convert a Close reply to an sf object
+- [`close_as_df()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_as_df.md)
+  : Convert a Close reply to a data.frame
 - [`close_reply`](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
   : The reply object

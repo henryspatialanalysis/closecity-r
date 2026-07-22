@@ -3,18 +3,19 @@
 An R6 object that holds your connection settings and gives you one
 method per public route. Create it with
 [`close_client()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_client.md)
-rather than calling `$new()`. Feature methods return an
-[sf](https://r-spatial.github.io/sf/reference/sf.html) object when
-`spatial` is TRUE (the default), or a
+rather than calling `$new()`. Results come back per the `output` field:
+an [sf](https://r-spatial.github.io/sf/reference/sf.html) object where
+geometry applies, a data frame otherwise, or a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
-otherwise.
+when `output` is `'raw'`.
 
 ## Public fields
 
-- `spatial`:
+- `output`:
 
-  (`logical(1)`)  
-  Should feature methods return an sf object? Toggle any time.
+  (`character(1)`)  
+  How results come back: `'spatial'`, `'tabular'`, or `'raw'`. Change it
+  any time, or override it per call with the method's `output` argument.
 
 ## Methods
 
@@ -73,7 +74,7 @@ Create a client. Prefer
       api_key = NULL,
       base_url = DEFAULT_BASE_URL,
       timeout = 30,
-      spatial = TRUE
+      output = "spatial"
     )
 
 #### Arguments
@@ -90,15 +91,16 @@ Create a client. Prefer
 
   Request timeout, in seconds.
 
-- `spatial`:
+- `output`:
 
-  Return feature results as sf objects?
+  One of `'spatial'`, `'tabular'`, or `'raw'`.
 
 ------------------------------------------------------------------------
 
 ### `CloseClient$health()`
 
-Liveness check (free).
+Liveness check (free). Always a raw
+[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md).
 
 #### Usage
 
@@ -113,7 +115,7 @@ A
 
 ### `CloseClient$last_updated()`
 
-Publication time of the newest data (free).
+Publication time of the newest data (free). Always a raw reply.
 
 #### Usage
 
@@ -132,28 +134,42 @@ Travel modes and their numeric ids (free).
 
 #### Usage
 
-    CloseClient$modes()
+    CloseClient$modes(output = NULL)
+
+#### Arguments
+
+- `output`:
+
+  Override the client's output mode for this call.
 
 #### Returns
 
-A
-[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md).
+A data frame, or a
+[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
+when `output` is `'raw'`.
 
 ------------------------------------------------------------------------
 
 ### `CloseClient$destination_types()`
 
 Destination-type taxonomy (free). Use it to look up the numeric `type`
-ids the data routes filter on.
+ids the data routes filter on; a parent type expands to its `leaf_ids`.
 
 #### Usage
 
-    CloseClient$destination_types()
+    CloseClient$destination_types(output = NULL)
+
+#### Arguments
+
+- `output`:
+
+  Override the client's output mode for this call.
 
 #### Returns
 
-A
-[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md).
+A data frame, or a
+[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
+when `output` is `'raw'`.
 
 ------------------------------------------------------------------------
 
@@ -163,12 +179,19 @@ Active version of each dataset component (free).
 
 #### Usage
 
-    CloseClient$vintage()
+    CloseClient$vintage(output = NULL)
+
+#### Arguments
+
+- `output`:
+
+  Override the client's output mode for this call.
 
 #### Returns
 
-A
-[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md).
+A data frame, or a
+[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
+when `output` is `'raw'`.
 
 ------------------------------------------------------------------------
 
@@ -179,7 +202,7 @@ place GEOID and centre point.
 
 #### Usage
 
-    CloseClient$places(q, limit = NULL)
+    CloseClient$places(q, limit = NULL, output = NULL)
 
 #### Arguments
 
@@ -191,10 +214,16 @@ place GEOID and centre point.
 
   Most matches to return (1 to 20).
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-A
-[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md).
+An [sf](https://r-spatial.github.io/sf/reference/sf.html) of points (a
+data frame in tabular mode, a
+[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
+when `output` is `'raw'`).
 
 ------------------------------------------------------------------------
 
@@ -209,7 +238,8 @@ mode.
       geoid,
       mode = NULL,
       type = NULL,
-      if_none_match = NULL
+      if_none_match = NULL,
+      output = NULL
     )
 
 #### Arguments
@@ -230,10 +260,15 @@ mode.
 
   An ETag from an earlier reply, to revalidate for free.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-A
-[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md).
+A data frame with a broadcast `geoid` column, or a
+[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
+when `output` is `'raw'`.
 
 ------------------------------------------------------------------------
 
@@ -251,7 +286,8 @@ per (POI, mode). Read every page with `$records()`.
       dest_id = NULL,
       max_minutes = NULL,
       limit = NULL,
-      cursor = NULL
+      cursor = NULL,
+      output = NULL
     )
 
 #### Arguments
@@ -284,18 +320,24 @@ per (POI, mode). Read every page with `$records()`.
 
   Page cursor from a previous reply's `next_cursor`.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-An [sf](https://r-spatial.github.io/sf/reference/sf.html) object, or a
+An [sf](https://r-spatial.github.io/sf/reference/sf.html) of points (a
+data frame in tabular mode, a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
-when `spatial` is FALSE.
+when `output` is `'raw'`).
 
 ------------------------------------------------------------------------
 
 ### `CloseClient$point_summary()`
 
 Like `$block_summary()`, but from the block containing a lat/lon point.
-The resolved block is echoed as `resolved_block`.
+The resolved block is echoed as `resolved_block` and broadcast to a
+`geoid` column.
 
 #### Usage
 
@@ -304,7 +346,8 @@ The resolved block is echoed as `resolved_block`.
       lon,
       mode = NULL,
       type = NULL,
-      if_none_match = NULL
+      if_none_match = NULL,
+      output = NULL
     )
 
 #### Arguments
@@ -329,10 +372,15 @@ The resolved block is echoed as `resolved_block`.
 
   An ETag to revalidate for free.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-A
-[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md).
+A data frame, or a
+[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
+when `output` is `'raw'`.
 
 ------------------------------------------------------------------------
 
@@ -351,7 +399,8 @@ Read every page with `$records()`.
       dest_id = NULL,
       max_minutes = NULL,
       limit = NULL,
-      cursor = NULL
+      cursor = NULL,
+      output = NULL
     )
 
 #### Arguments
@@ -388,11 +437,16 @@ Read every page with `$records()`.
 
   Page cursor.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-An [sf](https://r-spatial.github.io/sf/reference/sf.html) object, or a
+An [sf](https://r-spatial.github.io/sf/reference/sf.html) of points (a
+data frame in tabular mode, a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
-when `spatial` is FALSE.
+when `output` is `'raw'`).
 
 ------------------------------------------------------------------------
 
@@ -411,7 +465,8 @@ Search points of interest by bounding box, or by a circle (`lat` +
       type = NULL,
       q = NULL,
       limit = NULL,
-      cursor = NULL
+      cursor = NULL,
+      output = NULL
     )
 
 #### Arguments
@@ -444,11 +499,16 @@ Search points of interest by bounding box, or by a circle (`lat` +
 
   Page cursor.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-An [sf](https://r-spatial.github.io/sf/reference/sf.html) object, or a
+An [sf](https://r-spatial.github.io/sf/reference/sf.html) of points (a
+data frame in tabular mode, a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
-when `spatial` is FALSE.
+when `output` is `'raw'`).
 
 ------------------------------------------------------------------------
 
@@ -458,7 +518,7 @@ Details for one point of interest.
 
 #### Usage
 
-    CloseClient$poi(dest_id, if_none_match = NULL)
+    CloseClient$poi(dest_id, if_none_match = NULL, output = NULL)
 
 #### Arguments
 
@@ -470,11 +530,16 @@ Details for one point of interest.
 
   An ETag to revalidate for free.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-An [sf](https://r-spatial.github.io/sf/reference/sf.html) object, or a
+An [sf](https://r-spatial.github.io/sf/reference/sf.html) of one point
+(a data frame in tabular mode, a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
-when `spatial` is FALSE.
+when `output` is `'raw'`).
 
 ------------------------------------------------------------------------
 
@@ -491,7 +556,8 @@ Every census block that can reach a point of interest, one row per
       block = NULL,
       max_minutes = NULL,
       limit = NULL,
-      cursor = NULL
+      cursor = NULL,
+      output = NULL
     )
 
 #### Arguments
@@ -520,18 +586,24 @@ Every census block that can reach a point of interest, one row per
 
   Page cursor.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-An [sf](https://r-spatial.github.io/sf/reference/sf.html) object, or a
+An [sf](https://r-spatial.github.io/sf/reference/sf.html) of block
+polygons (a data frame in tabular mode, a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
-when `spatial` is FALSE.
+when `output` is `'raw'`).
 
 ------------------------------------------------------------------------
 
 ### `CloseClient$blocks_query()`
 
 Blocks inside a GeoJSON polygon, or a circle (`center` + `radius_m`),
-one row per (block, category, mode). Read every page with `$records()`.
+one row per (block, category, mode). Rows carry the numeric `mode_id`
+(join `$modes()` to label it). Read every page with `$records()`.
 
 #### Usage
 
@@ -543,7 +615,8 @@ one row per (block, category, mode). Read every page with `$records()`.
       mode = NULL,
       include_population = NULL,
       limit = NULL,
-      cursor = NULL
+      cursor = NULL,
+      output = NULL
     )
 
 #### Arguments
@@ -580,18 +653,24 @@ one row per (block, category, mode). Read every page with `$records()`.
 
   Page cursor.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-An [sf](https://r-spatial.github.io/sf/reference/sf.html) object, or a
+An [sf](https://r-spatial.github.io/sf/reference/sf.html) of block
+polygons (a data frame in tabular mode, a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
-when `spatial` is FALSE.
+when `output` is `'raw'`).
 
 ------------------------------------------------------------------------
 
 ### `CloseClient$place_blocks()`
 
 Per-block travel times for every block in a place (a city or town), by
-place GEOID. Read every page with `$records()`.
+place GEOID. Rows carry the numeric `mode_id` (join `$modes()` to label
+it). Read every page with `$records()`.
 
 #### Usage
 
@@ -601,7 +680,8 @@ place GEOID. Read every page with `$records()`.
       type = NULL,
       include_population = NULL,
       limit = NULL,
-      cursor = NULL
+      cursor = NULL,
+      output = NULL
     )
 
 #### Arguments
@@ -630,11 +710,16 @@ place GEOID. Read every page with `$records()`.
 
   Page cursor.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-An [sf](https://r-spatial.github.io/sf/reference/sf.html) object, or a
+An [sf](https://r-spatial.github.io/sf/reference/sf.html) of block
+polygons (a data frame in tabular mode, a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
-when `spatial` is FALSE.
+when `output` is `'raw'`).
 
 ------------------------------------------------------------------------
 
@@ -655,7 +740,8 @@ one threshold, or `contours` for up to four.
       contours = NULL,
       format = NULL,
       v = NULL,
-      if_none_match = NULL
+      if_none_match = NULL,
+      output = NULL
     )
 
 #### Arguments
@@ -696,18 +782,25 @@ one threshold, or `contours` for up to four.
 
   An ETag to revalidate for free.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-An [sf](https://r-spatial.github.io/sf/reference/sf.html) object of
-contour polygons, or a
+An [sf](https://r-spatial.github.io/sf/reference/sf.html) (contour
+polygons for geojson, block polygons for blocks), a data frame in
+tabular mode, or a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
-when `spatial` is FALSE or `format` is "blocks".
+when `output` is `'raw'`.
 
 ------------------------------------------------------------------------
 
 ### `CloseClient$isochrone_meta()`
 
-Isochrone version, directions, modes, and assumptions (free).
+Isochrone version, directions, modes, and assumptions (free). Always a
+raw
+[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md).
 
 #### Usage
 
@@ -733,7 +826,7 @@ last page.
 
 #### Usage
 
-    CloseClient$records(endpoint, ...)
+    CloseClient$records(endpoint, ..., output = NULL)
 
 #### Arguments
 
@@ -745,10 +838,14 @@ last page.
 
   Arguments passed on to that method.
 
+- `output`:
+
+  Override the client's output mode for this call.
+
 #### Returns
 
-An [sf](https://r-spatial.github.io/sf/reference/sf.html) object, or a
-list of records when `spatial` is FALSE.
+A data frame (an [sf](https://r-spatial.github.io/sf/reference/sf.html)
+in spatial mode), or a list of records when `output` is `'raw'`.
 
 #### Examples
 

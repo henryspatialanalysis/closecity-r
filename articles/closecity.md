@@ -33,62 +33,34 @@ with no key also works for those.
 
 ``` r
 
-close$modes()$data$modes
-#> [[1]]
-#> [[1]]$mode_id
-#> [1] 1
-#> 
-#> [[1]]$mode
-#> [1] "walk"
-#> 
-#> [[1]]$description
-#> [1] "Walking"
-#> 
-#> 
-#> [[2]]
-#> [[2]]$mode_id
-#> [1] 2
-#> 
-#> [[2]]$mode
-#> [1] "bike"
-#> 
-#> [[2]]$description
-#> [1] "Biking"
-#> 
-#> 
-#> [[3]]
-#> [[3]]$mode_id
-#> [1] 3
-#> 
-#> [[3]]$mode
-#> [1] "transit"
-#> 
-#> [[3]]$description
-#> [1] "Public transit"
+close$modes()
+#>   mode_id    mode    description
+#> 1       1    walk        Walking
+#> 2       2    bike         Biking
+#> 3       3 transit Public transit
 ```
 
 ## Look things up instead of guessing
 
-Two free calls save you from memorising codes. Read the numeric id for a
-category from the catalog, and turn a city name into a GEOID and a
+Two free calls save you from memorising codes. Both come back as data
+frames, so you filter and index them the usual way: read the numeric id
+for a category from the catalog, and turn a city name into a GEOID and a
 centre point.
 
 ``` r
 
-types <- close$destination_types()$data$destination_types
-labels <- sapply(types, `[[`, "label")
-ids <- sapply(types, `[[`, "dest_type_id")
-grocery_id <- ids[labels == "grocery_stores"]
+types <- close$destination_types()
+grocery_id <- types$dest_type_id[types$label == "grocery_stores"]
 
-providence <- close$places("Providence")$data$places[[1]]
+providence <- close$places("Providence")[1, ]
 providence$geoid
 #> [1] "4459000"
 ```
 
 ## Make a call and map it
 
-Feature methods return an [sf](https://r-spatial.github.io/sf/) object,
-so you can map the result straight away.
+Routes with geometry return an [sf](https://r-spatial.github.io/sf/)
+object, so you can map the result straight away.
 
 ``` r
 
@@ -99,15 +71,18 @@ plot(st_geometry(groceries), pch = 19, col = "#202a5b")
 
 ![](closecity_files/figure-html/unnamed-chunk-4-1.png)
 
-## Turn spatial output off
+## Choose an output
 
-Set the client’s `spatial` flag to FALSE to work with the raw data.
-Block routes join census-block boundaries for you, using the `tigris`
-package.
+Every route returns tabular data by default. The `output` setting
+controls the shape: `"spatial"` (the default) gives an sf object where
+geometry applies and a data frame otherwise; `"tabular"` gives a data
+frame everywhere and never downloads block boundaries; `"raw"` gives the
+underlying reply. Set it on the client, or pass `output =` to a single
+call.
 
 ``` r
 
-close$spatial <- FALSE
+close$output <- "raw"
 summary <- close$block_summary("440070008001068", mode = "walk")
 summary$results
 #> [[1]]

@@ -8,6 +8,8 @@ idea follows [this
 analysis](https://nathenry.com/writing/2023-02-07-seattle-walkability.html),
 here applied to Richmond, Virginia.
 
+*Running this tutorial uses about 3,500 tokens.*
+
 ## Set up
 
 Read the six category ids from the free catalog, and turn the city name
@@ -22,20 +24,19 @@ close <- close_client("ck_live_your_key")   # use your own key here
 
 ``` r
 
-types <- close$destination_types()$data$destination_types
-labels <- sapply(types, `[[`, "label")
-ids <- sapply(types, `[[`, "dest_type_id")
+types <- close$destination_types()
+ids <- setNames(types$dest_type_id, types$label)
 
 basket <- c(
-  grocery = ids[labels == "grocery_stores"],
-  library = ids[labels == "libraries"],
-  park = ids[labels == "parks"],
-  transit = ids[labels == "frequent_transit"],
-  restaurant = ids[labels == "restaurants"],
-  cafe = ids[labels == "cafes"]
+  grocery = ids[["grocery_stores"]],
+  library = ids[["libraries"]],
+  park = ids[["parks"]],
+  transit = ids[["frequent_transit"]],
+  restaurant = ids[["restaurants"]],
+  cafe = ids[["cafes"]]
 )
 
-city <- close$places("Richmond")$data$places[[1]]
+city <- close$places("Richmond")[1, ]
 ```
 
 ## Pull the blocks, with population
@@ -93,6 +94,24 @@ plot(one_per_block["has_transit"], pal = c("#eef0f7", "#058040"), border = NA)
 
 ![](amenity-basket_files/figure-html/unnamed-chunk-5-1.png)
 
+## The 15-minute-city score
+
+Count, for each block, how many of the six amenities are within a
+15-minute walk. That score, from 0 to 6, is the map planners reach for.
+It reuses the data you already pulled, so it costs nothing more.
+
+``` r
+
+covered <- blocks[blocks$travel_time <= 15, ]
+score <- tapply(covered$dest_type_id, covered$geoid, function(x) length(unique(x)))
+one_per_block$score <- as.integer(score[one_per_block$geoid])
+one_per_block$score[is.na(one_per_block$score)] <- 0L
+
+plot(one_per_block["score"], pal = hcl.colors(7, "viridis"), border = NA)
+```
+
+![](amenity-basket_files/figure-html/unnamed-chunk-6-1.png)
+
 ## Who can reach all six
 
 A block is fully covered only if all six amenities are within 15
@@ -116,7 +135,7 @@ one_per_block$full_basket <- one_per_block$geoid %in% covered_all
 plot(one_per_block["full_basket"], pal = c("#eef0f7", "#f36e21"), border = NA)
 ```
 
-![](amenity-basket_files/figure-html/unnamed-chunk-6-1.png)
+![](amenity-basket_files/figure-html/unnamed-chunk-7-1.png)
 
 ## Which amenity to add first
 
@@ -152,4 +171,4 @@ one_per_block$uncovered <- one_per_block$geoid %in% uncovered
 plot(one_per_block["uncovered"], pal = c("#eef0f7", "#202a5b"), border = NA)
 ```
 
-![](amenity-basket_files/figure-html/unnamed-chunk-8-1.png)
+![](amenity-basket_files/figure-html/unnamed-chunk-9-1.png)
