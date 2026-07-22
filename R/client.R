@@ -383,6 +383,34 @@ CloseClient <- R6::R6Class(
       )
     },
 
+    #' @description Every point of interest within a census place (a city or
+    #'   town), by place GEOID. The place analog of `$pois_search()`; pass
+    #'   `type` to get, e.g., all supermarkets in a city. Spatial only, no
+    #'   travel times. Reads every page by default.
+    #' @param geoid Census place GEOID.
+    #' @param type Destination type id(s) to keep.
+    #' @param q Name substring to match.
+    #' @param limit Rows per page (up to 1000).
+    #' @param cursor Page cursor; supplying one fetches only that page.
+    #' @param paginate Follow `next_cursor` and return every page (the default);
+    #'   set `FALSE` for the first page only.
+    #' @param output Override the client's output mode for this call.
+    #' @return An [sf][sf::sf] of points (a data frame in tabular mode, a
+    #'   [close_reply] when `output` is `'raw'`).
+    place_pois = function(
+      geoid, type = NULL, q = NULL, limit = NULL, cursor = NULL,
+      paginate = TRUE, output = NULL
+    ){
+      fetch_page <- function(cur) private$get(
+        sprintf('/v1/places/%s/pois', geoid),
+        list(type = type, q = q, limit = limit, cursor = cur)
+      )
+      private$deliver(
+        private$collect(fetch_page, paginate, cursor),
+        geometry = TRUE, output = output
+      )
+    },
+
     #' @description Travel-time contours from a block or a lat/lon point. Give
     #'   `minutes` for one threshold, or `contours` for up to four.
     #' @param block Origin block GEOID (or give `lon` + `lat`).

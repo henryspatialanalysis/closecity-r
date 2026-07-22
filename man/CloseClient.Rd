@@ -47,6 +47,7 @@ time, or override it per call with the method's \code{output} argument.}
     \item \href{#method-CloseClient-poi_catchment}{\code{CloseClient$poi_catchment()}}
     \item \href{#method-CloseClient-blocks_query}{\code{CloseClient$blocks_query()}}
     \item \href{#method-CloseClient-place_blocks}{\code{CloseClient$place_blocks()}}
+    \item \href{#method-CloseClient-place_pois}{\code{CloseClient$place_pois()}}
     \item \href{#method-CloseClient-isochrone}{\code{CloseClient$isochrone()}}
     \item \href{#method-CloseClient-isochrone_meta}{\code{CloseClient$isochrone_meta()}}
     \item \href{#method-CloseClient-records}{\code{CloseClient$records()}}
@@ -558,6 +559,47 @@ set \code{FALSE} for the first page only.}
   }
   \subsection{Returns}{
     An \link[sf:sf]{sf} of block polygons (a data frame in tabular mode, a
+\link{close_reply} when \code{output} is \code{'raw'}).
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CloseClient-place_pois"></a>}}
+\if{latex}{\out{\hypertarget{method-CloseClient-place_pois}{}}}
+\subsection{\code{CloseClient$place_pois()}}{
+  Every point of interest within a census place (a city or
+town), by place GEOID. The place analog of \verb{$pois_search()}; pass
+\code{type} to get, e.g., all supermarkets in a city. Spatial only, no
+travel times. Reads every page by default.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CloseClient$place_pois(
+  geoid,
+  type = NULL,
+  q = NULL,
+  limit = NULL,
+  cursor = NULL,
+  paginate = TRUE,
+  output = NULL
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{geoid}}{Census place GEOID.}
+      \item{\code{type}}{Destination type id(s) to keep.}
+      \item{\code{q}}{Name substring to match.}
+      \item{\code{limit}}{Rows per page (up to 1000).}
+      \item{\code{cursor}}{Page cursor; supplying one fetches only that page.}
+      \item{\code{paginate}}{Follow \code{next_cursor} and return every page (the default);
+set \code{FALSE} for the first page only.}
+      \item{\code{output}}{Override the client's output mode for this call.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    An \link[sf:sf]{sf} of points (a data frame in tabular mode, a
 \link{close_reply} when \code{output} is \code{'raw'}).
   }
 }

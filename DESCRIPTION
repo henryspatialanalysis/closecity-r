@@ -1,6 +1,6 @@
 Package: closecity
 Title: Client for the Close API (api.close.city)
-Version: 1.2.0
+Version: 1.3.0
 Authors@R: c(
     person("Nathaniel", "Henry", role = c("aut", "cre"),
            email = "nat@henryspatialanalysis.com"),
@@ -28,6 +28,8 @@ Suggests:
     withr,
     webfakes,
     tigris,
+    plotly,
+    geojsonsf,
     knitr,
     rmarkdown
 Config/testthat/edition: 3
