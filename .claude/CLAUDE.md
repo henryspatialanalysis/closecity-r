@@ -58,10 +58,10 @@ target. Public repo: `henryspatialanalysis/closecity-r`. The Python sibling is
   the first call while the database cache warms; it is not broken again.
 - **Bare feature methods return ONE page.** A reply's `$results` is a single page
   (default 100 blocks); only `close$records("method", ...)` walks `next_cursor` to
-  the end. The home-search vignette hit this: its old bare `$blocks_query()` call
-  silently mapped only the first ~100 blocks. The amenity-basket vignette still
-  reads one page (flagged, not yet fixed); its printed coverage percentages would
-  shift on a full read.
+  the end. Both block-pulling vignettes hit this before 2026-07-22: their old bare
+  `$blocks_query()` calls silently used only the first ~100 blocks (the
+  amenity-basket coverage percentages shifted when the full read landed). Any new
+  example that wants "all the blocks" must go through `$records()`.
 
 ## Local live doc build (this EFS host)
 

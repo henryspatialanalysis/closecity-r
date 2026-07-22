@@ -52,11 +52,13 @@ city <- close$places("Richmond")$data$places[[1]]
 
 ## Pull the blocks, with population
 
-One call gets the walk time from every block near downtown to each of the six
-categories, along with each block's population. The result is an sf table.
+`$records()` reads every page of a block query: the walk time from every block near
+downtown to each of the six categories, along with each block's population. The
+result is one sf table.
 
 ```{r}
-blocks <- close$blocks_query(
+blocks <- close$records(
+  "blocks_query",
   center = list(lon = city$lon, lat = city$lat), radius_m = 2500,
   mode = "walk", type = unname(basket), include_population = TRUE
 )
