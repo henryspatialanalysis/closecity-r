@@ -32,13 +32,18 @@ close <- close_client("ck_live_your_key")   # use your own key here
 
 ``` r
 
-# Grocery stores within a 1.5 km walk of a point (type 30 is grocery stores):
-groceries <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1500, type = 30)
-plot(sf::st_geometry(groceries), pch = 19, col = "#202a5b")
+# Supermarkets within a 1.5 km walk of a point (type 30 is grocery stores):
+supermarkets <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1500, type = 30)
+plot(sf::st_geometry(supermarkets), pch = 19, col = "#e8590c")
 ```
 
-![Grocery stores near downtown Providence, drawn as
+![Supermarkets near downtown Providence, drawn as
 points.](reference/figures/README-first-call-1.png)
+
+The tutorials draw results as one-line interactive maps with
+[`close_map()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_map.md)
+(bright hoverable points, or blocks shaded by travel time), on a CARTO
+Positron basemap.
 
 Catalog and lookup routes are free and need no key:
 
@@ -50,24 +55,34 @@ close$modes()                    # walk, bike, transit
 #> 2       2    bike         Biking
 #> 3       3 transit Public transit
 close$places("Providence")       # a city name to its GEOID and centre
-#> Simple feature collection with 9 features and 4 fields
+#> Simple feature collection with 9 features and 5 fields
 #> Geometry type: POINT
 #> Dimension:     XY
 #> Bounding box:  xmin: -111.8133 ymin: 32.34238 xmax: -71.35821 ymax: 42.28133
 #> Geodetic CRS:  WGS 84
-#>                 name   geoid        lon      lat                   geometry
-#> 1         Providence 4459000  -71.41872 41.82301 POINT (-71.41872 41.82301)
-#> 2         Providence 4962360 -111.81331 41.70341 POINT (-111.8133 41.70341)
-#> 3 Providence Village 4859748  -96.95432 33.23890  POINT (-96.95432 33.2389)
-#> 4         Providence 2163372  -87.75094 37.39935 POINT (-87.75094 37.39935)
-#> 5         Providence 0162688  -87.77611 32.34238 POINT (-87.77611 32.34238)
-#> 6    East Providence 4422960  -71.35821 41.80049 POINT (-71.35821 41.80049)
-#> 7     New Providence 3451810  -74.40343 40.69964 POINT (-74.40343 40.69964)
-#> 8    Lake Providence 2241400  -91.18247 32.81322 POINT (-91.18247 32.81322)
-#> 9     New Providence 1956415  -93.17162 42.28133 POINT (-93.17162 42.28133)
+#>                 name   geoid state        lon      lat
+#> 1         Providence 4459000    RI  -71.41872 41.82301
+#> 2         Providence 4962360    UT -111.81331 41.70341
+#> 3 Providence Village 4859748    TX  -96.95432 33.23890
+#> 4         Providence 2163372    KY  -87.75094 37.39935
+#> 5         Providence 0162688    AL  -87.77611 32.34238
+#> 6    East Providence 4422960    RI  -71.35821 41.80049
+#> 7     New Providence 3451810    NJ  -74.40343 40.69964
+#> 8    Lake Providence 2241400    LA  -91.18247 32.81322
+#> 9     New Providence 1956415    IA  -93.17162 42.28133
+#>                     geometry
+#> 1 POINT (-71.41872 41.82301)
+#> 2 POINT (-111.8133 41.70341)
+#> 3  POINT (-96.95432 33.2389)
+#> 4 POINT (-87.75094 37.39935)
+#> 5 POINT (-87.77611 32.34238)
+#> 6 POINT (-71.35821 41.80049)
+#> 7 POINT (-74.40343 40.69964)
+#> 8 POINT (-91.18247 32.81322)
+#> 9 POINT (-93.17162 42.28133)
 ```
 
-## Words you will see
+## Key terms
 
 - **Census block.** The smallest area the Census Bureau publishes. Each
   one has a 15-digit id called a **GEOID**.
@@ -75,10 +90,9 @@ close$places("Providence")       # a city name to its GEOID and centre
   libraries. Each type has a numeric id. Look them up with
   `close$destination_types()`.
 - **Mode.** How someone travels: walk, bike, or transit.
-- **Isochrone.** The area you can reach from a point within a time
-  limit, as a polygon.
-- **Catchment.** The reverse of an isochrone: every block that can reach
-  a place.
+- **Isochrone** or **catchment.** Two views of the same reachability:
+  the area you can reach from a point within a time limit (an
+  isochrone), or every block that can reach a place (a catchment).
 
 ## Choosing an output
 

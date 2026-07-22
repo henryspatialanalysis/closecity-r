@@ -1,7 +1,7 @@
 # The amenity basket
 
 A city planner wants every resident to be able to walk to a basket of
-six everyday amenities: a grocery store, a library, a park, a
+six everyday amenities: a supermarket, a library, a park, a
 frequent-transit stop, a restaurant, and a cafe. This tutorial measures
 how many residents already have that, and shows where the gaps are. The
 idea follows [this
@@ -28,7 +28,7 @@ types <- close$destination_types()
 ids <- setNames(types$dest_type_id, types$label)
 
 basket <- c(
-  grocery = ids[["grocery_stores"]],
+  supermarket = ids[["grocery_stores"]],
   library = ids[["libraries"]],
   park = ids[["parks"]],
   transit = ids[["frequent_transit"]],
@@ -41,14 +41,15 @@ city <- close$places("Richmond")[1, ]
 
 ## Pull the blocks, with population
 
-`$records()` reads every page of a block query: the walk time from every
-block near downtown to each of the six categories, along with each
-block’s population. The result is one sf table.
+`$blocks_query()` reads every page: the walk time from every block to
+each of the six categories, plus each block’s population, as one sf
+table. To keep this tutorial cheap we take the central blocks within a
+radius; `$place_blocks(city$geoid)` pulls **every** block in the city
+the same way (at a higher token cost).
 
 ``` r
 
-blocks <- close$records(
-  "blocks_query",
+blocks <- close$blocks_query(
   center = list(lon = city$lon, lat = city$lat), radius_m = 2500,
   mode = "walk", type = unname(basket), include_population = TRUE
 )
@@ -71,7 +72,7 @@ for (name in names(basket)) {
   pop <- sum(one_per_block$population[one_per_block$geoid %in% covered])
   cat(sprintf("%-11s %3.0f%%\n", name, 100 * pop / total_pop))
 }
-#> grocery      13%
+#> supermarket  13%
 #> library      38%
 #> park         89%
 #> transit       5%
@@ -79,20 +80,17 @@ for (name in names(basket)) {
 #> cafe         64%
 ```
 
-Parks and restaurants tend to be everywhere; groceries and frequent
-transit are usually the hardest to reach. Map one amenity to see the
-pattern.
+Parks and restaurants tend to be everywhere; supermarkets and frequent
+transit are usually the hardest to reach. Map one amenity — every block
+shown, the covered ones highlighted.
 
 ``` r
 
 near_transit <- unique(blocks$geoid[blocks$dest_type_id == basket["transit"] &
                                       blocks$travel_time <= 15])
 one_per_block$has_transit <- one_per_block$geoid %in% near_transit
-
-plot(one_per_block["has_transit"], pal = c("#eef0f7", "#058040"), border = NA)
+close_map(one_per_block, highlight = "has_transit", color = "#058040")
 ```
-
-![](amenity-basket_files/figure-html/unnamed-chunk-5-1.png)
 
 ## The 15-minute-city score
 
@@ -106,36 +104,29 @@ covered <- blocks[blocks$travel_time <= 15, ]
 score <- tapply(covered$dest_type_id, covered$geoid, function(x) length(unique(x)))
 one_per_block$score <- as.integer(score[one_per_block$geoid])
 one_per_block$score[is.na(one_per_block$score)] <- 0L
-
-plot(one_per_block["score"], pal = hcl.colors(7, "viridis"), border = NA)
+close_map(one_per_block, fill = "score")
 ```
-
-![](amenity-basket_files/figure-html/unnamed-chunk-6-1.png)
 
 ## Who can reach all six
 
 A block is fully covered only if all six amenities are within 15
-minutes. Start with every block and remove the ones that miss any
-amenity.
+minutes. Fold the per-amenity covered sets together.
 
 ``` r
 
-covered_all <- one_per_block$geoid
-for (name in names(basket)) {
-  covered <- unique(blocks$geoid[blocks$dest_type_id == basket[name] &
-                                   blocks$travel_time <= 15])
-  covered_all <- intersect(covered_all, covered)
-}
+covered_sets <- lapply(names(basket), function(name) {
+  unique(blocks$geoid[blocks$dest_type_id == basket[name] &
+                        blocks$travel_time <= 15])
+})
+covered_all <- Reduce(intersect, covered_sets)
 
 basket_pop <- sum(one_per_block$population[one_per_block$geoid %in% covered_all])
 cat(sprintf("All six amenities: %.0f%% of residents\n", 100 * basket_pop / total_pop))
 #> All six amenities: 4% of residents
 
 one_per_block$full_basket <- one_per_block$geoid %in% covered_all
-plot(one_per_block["full_basket"], pal = c("#eef0f7", "#f36e21"), border = NA)
+close_map(one_per_block, highlight = "full_basket", color = "#f36e21")
 ```
-
-![](amenity-basket_files/figure-html/unnamed-chunk-7-1.png)
 
 ## Which amenity to add first
 
@@ -154,7 +145,7 @@ for (name in names(basket)) {
   pop <- sum(one_per_block$population[one_per_block$geoid %in% lacking])
   cat(sprintf("%-11s %6.0f residents would gain access\n", name, pop))
 }
-#> grocery      26219 residents would gain access
+#> supermarket  26219 residents would gain access
 #> library      18720 residents would gain access
 #> park          3373 residents would gain access
 #> transit      28424 residents would gain access
@@ -162,13 +153,32 @@ for (name in names(basket)) {
 #> cafe         10798 residents would gain access
 ```
 
-Map the uncovered blocks to see where new amenities would do the most
-good.
+## Site a new supermarket
+
+The counts above say *which* amenity to add; the next question is
+*where*. Take a candidate site near the city centre and ask how many
+residents would newly gain a supermarket within a 15-minute walk if one
+opened there. A `direction = "to"` isochrone gives exactly the blocks
+that could reach the site on foot in 15 minutes.
 
 ``` r
 
-one_per_block$uncovered <- one_per_block$geoid %in% uncovered
-plot(one_per_block["uncovered"], pal = c("#eef0f7", "#202a5b"), border = NA)
+reachable <- close$isochrone(lon = city$lon, lat = city$lat, mode = "walk",
+                             direction = "to", minutes = 15, format = "blocks")
+
+near_supermarket <- unique(blocks$geoid[blocks$dest_type_id == basket["supermarket"] &
+                                          blocks$travel_time <= 15])
+newly_served <- setdiff(reachable$geoid, near_supermarket)
+gain_pop <- sum(one_per_block$population[one_per_block$geoid %in% newly_served])
+cat(sprintf("A supermarket here would newly serve %.0f residents\n", gain_pop))
+#> A supermarket here would newly serve 0 residents
 ```
 
-![](amenity-basket_files/figure-html/unnamed-chunk-9-1.png)
+Map the whole city and highlight the blocks that would newly gain access
+— the population this one site reaches.
+
+``` r
+
+one_per_block$newly_served <- one_per_block$geoid %in% newly_served
+close_map(one_per_block, highlight = "newly_served", color = "#e8590c")
+```

@@ -2,16 +2,15 @@
 
 A coffee shop wants to know which competitors draw from the same
 neighbourhood it does. Its **walkshed** is every residential block that
-can walk to it. This tutorial finds nearby competitors and measures how
+can walk to it. This tutorial finds the competitors and measures how
 much of that walkshed they share. The example city is Providence, Rhode
 Island.
 
-*Running this tutorial uses about 900 tokens.*
+*Running this tutorial uses about 700 tokens.*
 
 ## Set up
 
-Read the cafe category id from the free catalog and find the city
-centre.
+Read the cafe category id from the free catalog and find the city.
 
 ``` r
 
@@ -31,24 +30,19 @@ city <- close$places("Providence")[1, ]
 
 ## Find the shops
 
-Search for cafes near downtown. The result is an sf of points, so plot
-them and pick one shop as the subject.
+`$place_pois()` returns every cafe within the city’s boundary — no
+radius to guess. Pick one as the subject and draw it in orange; the rest
+are the field.
 
 ``` r
 
-cafes <- close$pois_search(lat = city$lat, lon = city$lon,
-                           radius_m = 1200, type = cafe)
-plot(st_geometry(cafes), pch = 19, col = "#202a5b")
-```
-
-![](competitor-walksheds_files/figure-html/unnamed-chunk-3-1.png)
-
-``` r
-
-
+cafes <- close$place_pois(city$geoid, type = cafe)
 ours <- cafes[1, ]
 ours$name
-#> [1] "The Nitro Bar"
+#> [1] "Little Sister"
+
+cafes$is_ours <- cafes$dest_id == ours$dest_id
+close_map(cafes, color = ifelse(cafes$is_ours, "#f36e21", "#202a5b"), label = "name")
 ```
 
 ## Our walkshed
@@ -60,12 +54,8 @@ once by `tigris`.
 ``` r
 
 our_shed <- close$poi_catchment(ours$dest_id, mode = "walk", max_minutes = 10)
-
-plot(st_geometry(our_shed), col = "#eef0f7", border = "#c6cbe0")
-plot(st_geometry(ours), add = TRUE, pch = 19, col = "#f36e21", cex = 1.6)
+close_map(our_shed, color = "#74b9ff")
 ```
-
-![](competitor-walksheds_files/figure-html/unnamed-chunk-4-1.png)
 
 ## Who else serves it
 
@@ -83,27 +73,24 @@ for (i in 2:6) {
               cafes$name[i], length(shared),
               100 * length(shared) / nrow(our_shed)))
 }
-#> Schaste                      120 shared blocks (83% of ours)
-#> White Electric                79 shared blocks (54% of ours)
-#> Starbucks                     83 shared blocks (57% of ours)
-#> Little City Coffee & Kitchen  22 shared blocks (15% of ours)
-#> Cafe La France                 1 shared blocks (1% of ours)
+#> Three Sisters                 11 shared blocks (10% of ours)
+#> New Harvest Coffee Roasters    0 shared blocks (0% of ours)
+#> Sawyer’s                     0 shared blocks (0% of ours)
+#> The Nitro Bar                  0 shared blocks (0% of ours)
+#> Schaste                        0 shared blocks (0% of ours)
 ```
 
 ## Map the contested ground
 
-Draw our walkshed, then every cafe on top, with our shop highlighted.
-The clusters of competitors inside the walkshed are the ones competing
-for the same walk-in traffic.
+Draw every cafe, with our shop in orange and the field in navy. The
+clusters of competitors sitting inside our walkshed are the ones
+competing for the same walk-in traffic.
 
 ``` r
 
-plot(st_geometry(our_shed), col = "#eef0f7", border = "#c6cbe0")
-plot(st_geometry(cafes), add = TRUE, pch = 19, col = "#202a5b")
-plot(st_geometry(ours), add = TRUE, pch = 19, col = "#f36e21", cex = 1.6)
+close_map(cafes, color = ifelse(cafes$is_ours, "#f36e21", "#202a5b"), label = "name")
 ```
 
-![](competitor-walksheds_files/figure-html/unnamed-chunk-6-1.png)
-
-The same recipe works over a wider area: search a bounding box instead
-of a radius, and loop over more shops.
+The same recipe scales up: loop `poi_catchment` over more competitors,
+or compare whole cities by pulling each one’s cafes with
+`$place_pois()`.

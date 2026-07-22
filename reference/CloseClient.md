@@ -53,6 +53,8 @@ when `output` is `'raw'`.
 
 - [`CloseClient$place_blocks()`](#method-CloseClient-place_blocks)
 
+- [`CloseClient$place_pois()`](#method-CloseClient-place_pois)
+
 - [`CloseClient$isochrone()`](#method-CloseClient-isochrone)
 
 - [`CloseClient$isochrone_meta()`](#method-CloseClient-isochrone_meta)
@@ -756,6 +758,65 @@ it). Reads every page by default.
 
 An [sf](https://r-spatial.github.io/sf/reference/sf.html) of block
 polygons (a data frame in tabular mode, a
+[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
+when `output` is `'raw'`).
+
+------------------------------------------------------------------------
+
+### `CloseClient$place_pois()`
+
+Every point of interest within a census place (a city or town), by place
+GEOID. The place analog of `$pois_search()`; pass `type` to get, e.g.,
+all supermarkets in a city. Spatial only, no travel times. Reads every
+page by default.
+
+#### Usage
+
+    CloseClient$place_pois(
+      geoid,
+      type = NULL,
+      q = NULL,
+      limit = NULL,
+      cursor = NULL,
+      paginate = TRUE,
+      output = NULL
+    )
+
+#### Arguments
+
+- `geoid`:
+
+  Census place GEOID.
+
+- `type`:
+
+  Destination type id(s) to keep.
+
+- `q`:
+
+  Name substring to match.
+
+- `limit`:
+
+  Rows per page (up to 1000).
+
+- `cursor`:
+
+  Page cursor; supplying one fetches only that page.
+
+- `paginate`:
+
+  Follow `next_cursor` and return every page (the default); set `FALSE`
+  for the first page only.
+
+- `output`:
+
+  Override the client's output mode for this call.
+
+#### Returns
+
+An [sf](https://r-spatial.github.io/sf/reference/sf.html) of points (a
+data frame in tabular mode, a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
 when `output` is `'raw'`).
 

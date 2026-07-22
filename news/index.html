@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">closecity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,15 @@
       <small>Source: <a href="https://github.com/henryspatialanalysis/closecity-r/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.3.0" id="closecity-130">closecity 1.3.0<a class="anchor" aria-label="anchor" href="#closecity-130"></a></h2>
+<ul><li>
+<code>$place_pois()</code> — every point of interest within a census place (city or town), by place GEOID. The place analog of <code>$pois_search()</code>; pass <code>type</code> to get, e.g., all supermarkets in a city.</li>
+<li>
+<code><a href="../reference/close_map.html">close_map()</a></code> — a one-line interactive map (CARTO Positron basemap, hoverable points, or filled blocks that highlight the features meeting a criterion) for the <code>sf</code> objects the client returns. Built on plotly (a Suggests dependency), so it needs no GDAL beyond what <code>sf</code> already uses.</li>
+<li>
+<code>$places()</code> results now carry a <code>state</code> column (two-letter USPS abbreviation), so same-named places are distinguishable.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="closecity-120">closecity 1.2.0<a class="anchor" aria-label="anchor" href="#closecity-120"></a></h2>
 <ul><li>

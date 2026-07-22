@@ -22,3 +22,11 @@ its fields.
   : Convert a Close reply to a data.frame
 - [`close_reply`](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
   : The reply object
+
+## Mapping
+
+Draw a client result on an interactive CARTO Positron basemap in one
+call.
+
+- [`close_map()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_map.md)
+  : Interactive map of Close spatial results

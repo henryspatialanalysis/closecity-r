@@ -1,5 +1,19 @@
 # Changelog
 
+## closecity 1.3.0
+
+- `$place_pois()` — every point of interest within a census place (city
+  or town), by place GEOID. The place analog of `$pois_search()`; pass
+  `type` to get, e.g., all supermarkets in a city.
+- [`close_map()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_map.md)
+  — a one-line interactive map (CARTO Positron basemap, hoverable
+  points, or filled blocks that highlight the features meeting a
+  criterion) for the `sf` objects the client returns. Built on plotly (a
+  Suggests dependency), so it needs no GDAL beyond what `sf` already
+  uses.
+- `$places()` results now carry a `state` column (two-letter USPS
+  abbreviation), so same-named places are distinguishable.
+
 ## closecity 1.2.0
 
 - [`close_client()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_client.md)

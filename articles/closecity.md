@@ -4,7 +4,7 @@
 to nearby places, on foot, by bike, and by public transit. This vignette
 is a short tour. The three tutorials go further.
 
-## Words you will see
+## Key terms
 
 A few terms come up throughout:
 
@@ -13,9 +13,16 @@ A few terms come up throughout:
 - **Destination type.** A category of place, such as grocery stores or
   libraries. Every type has a numeric id.
 - **Mode.** How someone travels: walk, bike, or transit.
-- **Isochrone.** The area reachable from a point within a time limit, as
-  a polygon.
-- **Catchment.** The reverse: every block that can reach a given place.
+- **Isochrone** or **catchment.** Two views of the same reachability:
+  the area reachable from a point within a time limit (an isochrone), or
+  every block that can reach a given place (a catchment).
+
+## Travel times
+
+Times to nearby places are **capped at 30 minutes** for each mode, and
+recorded in **whole minutes**. A missing time means the place is not
+reachable within the cap, not that it is zero. Isochrones are the
+exception: they are available for any budget up to an hour.
 
 ## Build a client
 
@@ -50,41 +57,92 @@ centre point.
 ``` r
 
 types <- close$destination_types()
-grocery_id <- types$dest_type_id[types$label == "grocery_stores"]
+supermarket_dest_type <- types[types$label == "grocery_stores", ]$dest_type_id
 
-providence <- close$places("Providence")[1, ]
-providence$geoid
-#> [1] "4459000"
+providence_ri <- close$places("Providence")[1, ]
+providence_ri[, c("name", "state", "geoid")]
+#> Simple feature collection with 1 feature and 3 fields
+#> Geometry type: POINT
+#> Dimension:     XY
+#> Bounding box:  xmin: -71.41872 ymin: 41.82301 xmax: -71.41872 ymax: 41.82301
+#> Geodetic CRS:  WGS 84
+#>         name state   geoid                   geometry
+#> 1 Providence    RI 4459000 POINT (-71.41872 41.82301)
 ```
+
+The catalog’s `name` column is the readable label (“Grocery stores”);
+the underscored `label` is the internal key you match on. A place lookup
+carries a `state`, so you can tell Providence, RI from the one in Utah.
 
 ## Make a call and map it
 
 Routes with geometry return an [sf](https://r-spatial.github.io/sf/)
-object, so you can map the result straight away.
+object.
+[`close_map()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_map.md)
+draws it on an interactive basemap in one line — bright, hoverable
+points here.
 
 ``` r
 
-groceries <- close$pois_search(lat = providence$lat, lon = providence$lon,
-                               radius_m = 1500, type = grocery_id)
-plot(st_geometry(groceries), pch = 19, col = "#202a5b")
+supermarkets <- close$place_pois(providence_ri$geoid, type = supermarket_dest_type)
+close_map(supermarkets, color = "#e8590c")
 ```
-
-![](closecity_files/figure-html/unnamed-chunk-4-1.png)
 
 ## Choose an output
 
-Every route returns tabular data by default. The `output` setting
-controls the shape: `"spatial"` (the default) gives an sf object where
-geometry applies and a data frame otherwise; `"tabular"` gives a data
-frame everywhere and never downloads block boundaries; `"raw"` gives the
-underlying reply. Set it on the client, or pass `output =` to a single
-call.
+Every route returns tabular data by default: an sf object where geometry
+applies, a data frame otherwise. The `output` setting changes the shape
+— `"tabular"` never downloads boundaries, and `"raw"` gives the
+underlying reply with its metering and cursor fields. Set it on the
+client, or pass `output =` to one call.
+
+The same block summary as a data frame (the default):
 
 ``` r
 
-close$output <- "raw"
-summary <- close$block_summary("440070008001068", mode = "walk")
-summary$results
+close$block_summary("440070008001068", mode = "walk")
+#>              geoid dest_type_id mode travel_time
+#> 1  440070008001068            1 walk          10
+#> 2  440070008001068            5 walk          26
+#> 3  440070008001068            6 walk          22
+#> 4  440070008001068            7 walk          10
+#> 5  440070008001068           27 walk           3
+#> 6  440070008001068           28 walk           3
+#> 7  440070008001068           29 walk           9
+#> 8  440070008001068           30 walk           6
+#> 9  440070008001068           31 walk           3
+#> 10 440070008001068           32 walk          15
+#> 11 440070008001068           33 walk          18
+#> 12 440070008001068           34 walk           9
+#> 13 440070008001068           35 walk          13
+#> 14 440070008001068           38 walk          17
+#> 15 440070008001068           40 walk           8
+#> 16 440070008001068           41 walk           9
+#> 17 440070008001068           43 walk           3
+#> 18 440070008001068           60 walk           2
+#> 19 440070008001068           63 walk           3
+#> 20 440070008001068           64 walk           4
+#> 21 440070008001068           65 walk           7
+#> 22 440070008001068           66 walk          13
+#> 23 440070008001068           67 walk           3
+#> 24 440070008001068          126 walk          10
+#> 25 440070008001068          159 walk          14
+#> 26 440070008001068          160 walk          24
+#> 27 440070008001068          200 walk           2
+#> 28 440070008001068          204 walk           2
+#> 29 440070008001068          205 walk           2
+#> 30 440070008001068          206 walk           4
+#> 31 440070008001068          207 walk           7
+#> 32 440070008001068          208 walk           3
+#> 33 440070008001068          209 walk           9
+```
+
+…and as the raw reply, whose `results` you can index yourself:
+
+``` r
+
+raw <- close$block_summary("440070008001068", mode = "walk", output = "raw")
+head(raw$results, 3)
 #> [[1]]
 #> [[1]]$dest_type_id
 #> [1] 1
@@ -116,336 +174,6 @@ summary$results
 #> 
 #> [[3]]$travel_time
 #> [1] 22
-#> 
-#> 
-#> [[4]]
-#> [[4]]$dest_type_id
-#> [1] 7
-#> 
-#> [[4]]$mode
-#> [1] "walk"
-#> 
-#> [[4]]$travel_time
-#> [1] 10
-#> 
-#> 
-#> [[5]]
-#> [[5]]$dest_type_id
-#> [1] 27
-#> 
-#> [[5]]$mode
-#> [1] "walk"
-#> 
-#> [[5]]$travel_time
-#> [1] 3
-#> 
-#> 
-#> [[6]]
-#> [[6]]$dest_type_id
-#> [1] 28
-#> 
-#> [[6]]$mode
-#> [1] "walk"
-#> 
-#> [[6]]$travel_time
-#> [1] 3
-#> 
-#> 
-#> [[7]]
-#> [[7]]$dest_type_id
-#> [1] 29
-#> 
-#> [[7]]$mode
-#> [1] "walk"
-#> 
-#> [[7]]$travel_time
-#> [1] 9
-#> 
-#> 
-#> [[8]]
-#> [[8]]$dest_type_id
-#> [1] 30
-#> 
-#> [[8]]$mode
-#> [1] "walk"
-#> 
-#> [[8]]$travel_time
-#> [1] 6
-#> 
-#> 
-#> [[9]]
-#> [[9]]$dest_type_id
-#> [1] 31
-#> 
-#> [[9]]$mode
-#> [1] "walk"
-#> 
-#> [[9]]$travel_time
-#> [1] 3
-#> 
-#> 
-#> [[10]]
-#> [[10]]$dest_type_id
-#> [1] 32
-#> 
-#> [[10]]$mode
-#> [1] "walk"
-#> 
-#> [[10]]$travel_time
-#> [1] 15
-#> 
-#> 
-#> [[11]]
-#> [[11]]$dest_type_id
-#> [1] 33
-#> 
-#> [[11]]$mode
-#> [1] "walk"
-#> 
-#> [[11]]$travel_time
-#> [1] 18
-#> 
-#> 
-#> [[12]]
-#> [[12]]$dest_type_id
-#> [1] 34
-#> 
-#> [[12]]$mode
-#> [1] "walk"
-#> 
-#> [[12]]$travel_time
-#> [1] 9
-#> 
-#> 
-#> [[13]]
-#> [[13]]$dest_type_id
-#> [1] 35
-#> 
-#> [[13]]$mode
-#> [1] "walk"
-#> 
-#> [[13]]$travel_time
-#> [1] 13
-#> 
-#> 
-#> [[14]]
-#> [[14]]$dest_type_id
-#> [1] 38
-#> 
-#> [[14]]$mode
-#> [1] "walk"
-#> 
-#> [[14]]$travel_time
-#> [1] 17
-#> 
-#> 
-#> [[15]]
-#> [[15]]$dest_type_id
-#> [1] 40
-#> 
-#> [[15]]$mode
-#> [1] "walk"
-#> 
-#> [[15]]$travel_time
-#> [1] 8
-#> 
-#> 
-#> [[16]]
-#> [[16]]$dest_type_id
-#> [1] 41
-#> 
-#> [[16]]$mode
-#> [1] "walk"
-#> 
-#> [[16]]$travel_time
-#> [1] 9
-#> 
-#> 
-#> [[17]]
-#> [[17]]$dest_type_id
-#> [1] 43
-#> 
-#> [[17]]$mode
-#> [1] "walk"
-#> 
-#> [[17]]$travel_time
-#> [1] 3
-#> 
-#> 
-#> [[18]]
-#> [[18]]$dest_type_id
-#> [1] 60
-#> 
-#> [[18]]$mode
-#> [1] "walk"
-#> 
-#> [[18]]$travel_time
-#> [1] 2
-#> 
-#> 
-#> [[19]]
-#> [[19]]$dest_type_id
-#> [1] 63
-#> 
-#> [[19]]$mode
-#> [1] "walk"
-#> 
-#> [[19]]$travel_time
-#> [1] 3
-#> 
-#> 
-#> [[20]]
-#> [[20]]$dest_type_id
-#> [1] 64
-#> 
-#> [[20]]$mode
-#> [1] "walk"
-#> 
-#> [[20]]$travel_time
-#> [1] 4
-#> 
-#> 
-#> [[21]]
-#> [[21]]$dest_type_id
-#> [1] 65
-#> 
-#> [[21]]$mode
-#> [1] "walk"
-#> 
-#> [[21]]$travel_time
-#> [1] 7
-#> 
-#> 
-#> [[22]]
-#> [[22]]$dest_type_id
-#> [1] 66
-#> 
-#> [[22]]$mode
-#> [1] "walk"
-#> 
-#> [[22]]$travel_time
-#> [1] 13
-#> 
-#> 
-#> [[23]]
-#> [[23]]$dest_type_id
-#> [1] 67
-#> 
-#> [[23]]$mode
-#> [1] "walk"
-#> 
-#> [[23]]$travel_time
-#> [1] 3
-#> 
-#> 
-#> [[24]]
-#> [[24]]$dest_type_id
-#> [1] 126
-#> 
-#> [[24]]$mode
-#> [1] "walk"
-#> 
-#> [[24]]$travel_time
-#> [1] 10
-#> 
-#> 
-#> [[25]]
-#> [[25]]$dest_type_id
-#> [1] 159
-#> 
-#> [[25]]$mode
-#> [1] "walk"
-#> 
-#> [[25]]$travel_time
-#> [1] 14
-#> 
-#> 
-#> [[26]]
-#> [[26]]$dest_type_id
-#> [1] 160
-#> 
-#> [[26]]$mode
-#> [1] "walk"
-#> 
-#> [[26]]$travel_time
-#> [1] 24
-#> 
-#> 
-#> [[27]]
-#> [[27]]$dest_type_id
-#> [1] 200
-#> 
-#> [[27]]$mode
-#> [1] "walk"
-#> 
-#> [[27]]$travel_time
-#> [1] 2
-#> 
-#> 
-#> [[28]]
-#> [[28]]$dest_type_id
-#> [1] 204
-#> 
-#> [[28]]$mode
-#> [1] "walk"
-#> 
-#> [[28]]$travel_time
-#> [1] 2
-#> 
-#> 
-#> [[29]]
-#> [[29]]$dest_type_id
-#> [1] 205
-#> 
-#> [[29]]$mode
-#> [1] "walk"
-#> 
-#> [[29]]$travel_time
-#> [1] 2
-#> 
-#> 
-#> [[30]]
-#> [[30]]$dest_type_id
-#> [1] 206
-#> 
-#> [[30]]$mode
-#> [1] "walk"
-#> 
-#> [[30]]$travel_time
-#> [1] 4
-#> 
-#> 
-#> [[31]]
-#> [[31]]$dest_type_id
-#> [1] 207
-#> 
-#> [[31]]$mode
-#> [1] "walk"
-#> 
-#> [[31]]$travel_time
-#> [1] 7
-#> 
-#> 
-#> [[32]]
-#> [[32]]$dest_type_id
-#> [1] 208
-#> 
-#> [[32]]$mode
-#> [1] "walk"
-#> 
-#> [[32]]$travel_time
-#> [1] 3
-#> 
-#> 
-#> [[33]]
-#> [[33]]$dest_type_id
-#> [1] 209
-#> 
-#> [[33]]$mode
-#> [1] "walk"
-#> 
-#> [[33]]$travel_time
-#> [1] 9
 ```
 
 ## Handle errors
