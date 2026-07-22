@@ -71,7 +71,7 @@ binding constraints.
 ## Which amenities to add, and where
 
 A new facility of a type placed at a block covers everything within a 15-minute walk
-of it — a `direction = "from"` walk isochrone (1 token each). We greedily pick the
+of it — a `direction = "from"` walk isochrone (10 tokens each). We greedily pick the
 five sites that turn the most currently-uncovered residents into fully-covered ones:
 
 ```{r}
@@ -105,7 +105,7 @@ ranked, mapped interventions.
 
 - `close_places`: free. `close_blocks_query` disc (~700 blocks x 6 categories):
   ~4,000 tokens.
-- Up to 25 candidate isochrones: ~25 tokens.
+- Up to 25 candidate isochrones (1 contour each, 10 tokens): ~250 tokens.
 
-Just inside a 5,000-token month. Shrink `radius_m` or the candidate count to trade
-coverage for budget.
+Around 4,300 tokens -- inside a 5,000-token month. Shrink `radius_m` or the candidate
+count to trade coverage for budget.
