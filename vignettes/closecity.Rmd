@@ -14,7 +14,6 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
                       eval = nzchar(Sys.getenv("CLOSECITY_KEY")))
 library(closecity)
-library(sf)
 close <- close_client(Sys.getenv("CLOSECITY_KEY"))
 ```
 
@@ -22,7 +21,7 @@ close <- close_client(Sys.getenv("CLOSECITY_KEY"))
 places, on foot, by bike, and by public transit. This vignette is a short tour.
 The three tutorials go further.
 
-## Words you will see
+## Key terms
 
 A few terms come up throughout:
 
@@ -31,8 +30,16 @@ A few terms come up throughout:
 - **Destination type.** A category of place, such as grocery stores or libraries.
   Every type has a numeric id.
 - **Mode.** How someone travels: walk, bike, or transit.
-- **Isochrone.** The area reachable from a point within a time limit, as a polygon.
-- **Catchment.** The reverse: every block that can reach a given place.
+- **Isochrone** or **catchment.** Two views of the same reachability: the area
+  reachable from a point within a time limit (an isochrone), or every block that
+  can reach a given place (a catchment).
+
+## Travel times
+
+Times to nearby places are **capped at 30 minutes** for each mode, and recorded in
+**whole minutes**. A missing time means the place is not reachable within the cap,
+not that it is zero. Isochrones are the exception: they are available for any
+budget up to an hour.
 
 ## Build a client
 
@@ -58,39 +65,45 @@ the catalog, and turn a city name into a GEOID and a centre point.
 
 ```{r}
 types <- close$destination_types()
-grocery_id <- types$dest_type_id[types$label == "grocery_stores"]
+supermarket_dest_type <- types[types$label == "grocery_stores", ]$dest_type_id
 
-providence <- close$places("Providence")[1, ]
-providence$geoid
+providence_ri <- close$places("Providence")[1, ]
+providence_ri[, c("name", "state", "geoid")]
 ```
+
+The catalog's `name` column is the readable label ("Grocery stores"); the
+underscored `label` is the internal key you match on. A place lookup carries a
+`state`, so you can tell Providence, RI from the one in Utah.
 
 ## Make a call and map it
 
-Routes with geometry return an [sf](https://r-spatial.github.io/sf/) object, so you
-can map the result straight away.
+Routes with geometry return an [sf](https://r-spatial.github.io/sf/) object.
+`close_map()` draws it on an interactive basemap in one line — bright, hoverable
+points here.
 
 ```{r}
-groceries <- close$pois_search(lat = providence$lat, lon = providence$lon,
-                               radius_m = 1500, type = grocery_id)
-plot(st_geometry(groceries), pch = 19, col = "#202a5b")
+supermarkets <- close$place_pois(providence_ri$geoid, type = supermarket_dest_type)
+close_map(supermarkets, color = "#e8590c")
 ```
 
 ## Choose an output
 
-Every route returns tabular data by default. The `output` setting controls the
-shape: `"spatial"` (the default) gives an sf object where geometry applies and a
-data frame otherwise; `"tabular"` gives a data frame everywhere and never downloads
-block boundaries; `"raw"` gives the underlying reply. Set it on the client, or pass
-`output =` to a single call.
+Every route returns tabular data by default: an sf object where geometry applies,
+a data frame otherwise. The `output` setting changes the shape — `"tabular"` never
+downloads boundaries, and `"raw"` gives the underlying reply with its metering and
+cursor fields. Set it on the client, or pass `output =` to one call.
+
+The same block summary as a data frame (the default):
 
 ```{r}
-close$output <- "raw"
-summary <- close$block_summary("440070008001068", mode = "walk")
-summary$results
+close$block_summary("440070008001068", mode = "walk")
 ```
 
-```{r, include = FALSE}
-close$output <- "spatial"
+...and as the raw reply, whose `results` you can index yourself:
+
+```{r}
+raw <- close$block_summary("440070008001068", mode = "walk", output = "raw")
+head(raw$results, 3)
 ```
 
 ## Handle errors

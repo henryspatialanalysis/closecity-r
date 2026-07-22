@@ -11,15 +11,14 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
                       eval = nzchar(Sys.getenv("CLOSECITY_KEY")))
 library(closecity)
-library(sf)
 close <- close_client(Sys.getenv("CLOSECITY_KEY"))
 ```
 
 The quickest way to feel what Close gives you: read one block's travel times, map
-the groceries around it, then draw how far you can walk from it. The example city
-is Providence, Rhode Island.
+the supermarkets around it, then draw how far you can walk from it. The example
+city is Providence, Rhode Island.
 
-*Running this tutorial uses about 90 tokens.*
+*Running this tutorial uses about 85 tokens.*
 
 ## Set up
 
@@ -27,66 +26,63 @@ Build a client, then read what you need from the free catalog.
 
 ```r
 library(closecity)
-library(sf)
 close <- close_client("ck_live_your_key")   # use your own key here
 ```
 
 ```{r}
 types <- close$destination_types()
-grocery <- types$dest_type_id[types$label == "grocery_stores"]
+supermarket_dest_type <- types[types$label == "grocery_stores", ]$dest_type_id
 
-downtown <- close$places("Providence")[1, ]
+providence_ri <- close$places("Providence")[1, ]
 ```
 
 ## Read one block's travel times
 
-Pick a block and ask how long it takes to walk to each kind of amenity. The result
-is a small data frame, one row per category.
+Pick a block and ask how long it takes to walk to each kind of amenity. Join the
+catalog's readable `name` and sort by time, so the nearest things are on top.
 
 ```{r}
-summary <- close$block_summary("440070008001068", mode = "walk")
-summary[, c("dest_type_id", "travel_time")]
+walk_times <- close$block_summary("440070008001068", mode = "walk")
+walk_times <- merge(walk_times, types[, c("dest_type_id", "name")],
+                    by = "dest_type_id")
+walk_times[order(walk_times$travel_time), c("name", "travel_time")]
 ```
 
-## Map the groceries nearby
+## Map the supermarkets nearby
 
-A radius search returns points, ready to map.
+`close_map()` draws the result on an interactive basemap in one line — bright,
+hoverable points here.
 
 ```{r}
-groceries <- close$pois_search(lat = downtown$lat, lon = downtown$lon,
-                               radius_m = 1200, type = grocery)
-plot(st_geometry(groceries), pch = 19, col = "#058040")
+supermarkets <- close$pois_search(lat = providence_ri$lat, lon = providence_ri$lon,
+                                  radius_m = 1200, type = supermarket_dest_type)
+close_map(supermarkets, color = "#e8590c")
 ```
 
 ## Draw how far you can walk
 
 An isochrone is the headline map: the area you can reach on foot in 10, 20, and 30
-minutes. The contours come back largest first, so drawing them paints the nearer
-times on top.
+minutes. Shade it by the `contour` minutes and the nearer times stand out.
 
 ```{r}
 rings <- close$isochrone(block = "440070008001068", mode = "walk",
                          direction = "from", contours = c(10, 20, 30))
-plot(rings["contour"], pal = hcl.colors(3, "YlGnBu", rev = TRUE),
-     border = "white", main = "Walk time from downtown (minutes)")
+close_map(rings, fill = "contour")
 ```
 
 ## Walk versus transit
 
-The same block, the same 30-minute budget, two modes side by side. It is the
-clearest way to see what the bus buys you.
+The same block and the same 30-minute budget, on foot and by bus — the clearest
+way to see what transit buys you.
 
-```{r, fig.width = 8, fig.height = 4}
+```{r}
 walk <- close$isochrone(block = "440070008001068", mode = "walk",
                         direction = "from", minutes = 30)
 transit <- close$isochrone(block = "440070008001068", mode = "transit",
                            direction = "from", minutes = 30)
 
-par(mfrow = c(1, 2))
-plot(st_geometry(walk), col = "#05804033", border = "#058040",
-     main = "Walk, 30 min")
-plot(st_geometry(transit), col = "#202a5b33", border = "#202a5b",
-     main = "Transit, 30 min")
+close_map(walk, color = "#058040")
+close_map(transit, color = "#202a5b")
 ```
 
 ## Where to next

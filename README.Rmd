@@ -43,11 +43,14 @@ library(closecity)
 close <- close_client("ck_live_your_key")   # use your own key here
 ```
 
-```{r first-call, fig.alt = "Grocery stores near downtown Providence, drawn as points."}
-# Grocery stores within a 1.5 km walk of a point (type 30 is grocery stores):
-groceries <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1500, type = 30)
-plot(sf::st_geometry(groceries), pch = 19, col = "#202a5b")
+```{r first-call, fig.alt = "Supermarkets near downtown Providence, drawn as points."}
+# Supermarkets within a 1.5 km walk of a point (type 30 is grocery stores):
+supermarkets <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1500, type = 30)
+plot(sf::st_geometry(supermarkets), pch = 19, col = "#e8590c")
 ```
+
+The tutorials draw results as one-line interactive maps with `close_map()` (bright
+hoverable points, or blocks shaded by travel time), on a CARTO Positron basemap.
 
 Catalog and lookup routes are free and need no key:
 
@@ -56,16 +59,16 @@ close$modes()                    # walk, bike, transit
 close$places("Providence")       # a city name to its GEOID and centre
 ```
 
-## Words you will see
+## Key terms
 
 - **Census block.** The smallest area the Census Bureau publishes. Each one has a
   15-digit id called a **GEOID**.
 - **Destination type.** A category of place, such as grocery stores or libraries.
   Each type has a numeric id. Look them up with `close$destination_types()`.
 - **Mode.** How someone travels: walk, bike, or transit.
-- **Isochrone.** The area you can reach from a point within a time limit, as a
-  polygon.
-- **Catchment.** The reverse of an isochrone: every block that can reach a place.
+- **Isochrone** or **catchment.** Two views of the same reachability: the area you
+  can reach from a point within a time limit (an isochrone), or every block that can
+  reach a place (a catchment).
 
 ## Choosing an output
 
