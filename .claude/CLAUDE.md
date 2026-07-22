@@ -1,8 +1,9 @@
 # closecity (R SDK)
 
 R client for the Close travel-time API (https://api.close.city). R6 class-based,
-returns `sf` by default. pkgdown docs deploy to GitHub Pages; CRAN is the eventual
-target. Public repo: `henryspatialanalysis/closecity-r`. The Python sibling is
+returns tabular data by default (an `sf` object where geometry applies, a plain data
+frame otherwise). pkgdown docs deploy to GitHub Pages; CRAN is the eventual target.
+Public repo: `henryspatialanalysis/closecity-r`. The Python sibling is
 `henryspatialanalysis/closecity-python` -- keep the two SDKs behaviourally in step.
 
 ## Conventions (these are binding -- do not re-litigate)
@@ -14,20 +15,35 @@ target. Public repo: `henryspatialanalysis/closecity-r`. The Python sibling is
 - **Attribution:** copyright and funder is "Henry Spatial Analysis", never "Close".
   Maintainer email `nat@henryspatialanalysis.com` (CRAN needs a real person).
 - **R style:** Nat's style, modelled on the `mbg` package -- line length 90, spaces
-  around `=` even inside calls, `<-` assignment. Roxygen with `markdown = TRUE` and
-  `r6 = TRUE`; run `roxygen2::roxygenise()` after touching `@` tags and commit the
+  around `=` even inside calls, `<-` assignment, single quotes for plain strings.
+  `if(` and `function(...){` without a space; wrap long signatures with a newline
+  after `(`, args indented 2, `){` on its own line. Native `|>` for internal request
+  building **only** (never in vignettes or the README). Roxygen with `markdown = TRUE`
+  and `r6 = TRUE`; run `roxygen2::roxygenise()` after touching `@` tags and commit the
   regenerated `man/*.Rd` + `NAMESPACE` together.
 - **API shape:** one R6 method per route, called as `close$method()`. Build clients
-  with `close_client()`, not `$new()`.
-- **Spatial by default:** feature methods (POIs, catchments, areal blocks, isochrones)
-  return `sf`. The client `spatial` field defaults `TRUE`; `spatial = FALSE` (on the
-  client or per call) returns the raw `close_reply`. Catalog/places/summaries stay raw.
-- **Dependencies:** `sf` is a hard dependency (Imports). `tigris` is Suggested and used
-  only to fetch block boundaries for the GEOID-only block routes (`fetch = TRUE`).
+  with `close_client()`, not `$new()`. `private$deliver()` is the chokepoint that
+  routes a reply by the resolved output mode; `close_as_sf()` / `close_as_df()` are
+  the public converters.
+- **Output modes (`output`, default `'spatial'`):** `'spatial'` returns `sf` where
+  geometry applies (points, isochrone and block polygons) and a data frame for catalog
+  and summary routes; `'tabular'` returns a data frame everywhere and never downloads
+  block boundaries; `'raw'` returns the `close_reply`. Set it on the client
+  (`close$output <- 'raw'`) or per call (`..., output = 'tabular'`).
+  `health`/`last_updated`/`isochrone_meta` are always raw; a 304 is always raw.
+  Metering + envelope ride on the frame's attributes. Keep the Python SDK's identical
+  `output` vocabulary in step. Requires R >= 4.1 (native pipe).
+- **Dependencies:** `sf` is a hard dependency (Imports); base data frames otherwise, no
+  tibble/dplyr (footprint rule -- this beats the mbg `data.table` habit here, and no
+  `assertthat` for the same reason). `tigris` is Suggested and used only to fetch block
+  boundaries for the GEOID-only block routes in `spatial` mode.
 - **Tutorials (vignettes):** dead-simple and linear, **no helper functions**. Pull
   destination-type ids from the **free catalog** (`close$destination_types()`), never
-  hardcode numeric codes. Draw a **map at each stage**. **No token-cost talk.** After a
-  placeholder key, inline `# use your own key here`.
+  hardcode numeric codes. Draw a **map at each stage**. State the tutorial's **measured
+  token usage** in one italic line near the top ("Running this tutorial uses about N
+  tokens."); keep every tutorial **under 5,000 tokens** and do not publish a cheaper
+  variant on the same page. No other token-cost talk in the body except the dedicated
+  `vignettes/token-use.Rmd`. After a placeholder key, inline `# use your own key here`.
 - **Example cities:** Somerville MA (home search), Richmond VA (amenity basket),
   Providence RI (competitor walksheds). **No Seattle anywhere.**
 - **Docs execute live** at build time (see below), guarded on `CLOSECITY_KEY` so a

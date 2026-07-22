@@ -4,7 +4,7 @@
 \alias{close_reply}
 \title{The reply object}
 \description{
-When \code{spatial} is FALSE, every method returns a \code{close_reply}: a list with the
+When \code{output} is \code{'raw'}, every method returns a \code{close_reply}: a list with the
 parsed body plus the metering and caching information as named fields.
 }
 \section{Fields}{
@@ -23,5 +23,5 @@ routes.}
 }
 
 \seealso{
-\code{\link[=close_as_sf]{close_as_sf()}} to turn a reply into an sf object by hand.
+\code{\link[=close_as_df]{close_as_df()}} and \code{\link[=close_as_sf]{close_as_sf()}} to convert a reply by hand.
 }

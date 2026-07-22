@@ -1,36 +1,43 @@
 # The client is an R6 object that holds your connection settings and gives you one
 # method per public route. Build it with close_client(), then make calls through
-# its methods, e.g. close$block_summary("440070008001068", mode = "walk").
+# its methods, e.g. close$block_summary('440070008001068', mode = 'walk').
 #
-# By default the feature methods (POIs, catchments, areal blocks, isochrones)
-# return an sf object, ready to map. Set spatial = FALSE (on the client, or per
-# call) to get the raw close_reply instead.
+# By default every route returns tabular data: an sf object where geometry applies
+# (points, isochrone and block polygons) and a plain data frame otherwise. The
+# output argument (on the client, or per call) switches between 'spatial',
+# 'tabular' (a data frame everywhere, no boundary download), and 'raw' (the
+# close_reply).
 
-DEFAULT_BASE_URL <- "https://api.close.city"
-PROBLEM_SLUG_PREFIX <- "https://api.close.city/problems/"
+DEFAULT_BASE_URL <- 'https://api.close.city'
+PROBLEM_SLUG_PREFIX <- 'https://api.close.city/problems/'
+OUTPUT_MODES <- c('spatial', 'tabular', 'raw')
 
 #' Create a Close API client
 #'
 #' Builds a [CloseClient]. The catalog and health routes are free, so a key is
-#' optional. Every data route needs one (a `ck_live_` or `ck_test_` key), created
-#' at https://account.close.city.
+#' optional. Every data route needs one (a `ck_live_` key), created at
+#' https://account.close.city.
 #'
-#' @param api_key Your API key, or NULL for the free routes.
-#' @param base_url API base URL.
-#' @param timeout Request timeout, in seconds.
-#' @param spatial Return feature results as [sf][sf::sf] objects? Defaults to
-#'   TRUE. Set FALSE to work with the raw [close_reply] instead.
+#' @param api_key (`character(1)`, default NULL)\cr Your API key, or NULL for the
+#'   free routes.
+#' @param base_url (`character(1)`)\cr API base URL.
+#' @param timeout (`numeric(1)`, default 30)\cr Request timeout, in seconds.
+#' @param output (`character(1)`, default `'spatial'`)\cr How results come back:
+#'   `'spatial'` returns an [sf][sf::sf] object where geometry applies and a data
+#'   frame otherwise; `'tabular'` returns a data frame for every route and never
+#'   downloads block boundaries; `'raw'` returns the [close_reply].
 #' @return A [CloseClient]. Make calls through its methods.
 #' @examples
 #' \dontrun{
-#' close <- close_client("ck_live_your_key")   # use your own key here
-#' close$block_summary("440070008001068", mode = "walk")
+#' close <- close_client('ck_live_your_key')   # use your own key here
+#' close$block_summary('440070008001068', mode = 'walk')
 #' }
 #' @export
-close_client <- function(api_key = NULL, base_url = DEFAULT_BASE_URL,
-                         timeout = 30, spatial = TRUE) {
+close_client <- function(
+  api_key = NULL, base_url = DEFAULT_BASE_URL, timeout = 30, output = 'spatial'
+){
   CloseClient$new(
-    api_key = api_key, base_url = base_url, timeout = timeout, spatial = spatial
+    api_key = api_key, base_url = base_url, timeout = timeout, output = output
   )
 }
 
@@ -38,60 +45,87 @@ close_client <- function(api_key = NULL, base_url = DEFAULT_BASE_URL,
 #'
 #' An R6 object that holds your connection settings and gives you one method per
 #' public route. Create it with [close_client()] rather than calling `$new()`.
-#' Feature methods return an [sf][sf::sf] object when `spatial` is TRUE (the
-#' default), or a [close_reply] otherwise.
+#' Results come back per the `output` field: an [sf][sf::sf] object where geometry
+#' applies, a data frame otherwise, or a [close_reply] when `output` is `'raw'`.
 #'
 #' @importFrom R6 R6Class
 #' @export
 CloseClient <- R6::R6Class(
-  "CloseClient",
+  'CloseClient',
   public = list(
 
-    #' @field spatial (`logical(1)`)\cr
-    #' Should feature methods return an sf object? Toggle any time.
-    spatial = TRUE,
+    #' @field output (`character(1)`)\cr
+    #' How results come back: `'spatial'`, `'tabular'`, or `'raw'`. Change it any
+    #' time, or override it per call with the method's `output` argument.
+    output = 'spatial',
 
     #' @description Create a client. Prefer [close_client()].
     #' @param api_key Your API key, or NULL for the free routes.
     #' @param base_url API base URL.
     #' @param timeout Request timeout, in seconds.
-    #' @param spatial Return feature results as sf objects?
-    initialize = function(api_key = NULL, base_url = DEFAULT_BASE_URL,
-                          timeout = 30, spatial = TRUE) {
+    #' @param output One of `'spatial'`, `'tabular'`, or `'raw'`.
+    initialize = function(
+      api_key = NULL, base_url = DEFAULT_BASE_URL, timeout = 30,
+      output = 'spatial'
+    ){
       private$api_key <- api_key
-      private$base_url <- sub("/$", "", base_url)
+      private$base_url <- sub('/$', '', base_url)
       private$timeout <- timeout
-      self$spatial <- spatial
+      self$output <- match.arg(output, OUTPUT_MODES)
     },
 
-    #' @description Liveness check (free).
+    #' @description Liveness check (free). Always a raw [close_reply].
     #' @return A [close_reply].
-    health = function() private$get("/v1/health"),
+    health = function() private$get('/v1/health'),
 
-    #' @description Publication time of the newest data (free).
+    #' @description Publication time of the newest data (free). Always a raw reply.
     #' @return A [close_reply].
-    last_updated = function() private$get("/v1/last-updated"),
+    last_updated = function() private$get('/v1/last-updated'),
 
     #' @description Travel modes and their numeric ids (free).
-    #' @return A [close_reply].
-    modes = function() private$get("/v1/meta/modes"),
+    #' @param output Override the client's output mode for this call.
+    #' @return A data frame, or a [close_reply] when `output` is `'raw'`.
+    modes = function(output = NULL){
+      private$deliver(
+        private$get('/v1/meta/modes'), geometry = FALSE, key = 'modes',
+        output = output
+      )
+    },
 
-    #' @description Destination-type taxonomy (free). Use it to look up the
-    #'   numeric `type` ids the data routes filter on.
-    #' @return A [close_reply].
-    destination_types = function() private$get("/v1/meta/destination-types"),
+    #' @description Destination-type taxonomy (free). Use it to look up the numeric
+    #'   `type` ids the data routes filter on; a parent type expands to its
+    #'   `leaf_ids`.
+    #' @param output Override the client's output mode for this call.
+    #' @return A data frame, or a [close_reply] when `output` is `'raw'`.
+    destination_types = function(output = NULL){
+      private$deliver(
+        private$get('/v1/meta/destination-types'), geometry = FALSE,
+        key = 'destination_types', output = output
+      )
+    },
 
     #' @description Active version of each dataset component (free).
-    #' @return A [close_reply].
-    vintage = function() private$get("/v1/meta/vintage"),
+    #' @param output Override the client's output mode for this call.
+    #' @return A data frame, or a [close_reply] when `output` is `'raw'`.
+    vintage = function(output = NULL){
+      private$deliver(
+        private$get('/v1/meta/vintage'), geometry = FALSE, key = 'components',
+        output = output
+      )
+    },
 
     #' @description Look up a city or town by name (free). Each match carries its
     #'   census place GEOID and centre point.
     #' @param q Name to search for, such as "Providence".
     #' @param limit Most matches to return (1 to 20).
-    #' @return A [close_reply].
-    places = function(q, limit = NULL) {
-      private$get("/v1/places", list(q = q, limit = limit))
+    #' @param output Override the client's output mode for this call.
+    #' @return An [sf][sf::sf] of points (a data frame in tabular mode, a
+    #'   [close_reply] when `output` is `'raw'`).
+    places = function(q, limit = NULL, output = NULL){
+      private$deliver(
+        private$get('/v1/places', list(q = q, limit = limit)),
+        geometry = TRUE, key = 'places', output = output
+      )
     },
 
     #' @description Fastest travel time from a census block to each destination
@@ -100,11 +134,19 @@ CloseClient <- R6::R6Class(
     #' @param mode Travel mode(s) to keep: "walk", "bike", "transit".
     #' @param type Destination type id(s) to keep.
     #' @param if_none_match An ETag from an earlier reply, to revalidate for free.
-    #' @return A [close_reply].
-    block_summary = function(geoid, mode = NULL, type = NULL,
-                             if_none_match = NULL) {
-      private$get(sprintf("/v1/blocks/%s/summary", geoid),
-                  list(mode = mode, type = type), if_none_match)
+    #' @param output Override the client's output mode for this call.
+    #' @return A data frame with a broadcast `geoid` column, or a [close_reply]
+    #'   when `output` is `'raw'`.
+    block_summary = function(
+      geoid, mode = NULL, type = NULL, if_none_match = NULL, output = NULL
+    ){
+      private$deliver(
+        private$get(
+          sprintf('/v1/blocks/%s/summary', geoid),
+          list(mode = mode, type = type), if_none_match
+        ),
+        geometry = FALSE, key = 'results', output = output
+      )
     },
 
     #' @description Nearby points of interest and their travel time from a block,
@@ -116,29 +158,45 @@ CloseClient <- R6::R6Class(
     #' @param max_minutes Upper bound on travel time (up to 30).
     #' @param limit Rows per page (up to 1000).
     #' @param cursor Page cursor from a previous reply's `next_cursor`.
-    #' @return An [sf][sf::sf] object, or a [close_reply] when `spatial` is FALSE.
-    block_pois = function(geoid, mode = NULL, type = NULL, dest_id = NULL,
-                          max_minutes = NULL, limit = NULL, cursor = NULL) {
-      private$as_spatial(private$get(
-        sprintf("/v1/blocks/%s/pois", geoid),
-        list(mode = mode, type = type, dest_id = dest_id,
-             max_minutes = max_minutes, limit = limit, cursor = cursor)
-      ))
+    #' @param output Override the client's output mode for this call.
+    #' @return An [sf][sf::sf] of points (a data frame in tabular mode, a
+    #'   [close_reply] when `output` is `'raw'`).
+    block_pois = function(
+      geoid, mode = NULL, type = NULL, dest_id = NULL, max_minutes = NULL,
+      limit = NULL, cursor = NULL, output = NULL
+    ){
+      private$deliver(
+        private$get(
+          sprintf('/v1/blocks/%s/pois', geoid),
+          list(
+            mode = mode, type = type, dest_id = dest_id,
+            max_minutes = max_minutes, limit = limit, cursor = cursor
+          )
+        ),
+        geometry = TRUE, output = output
+      )
     },
 
     #' @description Like `$block_summary()`, but from the block containing a
-    #'   lat/lon point. The resolved block is echoed as `resolved_block`.
+    #'   lat/lon point. The resolved block is echoed as `resolved_block` and
+    #'   broadcast to a `geoid` column.
     #' @param lat Latitude.
     #' @param lon Longitude.
     #' @param mode Travel mode(s) to keep.
     #' @param type Destination type id(s) to keep.
     #' @param if_none_match An ETag to revalidate for free.
-    #' @return A [close_reply].
-    point_summary = function(lat, lon, mode = NULL, type = NULL,
-                             if_none_match = NULL) {
-      private$get("/v1/point/summary",
-                  list(lat = lat, lon = lon, mode = mode, type = type),
-                  if_none_match)
+    #' @param output Override the client's output mode for this call.
+    #' @return A data frame, or a [close_reply] when `output` is `'raw'`.
+    point_summary = function(
+      lat, lon, mode = NULL, type = NULL, if_none_match = NULL, output = NULL
+    ){
+      private$deliver(
+        private$get(
+          '/v1/point/summary',
+          list(lat = lat, lon = lon, mode = mode, type = type), if_none_match
+        ),
+        geometry = FALSE, key = 'results', output = output
+      )
     },
 
     #' @description Like `$block_pois()`, but from the block containing a lat/lon
@@ -151,15 +209,23 @@ CloseClient <- R6::R6Class(
     #' @param max_minutes Upper bound on travel time (up to 30).
     #' @param limit Rows per page (up to 1000).
     #' @param cursor Page cursor.
-    #' @return An [sf][sf::sf] object, or a [close_reply] when `spatial` is FALSE.
-    point_pois = function(lat, lon, mode = NULL, type = NULL, dest_id = NULL,
-                          max_minutes = NULL, limit = NULL, cursor = NULL) {
-      private$as_spatial(private$get(
-        "/v1/point/pois",
-        list(lat = lat, lon = lon, mode = mode, type = type,
-             dest_id = dest_id, max_minutes = max_minutes,
-             limit = limit, cursor = cursor)
-      ))
+    #' @param output Override the client's output mode for this call.
+    #' @return An [sf][sf::sf] of points (a data frame in tabular mode, a
+    #'   [close_reply] when `output` is `'raw'`).
+    point_pois = function(
+      lat, lon, mode = NULL, type = NULL, dest_id = NULL, max_minutes = NULL,
+      limit = NULL, cursor = NULL, output = NULL
+    ){
+      private$deliver(
+        private$get(
+          '/v1/point/pois',
+          list(
+            lat = lat, lon = lon, mode = mode, type = type, dest_id = dest_id,
+            max_minutes = max_minutes, limit = limit, cursor = cursor
+          )
+        ),
+        geometry = TRUE, output = output
+      )
     },
 
     #' @description Search points of interest by bounding box, or by a circle
@@ -171,23 +237,35 @@ CloseClient <- R6::R6Class(
     #' @param q Name text to match.
     #' @param limit Rows per page (up to 1000).
     #' @param cursor Page cursor.
-    #' @return An [sf][sf::sf] object, or a [close_reply] when `spatial` is FALSE.
-    pois_search = function(lat = NULL, lon = NULL, radius_m = NULL, bbox = NULL,
-                           type = NULL, q = NULL, limit = NULL, cursor = NULL) {
-      private$as_spatial(private$get(
-        "/v1/pois",
-        list(lat = lat, lon = lon, radius_m = radius_m, bbox = bbox,
-             type = type, q = q, limit = limit, cursor = cursor)
-      ))
+    #' @param output Override the client's output mode for this call.
+    #' @return An [sf][sf::sf] of points (a data frame in tabular mode, a
+    #'   [close_reply] when `output` is `'raw'`).
+    pois_search = function(
+      lat = NULL, lon = NULL, radius_m = NULL, bbox = NULL, type = NULL,
+      q = NULL, limit = NULL, cursor = NULL, output = NULL
+    ){
+      private$deliver(
+        private$get(
+          '/v1/pois',
+          list(
+            lat = lat, lon = lon, radius_m = radius_m, bbox = bbox, type = type,
+            q = q, limit = limit, cursor = cursor
+          )
+        ),
+        geometry = TRUE, output = output
+      )
     },
 
     #' @description Details for one point of interest.
     #' @param dest_id Destination id.
     #' @param if_none_match An ETag to revalidate for free.
-    #' @return An [sf][sf::sf] object, or a [close_reply] when `spatial` is FALSE.
-    poi = function(dest_id, if_none_match = NULL) {
-      private$as_spatial(
-        private$get(sprintf("/v1/pois/%s", dest_id), NULL, if_none_match)
+    #' @param output Override the client's output mode for this call.
+    #' @return An [sf][sf::sf] of one point (a data frame in tabular mode, a
+    #'   [close_reply] when `output` is `'raw'`).
+    poi = function(dest_id, if_none_match = NULL, output = NULL){
+      private$deliver(
+        private$get(sprintf('/v1/pois/%s', dest_id), NULL, if_none_match),
+        geometry = TRUE, output = output
       )
     },
 
@@ -199,18 +277,28 @@ CloseClient <- R6::R6Class(
     #' @param max_minutes Upper bound on travel time (up to 30).
     #' @param limit Rows per page (up to 1000).
     #' @param cursor Page cursor.
-    #' @return An [sf][sf::sf] object, or a [close_reply] when `spatial` is FALSE.
-    poi_catchment = function(dest_id, mode = NULL, block = NULL,
-                             max_minutes = NULL, limit = NULL, cursor = NULL) {
-      private$as_spatial(private$get(
-        sprintf("/v1/pois/%s/catchment", dest_id),
-        list(mode = mode, block = block, max_minutes = max_minutes,
-             limit = limit, cursor = cursor)
-      ))
+    #' @param output Override the client's output mode for this call.
+    #' @return An [sf][sf::sf] of block polygons (a data frame in tabular mode, a
+    #'   [close_reply] when `output` is `'raw'`).
+    poi_catchment = function(
+      dest_id, mode = NULL, block = NULL, max_minutes = NULL, limit = NULL,
+      cursor = NULL, output = NULL
+    ){
+      private$deliver(
+        private$get(
+          sprintf('/v1/pois/%s/catchment', dest_id),
+          list(
+            mode = mode, block = block, max_minutes = max_minutes,
+            limit = limit, cursor = cursor
+          )
+        ),
+        geometry = TRUE, output = output
+      )
     },
 
     #' @description Blocks inside a GeoJSON polygon, or a circle (`center` +
-    #'   `radius_m`), one row per (block, category, mode). Read every page with
+    #'   `radius_m`), one row per (block, category, mode). Rows carry the numeric
+    #'   `mode_id` (join `$modes()` to label it). Read every page with
     #'   `$records()`.
     #' @param polygon A GeoJSON polygon or multipolygon (a list).
     #' @param center A circle centre, `list(lon =, lat =)`.
@@ -220,36 +308,53 @@ CloseClient <- R6::R6Class(
     #' @param include_population Add each block's population to its rows.
     #' @param limit Rows per page (up to 1000).
     #' @param cursor Page cursor.
-    #' @return An [sf][sf::sf] object, or a [close_reply] when `spatial` is FALSE.
-    blocks_query = function(polygon = NULL, center = NULL, radius_m = NULL,
-                            type = NULL, mode = NULL, include_population = NULL,
-                            limit = NULL, cursor = NULL) {
-      private$as_spatial(private$post_json(
-        "/v1/blocks/query",
-        list(polygon = polygon, center = center, radius_m = radius_m,
-             type = .close_as_array(type), mode = .close_as_array(mode),
-             include_population = include_population, limit = limit,
-             cursor = cursor)
-      ))
+    #' @param output Override the client's output mode for this call.
+    #' @return An [sf][sf::sf] of block polygons (a data frame in tabular mode, a
+    #'   [close_reply] when `output` is `'raw'`).
+    blocks_query = function(
+      polygon = NULL, center = NULL, radius_m = NULL, type = NULL, mode = NULL,
+      include_population = NULL, limit = NULL, cursor = NULL, output = NULL
+    ){
+      private$deliver(
+        private$post_json(
+          '/v1/blocks/query',
+          list(
+            polygon = polygon, center = center, radius_m = radius_m,
+            type = .close_as_array(type), mode = .close_as_array(mode),
+            include_population = include_population, limit = limit,
+            cursor = cursor
+          )
+        ),
+        geometry = TRUE, output = output
+      )
     },
 
     #' @description Per-block travel times for every block in a place (a city or
-    #'   town), by place GEOID. Read every page with `$records()`.
+    #'   town), by place GEOID. Rows carry the numeric `mode_id` (join `$modes()`
+    #'   to label it). Read every page with `$records()`.
     #' @param geoid Census place GEOID.
     #' @param mode Travel mode(s) to keep.
     #' @param type Destination type id(s) to keep.
     #' @param include_population Add each block's population to its rows.
     #' @param limit Rows per page (up to 1000).
     #' @param cursor Page cursor.
-    #' @return An [sf][sf::sf] object, or a [close_reply] when `spatial` is FALSE.
-    place_blocks = function(geoid, mode = NULL, type = NULL,
-                            include_population = NULL, limit = NULL,
-                            cursor = NULL) {
-      private$as_spatial(private$get(
-        sprintf("/v1/places/%s/blocks", geoid),
-        list(mode = mode, type = type, include_population = include_population,
-             limit = limit, cursor = cursor)
-      ))
+    #' @param output Override the client's output mode for this call.
+    #' @return An [sf][sf::sf] of block polygons (a data frame in tabular mode, a
+    #'   [close_reply] when `output` is `'raw'`).
+    place_blocks = function(
+      geoid, mode = NULL, type = NULL, include_population = NULL, limit = NULL,
+      cursor = NULL, output = NULL
+    ){
+      private$deliver(
+        private$get(
+          sprintf('/v1/places/%s/blocks', geoid),
+          list(
+            mode = mode, type = type, include_population = include_population,
+            limit = limit, cursor = cursor
+          )
+        ),
+        geometry = TRUE, output = output
+      )
     },
 
     #' @description Travel-time contours from a block or a lat/lon point. Give
@@ -263,58 +368,70 @@ CloseClient <- R6::R6Class(
     #' @param format "geojson" (polygons) or "blocks" (a block list).
     #' @param v Optional cache-buster, echoed back.
     #' @param if_none_match An ETag to revalidate for free.
-    #' @return An [sf][sf::sf] object of contour polygons, or a [close_reply] when
-    #'   `spatial` is FALSE or `format` is "blocks".
-    isochrone = function(block = NULL, lon = NULL, lat = NULL, mode = NULL,
-                         direction = NULL, minutes = NULL, contours = NULL,
-                         format = NULL, v = NULL, if_none_match = NULL) {
-      if (length(contours) > 1) contours <- paste(contours, collapse = ",")
+    #' @param output Override the client's output mode for this call.
+    #' @return An [sf][sf::sf] (contour polygons for geojson, block polygons for
+    #'   blocks), a data frame in tabular mode, or a [close_reply] when `output`
+    #'   is `'raw'`.
+    isochrone = function(
+      block = NULL, lon = NULL, lat = NULL, mode = NULL, direction = NULL,
+      minutes = NULL, contours = NULL, format = NULL, v = NULL,
+      if_none_match = NULL, output = NULL
+    ){
+      if(length(contours) > 1) contours <- paste(contours, collapse = ',')
       reply <- private$get(
-        "/v1/isochrone",
-        list(block = block, lon = lon, lat = lat, mode = mode,
-             direction = direction, minutes = minutes, contours = contours,
-             format = format, v = v),
+        '/v1/isochrone',
+        list(
+          block = block, lon = lon, lat = lat, mode = mode,
+          direction = direction, minutes = minutes, contours = contours,
+          format = format, v = v
+        ),
         if_none_match
       )
-      if (identical(format, "blocks")) reply else private$as_spatial(reply)
+      private$deliver(reply, geometry = TRUE, output = output)
     },
 
     #' @description Isochrone version, directions, modes, and assumptions (free).
+    #'   Always a raw [close_reply].
     #' @param if_none_match An ETag to revalidate for free.
     #' @return A [close_reply].
-    isochrone_meta = function(if_none_match = NULL) {
-      private$get("/v1/isochrone/meta", NULL, if_none_match)
+    isochrone_meta = function(if_none_match = NULL){
+      private$get('/v1/isochrone/meta', NULL, if_none_match)
     },
 
-    #' @description Read every record from a paginated method, following the
-    #'   cursor to the last page.
+    #' @description Read every record from a paginated method, following the cursor
+    #'   to the last page.
     #' @param endpoint Name of a paginated method, such as "pois_search".
     #' @param ... Arguments passed on to that method.
-    #' @return An [sf][sf::sf] object, or a list of records when `spatial` is
-    #'   FALSE.
+    #' @param output Override the client's output mode for this call.
+    #' @return A data frame (an [sf][sf::sf] in spatial mode), or a list of records
+    #'   when `output` is `'raw'`.
     #' @examples
     #' \dontrun{
     #' close$records("pois_search", lat = 41.82, lon = -71.41, radius_m = 1500)
     #' }
-    records = function(endpoint, ...) {
+    records = function(endpoint, ..., output = NULL){
+      mode <- private$resolve_output(output)
       fetch <- self[[endpoint]]
-      want_spatial <- self$spatial
-      self$spatial <- FALSE                 # collect the raw pages first
-      on.exit(self$spatial <- want_spatial)
       out <- list()
       cursor <- NULL
-      repeat {
-        page <- fetch(..., cursor = cursor)
+      charged <- 0
+      last <- NULL
+      repeat{
+        page <- fetch(..., cursor = cursor, output = 'raw')
         out <- c(out, page$results)
+        if(!is.null(page$tokens_charged)) charged <- charged + page$tokens_charged
+        last <- page
         cursor <- page$next_cursor
-        if (is.null(cursor)) break
+        if(is.null(cursor)) break
       }
-      if (isTRUE(want_spatial)) {
-        close_as_sf(.close_reply(data = list(results = out), status = 200L),
-                    fetch = TRUE)
-      } else {
-        out
-      }
+      if(identical(mode, 'raw')) return(out)
+      combined <- .close_reply(
+        data = list(results = out), status = last$status %||% 200L,
+        tokens_charged = if(charged > 0) charged else NULL,
+        tokens_remaining = last$tokens_remaining, etag = last$etag,
+        request_id = last$request_id
+      )
+      private$deliver(combined, geometry = TRUE, output = mode)
     }
   ),
   private = list(
@@ -322,93 +439,102 @@ CloseClient <- R6::R6Class(
     base_url = NULL,
     timeout = NULL,
 
-    # Convert a feature reply to sf when spatial is on, otherwise pass it through.
-    as_spatial = function(reply) {
-      if (isTRUE(self$spatial)) close_as_sf(reply, fetch = TRUE) else reply
+    # Resolve a per-call output against the client default, validating it.
+    resolve_output = function(output){
+      match.arg(output %||% self$output, OUTPUT_MODES)
     },
 
-    # Build the base httr2 request for a path, with auth and our own error
-    # handling (we read every status ourselves, including 304).
-    req = function(method, path) {
-      request <- httr2::request(private$base_url)
-      request <- httr2::req_url_path_append(request, path)
-      request <- httr2::req_method(request, method)
-      request <- httr2::req_timeout(request, private$timeout)
-      request <- httr2::req_headers(request, Accept = "application/json")
-      if (!is.null(private$api_key)) {
+    # Shape a reply per the resolved output mode. geometry says whether the route
+    # can carry geometry in spatial mode; key names the record array for tabular.
+    deliver = function(reply, geometry, key = NULL, output = NULL){
+      mode <- private$resolve_output(output)
+      if(identical(mode, 'raw')) return(reply)
+      if(isTRUE(reply$not_modified)) return(reply)
+      if(identical(mode, 'spatial') && isTRUE(geometry)){
+        close_as_sf(reply, fetch = TRUE)
+      } else {
+        close_as_df(reply, key = key)
+      }
+    },
+
+    # Build the base httr2 request for a path, with auth and our own error handling
+    # (we read every status ourselves, including 304).
+    req = function(method, path){
+      request <- httr2::request(private$base_url) |>
+        httr2::req_url_path_append(path) |>
+        httr2::req_method(method) |>
+        httr2::req_timeout(private$timeout) |>
+        httr2::req_headers(Accept = 'application/json')
+      if(!is.null(private$api_key)){
         request <- httr2::req_auth_bearer_token(request, private$api_key)
       }
       httr2::req_error(request, is_error = function(resp) FALSE)
     },
 
-    perform = function(request) {
+    perform = function(request){
       resp <- httr2::req_perform(request)
       status <- httr2::resp_status(resp)
-      request_id <- httr2::resp_header(resp, "X-Request-Id")
-      if (status == 304L) {
+      request_id <- httr2::resp_header(resp, 'X-Request-Id')
+      if(status == 304L){
         return(.close_reply(
           data = NULL, status = 304L, not_modified = TRUE,
-          etag = httr2::resp_header(resp, "ETag"), request_id = request_id
+          etag = httr2::resp_header(resp, 'ETag'), request_id = request_id
         ))
       }
-      if (status >= 400L) .close_abort_problem(resp, request_id)
-      data <- if (httr2::resp_has_body(resp)) {
-        httr2::resp_body_json(resp)
-      } else {
-        NULL
-      }
+      if(status >= 400L) .close_abort_problem(resp, request_id)
+      data <- if(httr2::resp_has_body(resp)) httr2::resp_body_json(resp) else NULL
       .close_reply(
         data = data, status = status,
-        tokens_charged = .as_num(httr2::resp_header(resp, "X-Tokens-Charged")),
-        tokens_remaining = .as_num(httr2::resp_header(resp, "X-Tokens-Remaining")),
-        etag = httr2::resp_header(resp, "ETag"), request_id = request_id
+        tokens_charged = .as_num(httr2::resp_header(resp, 'X-Tokens-Charged')),
+        tokens_remaining = .as_num(httr2::resp_header(resp, 'X-Tokens-Remaining')),
+        etag = httr2::resp_header(resp, 'ETag'), request_id = request_id
       )
     },
 
-    get = function(path, query = NULL, if_none_match = NULL) {
-      request <- private$req("GET", path)
+    get = function(path, query = NULL, if_none_match = NULL){
+      request <- private$req('GET', path)
       query <- .drop_null(query)
-      if (length(query) > 0) {
+      if(length(query) > 0){
         request <- rlang::inject(
-          httr2::req_url_query(request, !!!query, .multi = "explode")
+          httr2::req_url_query(request, !!!query, .multi = 'explode')
         )
       }
-      if (!is.null(if_none_match)) {
+      if(!is.null(if_none_match)){
         request <- httr2::req_headers(request, `If-None-Match` = if_none_match)
       }
       private$perform(request)
     },
 
-    post_json = function(path, body) {
-      request <- private$req("POST", path)
-      request <- httr2::req_body_json(request, .drop_null(body), auto_unbox = TRUE)
+    post_json = function(path, body){
+      request <- private$req('POST', path) |>
+        httr2::req_body_json(.drop_null(body), auto_unbox = TRUE)
       private$perform(request)
     }
   )
 )
 
-.as_num <- function(x) if (is.null(x) || is.na(x)) NULL else as.numeric(x)
+.as_num <- function(x) if(is.null(x) || is.na(x)) NULL else as.numeric(x)
 
 # Turn a problem+json response into a classed condition and stop.
-.close_abort_problem <- function(resp, request_id) {
+.close_abort_problem <- function(resp, request_id){
   body <- tryCatch(httr2::resp_body_json(resp), error = function(e) list())
   status <- httr2::resp_status(resp)
-  type <- body$type %||% ""
-  slug <- if (startsWith(type, PROBLEM_SLUG_PREFIX)) {
+  type <- body$type %||% ''
+  slug <- if(startsWith(type, PROBLEM_SLUG_PREFIX)){
     substring(type, nchar(PROBLEM_SLUG_PREFIX) + 1)
-  } else if (nzchar(type)) {
+  } else if(nzchar(type)){
     type
   } else {
-    paste0("http-", status)
+    paste0('http-', status)
   }
-  known <- c("type", "title", "status", "detail")
-  retry_after <- .as_num(httr2::resp_header(resp, "Retry-After"))
+  known <- c('type', 'title', 'status', 'detail')
+  retry_after <- .as_num(httr2::resp_header(resp, 'Retry-After'))
   rlang::abort(
-    message = sprintf("%d %s: %s", status, slug, body$title %||% ""),
-    class = c(paste0("close_api_", slug), "close_api_error"),
+    message = sprintf('%d %s: %s', status, slug, body$title %||% ''),
+    class = c(paste0('close_api_', slug), 'close_api_error'),
     status = status,
     slug = slug,
-    title = body$title %||% "",
+    title = body$title %||% '',
     detail = body$detail,
     request_id = request_id,
     retry_after = retry_after,
@@ -416,9 +542,10 @@ CloseClient <- R6::R6Class(
   )
 }
 
-.close_reply <- function(data, status, tokens_charged = NULL,
-                         tokens_remaining = NULL, etag = NULL,
-                         request_id = NULL, not_modified = FALSE) {
+.close_reply <- function(
+  data, status, tokens_charged = NULL, tokens_remaining = NULL, etag = NULL,
+  request_id = NULL, not_modified = FALSE
+){
   structure(
     list(
       data = data, status = status, tokens_charged = tokens_charged,
@@ -427,7 +554,7 @@ CloseClient <- R6::R6Class(
       results = data$results %||% list(),
       next_cursor = data$next_cursor %||% NULL
     ),
-    class = "close_reply"
+    class = 'close_reply'
   )
 }
 
@@ -435,13 +562,13 @@ CloseClient <- R6::R6Class(
 
 # Force a value to a JSON array (so a single mode/type still serialises as [x]).
 # The POST /v1/blocks/query body requires list fields, unlike the GET routes.
-.close_as_array <- function(x) if (is.null(x)) NULL else as.list(x)
+.close_as_array <- function(x) if(is.null(x)) NULL else as.list(x)
 
-`%||%` <- function(a, b) if (is.null(a)) b else a
+`%||%` <- function(a, b) if(is.null(a)) b else a
 
 #' The reply object
 #'
-#' When `spatial` is FALSE, every method returns a `close_reply`: a list with the
+#' When `output` is `'raw'`, every method returns a `close_reply`: a list with the
 #' parsed body plus the metering and caching information as named fields.
 #'
 #' @section Fields:
@@ -456,7 +583,7 @@ CloseClient <- R6::R6Class(
 #'   \item{`not_modified`}{`TRUE` for a 304 (`data` is `NULL`).}
 #'   \item{`request_id`}{Server request id, handy for support.}
 #' }
-#' @seealso [close_as_sf()] to turn a reply into an sf object by hand.
+#' @seealso [close_as_df()] and [close_as_sf()] to convert a reply by hand.
 #' @name close_reply
 NULL
 
@@ -467,12 +594,12 @@ NULL
 #' @return `x`, invisibly.
 #' @keywords internal
 #' @export
-print.close_reply <- function(x, ...) {
-  cat(sprintf("<close_reply> status=%d", x$status))
-  if (!is.null(x$tokens_charged)) {
-    cat(sprintf(" charged=%g remaining=%g", x$tokens_charged, x$tokens_remaining))
+print.close_reply <- function(x, ...){
+  cat(sprintf('<close_reply> status=%d', x$status))
+  if(!is.null(x$tokens_charged)){
+    cat(sprintf(' charged=%g remaining=%g', x$tokens_charged, x$tokens_remaining))
   }
-  if (isTRUE(x$not_modified)) cat(" [not modified]")
-  cat("\n")
+  if(isTRUE(x$not_modified)) cat(' [not modified]')
+  cat('\n')
   invisible(x)
 }

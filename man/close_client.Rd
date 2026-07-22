@@ -8,30 +8,33 @@ close_client(
   api_key = NULL,
   base_url = DEFAULT_BASE_URL,
   timeout = 30,
-  spatial = TRUE
+  output = "spatial"
 )
 }
 \arguments{
-\item{api_key}{Your API key, or NULL for the free routes.}
+\item{api_key}{(\code{character(1)}, default NULL)\cr Your API key, or NULL for the
+free routes.}
 
-\item{base_url}{API base URL.}
+\item{base_url}{(\code{character(1)})\cr API base URL.}
 
-\item{timeout}{Request timeout, in seconds.}
+\item{timeout}{(\code{numeric(1)}, default 30)\cr Request timeout, in seconds.}
 
-\item{spatial}{Return feature results as \link[sf:sf]{sf} objects? Defaults to
-TRUE. Set FALSE to work with the raw \link{close_reply} instead.}
+\item{output}{(\code{character(1)}, default \code{'spatial'})\cr How results come back:
+\code{'spatial'} returns an \link[sf:sf]{sf} object where geometry applies and a data
+frame otherwise; \code{'tabular'} returns a data frame for every route and never
+downloads block boundaries; \code{'raw'} returns the \link{close_reply}.}
 }
 \value{
 A \link{CloseClient}. Make calls through its methods.
 }
 \description{
 Builds a \link{CloseClient}. The catalog and health routes are free, so a key is
-optional. Every data route needs one (a \code{ck_live_} or \code{ck_test_} key), created
-at https://account.close.city.
+optional. Every data route needs one (a \code{ck_live_} key), created at
+https://account.close.city.
 }
 \examples{
 \dontrun{
-close <- close_client("ck_live_your_key")   # use your own key here
-close$block_summary("440070008001068", mode = "walk")
+close <- close_client('ck_live_your_key')   # use your own key here
+close$block_summary('440070008001068', mode = 'walk')
 }
 }

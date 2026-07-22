@@ -1,7 +1,7 @@
 # Driven over httr2's response mocking, so no network is touched. Pins the
 # mechanics the client exists to get right: bearer auth, token-header surfacing,
 # opaque cursor pagination, ETag/304 revalidation, and problem+json -> condition.
-# The client is built with spatial = FALSE so methods return the raw close_reply.
+# The client is built with output = "raw" so methods return the raw close_reply.
 
 json_response <- function(status = 200, body = list(), headers = list()) {
   headers[["Content-Type"]] <- "application/json"
@@ -23,14 +23,14 @@ problem_response <- function(status, slug, title, extra = list()) {
   )
 }
 
-client <- close_client("ck_test_abc", base_url = "https://api.close.city",
-                       spatial = FALSE)
+client <- close_client("ck_live_abc", base_url = "https://api.close.city",
+                       output = "raw")
 
 
 test_that("close_client() builds an R6 CloseClient", {
   expect_s3_class(client, "CloseClient")
   expect_s3_class(client, "R6")
-  expect_false(client$spatial)
+  expect_equal(client$output, "raw")
 })
 
 
@@ -62,7 +62,7 @@ test_that("free routes need no key", {
     json_response(body = list(status = "ok", version = "0.1.0"))
   }
   reply <- httr2::with_mocked_responses(mock, {
-    close_client(spatial = FALSE)$health()
+    close_client(output = "raw")$health()
   })
   expect_equal(reply$data$status, "ok")
   expect_null(reply$tokens_charged)

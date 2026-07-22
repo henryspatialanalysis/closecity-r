@@ -6,8 +6,8 @@
 \description{
 An R6 object that holds your connection settings and gives you one method per
 public route. Create it with \code{\link[=close_client]{close_client()}} rather than calling \verb{$new()}.
-Feature methods return an \link[sf:sf]{sf} object when \code{spatial} is TRUE (the
-default), or a \link{close_reply} otherwise.
+Results come back per the \code{output} field: an \link[sf:sf]{sf} object where geometry
+applies, a data frame otherwise, or a \link{close_reply} when \code{output} is \code{'raw'}.
 }
 \examples{
 
@@ -22,8 +22,9 @@ close$records("pois_search", lat = 41.82, lon = -71.41, radius_m = 1500)
 \section{Public fields}{
   \if{html}{\out{<div class="r6-fields">}}
   \describe{
-    \item{\code{spatial}}{(\code{logical(1)})\cr
-Should feature methods return an sf object? Toggle any time.}
+    \item{\code{output}}{(\code{character(1)})\cr
+How results come back: \code{'spatial'}, \code{'tabular'}, or \code{'raw'}. Change it any
+time, or override it per call with the method's \code{output} argument.}
   }
   \if{html}{\out{</div>}}
 }
@@ -63,7 +64,7 @@ Should feature methods return an sf object? Toggle any time.}
   api_key = NULL,
   base_url = DEFAULT_BASE_URL,
   timeout = 30,
-  spatial = TRUE
+  output = "spatial"
 )}
     \if{html}{\out{</div>}}
   }
@@ -73,7 +74,7 @@ Should feature methods return an sf object? Toggle any time.}
       \item{\code{api_key}}{Your API key, or NULL for the free routes.}
       \item{\code{base_url}}{API base URL.}
       \item{\code{timeout}}{Request timeout, in seconds.}
-      \item{\code{spatial}}{Return feature results as sf objects?}
+      \item{\code{output}}{One of \code{'spatial'}, \code{'tabular'}, or \code{'raw'}.}
     }
     \if{html}{\out{</div>}}
   }
@@ -83,7 +84,7 @@ Should feature methods return an sf object? Toggle any time.}
 \if{html}{\out{<a id="method-CloseClient-health"></a>}}
 \if{latex}{\out{\hypertarget{method-CloseClient-health}{}}}
 \subsection{\code{CloseClient$health()}}{
-  Liveness check (free).
+  Liveness check (free). Always a raw \link{close_reply}.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$health()}
@@ -98,7 +99,7 @@ Should feature methods return an sf object? Toggle any time.}
 \if{html}{\out{<a id="method-CloseClient-last_updated"></a>}}
 \if{latex}{\out{\hypertarget{method-CloseClient-last_updated}{}}}
 \subsection{\code{CloseClient$last_updated()}}{
-  Publication time of the newest data (free).
+  Publication time of the newest data (free). Always a raw reply.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$last_updated()}
@@ -116,11 +117,18 @@ Should feature methods return an sf object? Toggle any time.}
   Travel modes and their numeric ids (free).
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CloseClient$modes()}
+    \preformatted{CloseClient$modes(output = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{output}}{Override the client's output mode for this call.}
+    }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    A \link{close_reply}.
+    A data frame, or a \link{close_reply} when \code{output} is \code{'raw'}.
   }
 }
 
@@ -128,15 +136,23 @@ Should feature methods return an sf object? Toggle any time.}
 \if{html}{\out{<a id="method-CloseClient-destination_types"></a>}}
 \if{latex}{\out{\hypertarget{method-CloseClient-destination_types}{}}}
 \subsection{\code{CloseClient$destination_types()}}{
-  Destination-type taxonomy (free). Use it to look up the
-numeric \code{type} ids the data routes filter on.
+  Destination-type taxonomy (free). Use it to look up the numeric
+\code{type} ids the data routes filter on; a parent type expands to its
+\code{leaf_ids}.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CloseClient$destination_types()}
+    \preformatted{CloseClient$destination_types(output = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{output}}{Override the client's output mode for this call.}
+    }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    A \link{close_reply}.
+    A data frame, or a \link{close_reply} when \code{output} is \code{'raw'}.
   }
 }
 
@@ -147,11 +163,18 @@ numeric \code{type} ids the data routes filter on.
   Active version of each dataset component (free).
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CloseClient$vintage()}
+    \preformatted{CloseClient$vintage(output = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{output}}{Override the client's output mode for this call.}
+    }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    A \link{close_reply}.
+    A data frame, or a \link{close_reply} when \code{output} is \code{'raw'}.
   }
 }
 
@@ -163,7 +186,7 @@ numeric \code{type} ids the data routes filter on.
 census place GEOID and centre point.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CloseClient$places(q, limit = NULL)}
+    \preformatted{CloseClient$places(q, limit = NULL, output = NULL)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -171,11 +194,13 @@ census place GEOID and centre point.
     \describe{
       \item{\code{q}}{Name to search for, such as "Providence".}
       \item{\code{limit}}{Most matches to return (1 to 20).}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    A \link{close_reply}.
+    An \link[sf:sf]{sf} of points (a data frame in tabular mode, a
+\link{close_reply} when \code{output} is \code{'raw'}).
   }
 }
 
@@ -191,7 +216,8 @@ category, by mode.
   geoid,
   mode = NULL,
   type = NULL,
-  if_none_match = NULL
+  if_none_match = NULL,
+  output = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -202,11 +228,13 @@ category, by mode.
       \item{\code{mode}}{Travel mode(s) to keep: "walk", "bike", "transit".}
       \item{\code{type}}{Destination type id(s) to keep.}
       \item{\code{if_none_match}}{An ETag from an earlier reply, to revalidate for free.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    A \link{close_reply}.
+    A data frame with a broadcast \code{geoid} column, or a \link{close_reply}
+when \code{output} is \code{'raw'}.
   }
 }
 
@@ -225,7 +253,8 @@ one row per (POI, mode). Read every page with \verb{$records()}.
   dest_id = NULL,
   max_minutes = NULL,
   limit = NULL,
-  cursor = NULL
+  cursor = NULL,
+  output = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -239,11 +268,13 @@ one row per (POI, mode). Read every page with \verb{$records()}.
       \item{\code{max_minutes}}{Upper bound on travel time (up to 30).}
       \item{\code{limit}}{Rows per page (up to 1000).}
       \item{\code{cursor}}{Page cursor from a previous reply's \code{next_cursor}.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    An \link[sf:sf]{sf} object, or a \link{close_reply} when \code{spatial} is FALSE.
+    An \link[sf:sf]{sf} of points (a data frame in tabular mode, a
+\link{close_reply} when \code{output} is \code{'raw'}).
   }
 }
 
@@ -252,7 +283,8 @@ one row per (POI, mode). Read every page with \verb{$records()}.
 \if{latex}{\out{\hypertarget{method-CloseClient-point_summary}{}}}
 \subsection{\code{CloseClient$point_summary()}}{
   Like \verb{$block_summary()}, but from the block containing a
-lat/lon point. The resolved block is echoed as \code{resolved_block}.
+lat/lon point. The resolved block is echoed as \code{resolved_block} and
+broadcast to a \code{geoid} column.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$point_summary(
@@ -260,7 +292,8 @@ lat/lon point. The resolved block is echoed as \code{resolved_block}.
   lon,
   mode = NULL,
   type = NULL,
-  if_none_match = NULL
+  if_none_match = NULL,
+  output = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -272,11 +305,12 @@ lat/lon point. The resolved block is echoed as \code{resolved_block}.
       \item{\code{mode}}{Travel mode(s) to keep.}
       \item{\code{type}}{Destination type id(s) to keep.}
       \item{\code{if_none_match}}{An ETag to revalidate for free.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    A \link{close_reply}.
+    A data frame, or a \link{close_reply} when \code{output} is \code{'raw'}.
   }
 }
 
@@ -296,7 +330,8 @@ point. Read every page with \verb{$records()}.
   dest_id = NULL,
   max_minutes = NULL,
   limit = NULL,
-  cursor = NULL
+  cursor = NULL,
+  output = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -311,11 +346,13 @@ point. Read every page with \verb{$records()}.
       \item{\code{max_minutes}}{Upper bound on travel time (up to 30).}
       \item{\code{limit}}{Rows per page (up to 1000).}
       \item{\code{cursor}}{Page cursor.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    An \link[sf:sf]{sf} object, or a \link{close_reply} when \code{spatial} is FALSE.
+    An \link[sf:sf]{sf} of points (a data frame in tabular mode, a
+\link{close_reply} when \code{output} is \code{'raw'}).
   }
 }
 
@@ -335,7 +372,8 @@ point. Read every page with \verb{$records()}.
   type = NULL,
   q = NULL,
   limit = NULL,
-  cursor = NULL
+  cursor = NULL,
+  output = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -349,11 +387,13 @@ point. Read every page with \verb{$records()}.
       \item{\code{q}}{Name text to match.}
       \item{\code{limit}}{Rows per page (up to 1000).}
       \item{\code{cursor}}{Page cursor.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    An \link[sf:sf]{sf} object, or a \link{close_reply} when \code{spatial} is FALSE.
+    An \link[sf:sf]{sf} of points (a data frame in tabular mode, a
+\link{close_reply} when \code{output} is \code{'raw'}).
   }
 }
 
@@ -364,7 +404,7 @@ point. Read every page with \verb{$records()}.
   Details for one point of interest.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CloseClient$poi(dest_id, if_none_match = NULL)}
+    \preformatted{CloseClient$poi(dest_id, if_none_match = NULL, output = NULL)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -372,11 +412,13 @@ point. Read every page with \verb{$records()}.
     \describe{
       \item{\code{dest_id}}{Destination id.}
       \item{\code{if_none_match}}{An ETag to revalidate for free.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    An \link[sf:sf]{sf} object, or a \link{close_reply} when \code{spatial} is FALSE.
+    An \link[sf:sf]{sf} of one point (a data frame in tabular mode, a
+\link{close_reply} when \code{output} is \code{'raw'}).
   }
 }
 
@@ -394,7 +436,8 @@ per (block, mode). Read every page with \verb{$records()}.
   block = NULL,
   max_minutes = NULL,
   limit = NULL,
-  cursor = NULL
+  cursor = NULL,
+  output = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -407,11 +450,13 @@ per (block, mode). Read every page with \verb{$records()}.
       \item{\code{max_minutes}}{Upper bound on travel time (up to 30).}
       \item{\code{limit}}{Rows per page (up to 1000).}
       \item{\code{cursor}}{Page cursor.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    An \link[sf:sf]{sf} object, or a \link{close_reply} when \code{spatial} is FALSE.
+    An \link[sf:sf]{sf} of block polygons (a data frame in tabular mode, a
+\link{close_reply} when \code{output} is \code{'raw'}).
   }
 }
 
@@ -420,7 +465,8 @@ per (block, mode). Read every page with \verb{$records()}.
 \if{latex}{\out{\hypertarget{method-CloseClient-blocks_query}{}}}
 \subsection{\code{CloseClient$blocks_query()}}{
   Blocks inside a GeoJSON polygon, or a circle (\code{center} +
-\code{radius_m}), one row per (block, category, mode). Read every page with
+\code{radius_m}), one row per (block, category, mode). Rows carry the numeric
+\code{mode_id} (join \verb{$modes()} to label it). Read every page with
 \verb{$records()}.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
@@ -432,7 +478,8 @@ per (block, mode). Read every page with \verb{$records()}.
   mode = NULL,
   include_population = NULL,
   limit = NULL,
-  cursor = NULL
+  cursor = NULL,
+  output = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -447,11 +494,13 @@ per (block, mode). Read every page with \verb{$records()}.
       \item{\code{include_population}}{Add each block's population to its rows.}
       \item{\code{limit}}{Rows per page (up to 1000).}
       \item{\code{cursor}}{Page cursor.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    An \link[sf:sf]{sf} object, or a \link{close_reply} when \code{spatial} is FALSE.
+    An \link[sf:sf]{sf} of block polygons (a data frame in tabular mode, a
+\link{close_reply} when \code{output} is \code{'raw'}).
   }
 }
 
@@ -460,7 +509,8 @@ per (block, mode). Read every page with \verb{$records()}.
 \if{latex}{\out{\hypertarget{method-CloseClient-place_blocks}{}}}
 \subsection{\code{CloseClient$place_blocks()}}{
   Per-block travel times for every block in a place (a city or
-town), by place GEOID. Read every page with \verb{$records()}.
+town), by place GEOID. Rows carry the numeric \code{mode_id} (join \verb{$modes()}
+to label it). Read every page with \verb{$records()}.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$place_blocks(
@@ -469,7 +519,8 @@ town), by place GEOID. Read every page with \verb{$records()}.
   type = NULL,
   include_population = NULL,
   limit = NULL,
-  cursor = NULL
+  cursor = NULL,
+  output = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -482,11 +533,13 @@ town), by place GEOID. Read every page with \verb{$records()}.
       \item{\code{include_population}}{Add each block's population to its rows.}
       \item{\code{limit}}{Rows per page (up to 1000).}
       \item{\code{cursor}}{Page cursor.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    An \link[sf:sf]{sf} object, or a \link{close_reply} when \code{spatial} is FALSE.
+    An \link[sf:sf]{sf} of block polygons (a data frame in tabular mode, a
+\link{close_reply} when \code{output} is \code{'raw'}).
   }
 }
 
@@ -508,7 +561,8 @@ town), by place GEOID. Read every page with \verb{$records()}.
   contours = NULL,
   format = NULL,
   v = NULL,
-  if_none_match = NULL
+  if_none_match = NULL,
+  output = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -524,12 +578,14 @@ town), by place GEOID. Read every page with \verb{$records()}.
       \item{\code{format}}{"geojson" (polygons) or "blocks" (a block list).}
       \item{\code{v}}{Optional cache-buster, echoed back.}
       \item{\code{if_none_match}}{An ETag to revalidate for free.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    An \link[sf:sf]{sf} object of contour polygons, or a \link{close_reply} when
-\code{spatial} is FALSE or \code{format} is "blocks".
+    An \link[sf:sf]{sf} (contour polygons for geojson, block polygons for
+blocks), a data frame in tabular mode, or a \link{close_reply} when \code{output}
+is \code{'raw'}.
   }
 }
 
@@ -538,6 +594,7 @@ town), by place GEOID. Read every page with \verb{$records()}.
 \if{latex}{\out{\hypertarget{method-CloseClient-isochrone_meta}{}}}
 \subsection{\code{CloseClient$isochrone_meta()}}{
   Isochrone version, directions, modes, and assumptions (free).
+Always a raw \link{close_reply}.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$isochrone_meta(if_none_match = NULL)}
@@ -559,11 +616,11 @@ town), by place GEOID. Read every page with \verb{$records()}.
 \if{html}{\out{<a id="method-CloseClient-records"></a>}}
 \if{latex}{\out{\hypertarget{method-CloseClient-records}{}}}
 \subsection{\code{CloseClient$records()}}{
-  Read every record from a paginated method, following the
-cursor to the last page.
+  Read every record from a paginated method, following the cursor
+to the last page.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CloseClient$records(endpoint, ...)}
+    \preformatted{CloseClient$records(endpoint, ..., output = NULL)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -571,12 +628,13 @@ cursor to the last page.
     \describe{
       \item{\code{endpoint}}{Name of a paginated method, such as "pois_search".}
       \item{\code{...}}{Arguments passed on to that method.}
+      \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    An \link[sf:sf]{sf} object, or a list of records when \code{spatial} is
-FALSE.
+    A data frame (an \link[sf:sf]{sf} in spatial mode), or a list of records
+when \code{output} is \code{'raw'}.
   }
   \subsection{Examples}{
     \if{html}{\out{<div class="r example copy">}}
