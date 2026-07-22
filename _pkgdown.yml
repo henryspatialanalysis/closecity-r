@@ -51,3 +51,8 @@ reference:
   - close_as_sf
   - close_as_df
   - close_reply
+- title: Mapping
+  desc: >
+    Draw a client result on an interactive CARTO Positron basemap in one call.
+  contents:
+  - close_map
