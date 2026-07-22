@@ -40,50 +40,27 @@ plot(sf::st_geometry(groceries), pch = 19, col = "#202a5b")
 Catalog and lookup routes are free and need no key:
 
 ``` r
-close$modes()$data$modes                       # walk, bike, transit
-#> [[1]]
-#> [[1]]$mode_id
-#> [1] 1
-#> 
-#> [[1]]$mode
-#> [1] "walk"
-#> 
-#> [[1]]$description
-#> [1] "Walking"
-#> 
-#> 
-#> [[2]]
-#> [[2]]$mode_id
-#> [1] 2
-#> 
-#> [[2]]$mode
-#> [1] "bike"
-#> 
-#> [[2]]$description
-#> [1] "Biking"
-#> 
-#> 
-#> [[3]]
-#> [[3]]$mode_id
-#> [1] 3
-#> 
-#> [[3]]$mode
-#> [1] "transit"
-#> 
-#> [[3]]$description
-#> [1] "Public transit"
-close$places("Providence")$data$places[[1]]        # a city name to its GEOID and centre
-#> $name
-#> [1] "Providence"
-#> 
-#> $geoid
-#> [1] "4459000"
-#> 
-#> $lon
-#> [1] -71.41872
-#> 
-#> $lat
-#> [1] 41.82301
+close$modes()                    # walk, bike, transit
+#>   mode_id    mode    description
+#> 1       1    walk        Walking
+#> 2       2    bike         Biking
+#> 3       3 transit Public transit
+close$places("Providence")       # a city name to its GEOID and centre
+#> Simple feature collection with 9 features and 4 fields
+#> Geometry type: POINT
+#> Dimension:     XY
+#> Bounding box:  xmin: -111.8133 ymin: 32.34238 xmax: -71.35821 ymax: 42.28133
+#> Geodetic CRS:  WGS 84
+#>                 name   geoid        lon      lat                   geometry
+#> 1         Providence 4459000  -71.41872 41.82301 POINT (-71.41872 41.82301)
+#> 2         Providence 4962360 -111.81331 41.70341 POINT (-111.8133 41.70341)
+#> 3 Providence Village 4859748  -96.95432 33.23890  POINT (-96.95432 33.2389)
+#> 4         Providence 2163372  -87.75094 37.39935 POINT (-87.75094 37.39935)
+#> 5         Providence 0162688  -87.77611 32.34238 POINT (-87.77611 32.34238)
+#> 6    East Providence 4422960  -71.35821 41.80049 POINT (-71.35821 41.80049)
+#> 7     New Providence 3451810  -74.40343 40.69964 POINT (-74.40343 40.69964)
+#> 8    Lake Providence 2241400  -91.18247 32.81322 POINT (-91.18247 32.81322)
+#> 9     New Providence 1956415  -93.17162 42.28133 POINT (-93.17162 42.28133)
 ```
 
 ## Words you will see
@@ -99,15 +76,21 @@ close$places("Providence")$data$places[[1]]        # a city name to its GEOID an
 - **Catchment.** The reverse of an isochrone: every block that can reach
   a place.
 
-## Spatial output, on or off
+## Choosing an output
 
-Feature methods return sf by default. Block routes join census-block
-boundaries for you (this needs the `tigris` package, which downloads the
-boundaries once and caches them). To work with the raw data instead, set
-the client's `spatial` flag to FALSE:
+Set `output` on the client, or per call:
+
+- `output = "spatial"` (the default) returns an `sf` object where
+  geometry applies and a `data.frame` otherwise. Block routes join
+  census-block boundaries with the `tigris` package, downloaded once and
+  cached.
+- `output = "tabular"` returns a `data.frame` for every route and never
+  downloads boundaries. Reach for it when you only want the numbers.
+- `output = "raw"` returns the underlying `close_reply`, with the parsed
+  body on `$data` and the token counts alongside.
 
 ``` r
-close$spatial <- FALSE
+close$output <- "raw"
 reply <- close$block_summary("440070008001068", mode = "walk")
 reply$results
 #> [[1]]

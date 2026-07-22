@@ -20,6 +20,8 @@ does. Its **walkshed** is every residential block that can walk to it. This tuto
 finds nearby competitors and measures how much of that walkshed they share. The
 example city is Providence, Rhode Island.
 
+*Running this tutorial uses about 900 tokens.*
+
 ## Set up
 
 Read the cafe category id from the free catalog and find the city centre.
@@ -31,12 +33,11 @@ close <- close_client("ck_live_your_key")   # use your own key here
 ```
 
 ```{r}
-types <- close$destination_types()$data$destination_types
-labels <- sapply(types, `[[`, "label")
-ids <- sapply(types, `[[`, "dest_type_id")
-cafe <- ids[labels == "cafes"]
+types <- close$destination_types()
+ids <- setNames(types$dest_type_id, types$label)
+cafe <- ids[["cafes"]]
 
-city <- close$places("Providence")$data$places[[1]]
+city <- close$places("Providence")[1, ]
 ```
 
 ## Find the shops

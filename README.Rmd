@@ -49,8 +49,8 @@ plot(sf::st_geometry(groceries), pch = 19, col = "#202a5b")
 Catalog and lookup routes are free and need no key:
 
 ```{r}
-close$modes()$data$modes                       # walk, bike, transit
-close$places("Providence")$data$places[[1]]        # a city name to its GEOID and centre
+close$modes()                    # walk, bike, transit
+close$places("Providence")       # a city name to its GEOID and centre
 ```
 
 ## Words you will see
@@ -64,14 +64,20 @@ close$places("Providence")$data$places[[1]]        # a city name to its GEOID an
   polygon.
 - **Catchment.** The reverse of an isochrone: every block that can reach a place.
 
-## Spatial output, on or off
+## Choosing an output
 
-Feature methods return sf by default. Block routes join census-block boundaries for
-you (this needs the `tigris` package, which downloads the boundaries once and caches
-them). To work with the raw data instead, set the client's `spatial` flag to FALSE:
+Set `output` on the client, or per call:
+
+- `output = "spatial"` (the default) returns an `sf` object where geometry applies
+  and a `data.frame` otherwise. Block routes join census-block boundaries with the
+  `tigris` package, downloaded once and cached.
+- `output = "tabular"` returns a `data.frame` for every route and never downloads
+  boundaries. Reach for it when you only want the numbers.
+- `output = "raw"` returns the underlying `close_reply`, with the parsed body on
+  `$data` and the token counts alongside.
 
 ```{r}
-close$spatial <- FALSE
+close$output <- "raw"
 reply <- close$block_summary("440070008001068", mode = "walk")
 reply$results
 ```

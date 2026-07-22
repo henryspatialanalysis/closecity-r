@@ -22,6 +22,8 @@ where the gaps are. The idea follows
 [this analysis](https://nathenry.com/writing/2023-02-07-seattle-walkability.html),
 here applied to Richmond, Virginia.
 
+*Running this tutorial uses about 3,500 tokens.*
+
 ## Set up
 
 Read the six category ids from the free catalog, and turn the city name into a
@@ -34,20 +36,19 @@ close <- close_client("ck_live_your_key")   # use your own key here
 ```
 
 ```{r}
-types <- close$destination_types()$data$destination_types
-labels <- sapply(types, `[[`, "label")
-ids <- sapply(types, `[[`, "dest_type_id")
+types <- close$destination_types()
+ids <- setNames(types$dest_type_id, types$label)
 
 basket <- c(
-  grocery = ids[labels == "grocery_stores"],
-  library = ids[labels == "libraries"],
-  park = ids[labels == "parks"],
-  transit = ids[labels == "frequent_transit"],
-  restaurant = ids[labels == "restaurants"],
-  cafe = ids[labels == "cafes"]
+  grocery = ids[["grocery_stores"]],
+  library = ids[["libraries"]],
+  park = ids[["parks"]],
+  transit = ids[["frequent_transit"]],
+  restaurant = ids[["restaurants"]],
+  cafe = ids[["cafes"]]
 )
 
-city <- close$places("Richmond")$data$places[[1]]
+city <- close$places("Richmond")[1, ]
 ```
 
 ## Pull the blocks, with population
@@ -91,6 +92,21 @@ near_transit <- unique(blocks$geoid[blocks$dest_type_id == basket["transit"] &
 one_per_block$has_transit <- one_per_block$geoid %in% near_transit
 
 plot(one_per_block["has_transit"], pal = c("#eef0f7", "#058040"), border = NA)
+```
+
+## The 15-minute-city score
+
+Count, for each block, how many of the six amenities are within a 15-minute walk.
+That score, from 0 to 6, is the map planners reach for. It reuses the data you
+already pulled, so it costs nothing more.
+
+```{r}
+covered <- blocks[blocks$travel_time <= 15, ]
+score <- tapply(covered$dest_type_id, covered$geoid, function(x) length(unique(x)))
+one_per_block$score <- as.integer(score[one_per_block$geoid])
+one_per_block$score[is.na(one_per_block$score)] <- 0L
+
+plot(one_per_block["score"], pal = hcl.colors(7, "viridis"), border = NA)
 ```
 
 ## Who can reach all six

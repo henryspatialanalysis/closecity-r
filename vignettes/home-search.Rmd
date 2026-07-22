@@ -20,6 +20,8 @@ the blocks that are within a 10-minute walk of a grocery store, a 5-minute walk 
 restaurant, and a 20-minute walk of a frequent-transit stop. Then you narrow those
 blocks to the overlap of two commutes. The example city is Somerville, Massachusetts.
 
+*Running this tutorial uses about 2,900 tokens.*
+
 ## Set up
 
 Build a client, then read the pieces you need from the free catalog instead of
@@ -33,16 +35,15 @@ close <- close_client("ck_live_your_key")   # use your own key here
 
 ```{r}
 # The catalog lists every category with its numeric id. Pull the ids you need.
-types <- close$destination_types()$data$destination_types
-labels <- sapply(types, `[[`, "label")
-ids <- sapply(types, `[[`, "dest_type_id")
+types <- close$destination_types()
+ids <- setNames(types$dest_type_id, types$label)
 
-grocery <- ids[labels == "grocery_stores"]
-restaurant <- ids[labels == "restaurants"]
-transit <- ids[labels == "frequent_transit"]
+grocery <- ids[["grocery_stores"]]
+restaurant <- ids[["restaurants"]]
+transit <- ids[["frequent_transit"]]
 
 # Turn the city name into a GEOID and a centre point.
-city <- close$places("Somerville")$data$places[[1]]
+city <- close$places("Somerville")[1, ]
 ```
 
 ## See what is around

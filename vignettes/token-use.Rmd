@@ -1,0 +1,76 @@
+---
+title: "Efficient token use"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Efficient token use}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      eval = nzchar(Sys.getenv("CLOSECITY_KEY")))
+library(closecity)
+close <- close_client(Sys.getenv("CLOSECITY_KEY"))
+```
+
+The API is metered in tokens: one per returned row, minimum one per request, and
+10 per isochrone contour. Tokens are rows, so spending well is mostly about not
+asking for rows you will throw away.
+
+## Free things
+
+The whole catalog is free and keyless: `$modes()`, `$destination_types()`,
+`$vintage()`, `$places()`, `$isochrone_meta()`, `$last_updated()`, and `$health()`.
+Do your lookups before you spend a token.
+
+Revalidation is free too. Keep a reply's `etag` and pass it back as
+`if_none_match`; an unchanged response returns a free `304`. Read `output = "raw"`
+when you want the etag:
+
+```{r}
+close$output <- "raw"
+first <- close$block_summary("440070008001068", mode = "walk")
+again <- close$block_summary("440070008001068", mode = "walk",
+                             if_none_match = first$etag)
+again$not_modified   # TRUE, and nothing was charged
+```
+
+## The big levers
+
+The rows a query returns multiply out as modes times types times blocks:
+
+- **Pass `mode`.** Omitting it returns all three modes, so three times the rows.
+- **Request leaf types, not parents.** A parent type expands to its leaves, so a
+  single leaf id is a fraction of the rows of a parent like `parks`.
+- **Shrink the area.** Cost grows with the square of `radius_m`, so halving the
+  radius is roughly a quarter of the tokens.
+- **Use `max_minutes`.** It drops rows you would filter out anyway.
+
+## Isochrones are the cheap reach primitive
+
+An isochrone is 10 tokens per contour regardless of area, and `format = "blocks"`
+returns every reachable block with its minutes. A whole walkshed for 10 tokens,
+where a catchment or block query charges per block:
+
+```{r}
+shed <- close$isochrone(block = "440070008001068", minutes = 30, mode = "walk",
+                        format = "blocks")
+```
+
+## Watch what you spend
+
+Every metered reply carries the token counts. In the frame output modes they are
+attached as attributes; in `output = "raw"` they are on the reply.
+
+```{r}
+close$output <- "tabular"
+groceries <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1200)
+attr(groceries, "tokens_charged")
+attr(groceries, "tokens_remaining")
+```
+
+When you only want the numbers, `output = "tabular"` skips the block-boundary
+download entirely. The block boundaries the spatial mode joins are cached locally,
+so re-running a script costs time, not tokens; pass a `block_geometry` frame you
+already have to skip even that.
