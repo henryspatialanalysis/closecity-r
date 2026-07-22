@@ -25,7 +25,7 @@ labels <- sapply(types, `[[`, "label")
 ids <- sapply(types, `[[`, "dest_type_id")
 cafe <- ids[labels == "cafes"]
 
-city <- close$places("Providence")$results[[1]]
+city <- close$places("Providence")$data$places[[1]]
 ```
 
 ## Find the shops
@@ -38,9 +38,16 @@ them and pick one shop as the subject.
 cafes <- close$pois_search(lat = city$lat, lon = city$lon,
                            radius_m = 1200, type = cafe)
 plot(st_geometry(cafes), pch = 19, col = "#202a5b")
+```
+
+![](competitor-walksheds_files/figure-html/unnamed-chunk-3-1.png)
+
+``` r
+
 
 ours <- cafes[1, ]
 ours$name
+#> [1] "The Nitro Bar"
 ```
 
 ## Our walkshed
@@ -56,6 +63,8 @@ our_shed <- close$poi_catchment(ours$dest_id, mode = "walk", max_minutes = 10)
 plot(st_geometry(our_shed), col = "#eef0f7", border = "#c6cbe0")
 plot(st_geometry(ours), add = TRUE, pch = 19, col = "#f36e21", cex = 1.6)
 ```
+
+![](competitor-walksheds_files/figure-html/unnamed-chunk-4-1.png)
 
 ## Who else serves it
 
@@ -73,6 +82,11 @@ for (i in 2:6) {
               cafes$name[i], length(shared),
               100 * length(shared) / nrow(our_shed)))
 }
+#> Schaste                       82 shared blocks (82% of ours)
+#> White Electric                53 shared blocks (53% of ours)
+#> Starbucks                     50 shared blocks (50% of ours)
+#> Little City Coffee & Kitchen  12 shared blocks (12% of ours)
+#> Cafe La France                 1 shared blocks (1% of ours)
 ```
 
 ## Map the contested ground
@@ -87,6 +101,8 @@ plot(st_geometry(our_shed), col = "#eef0f7", border = "#c6cbe0")
 plot(st_geometry(cafes), add = TRUE, pch = 19, col = "#202a5b")
 plot(st_geometry(ours), add = TRUE, pch = 19, col = "#f36e21", cex = 1.6)
 ```
+
+![](competitor-walksheds_files/figure-html/unnamed-chunk-6-1.png)
 
 The same recipe works over a wider area: search a bounding box instead
 of a radius, and loop over more shops.

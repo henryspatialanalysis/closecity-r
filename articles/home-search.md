@@ -30,7 +30,7 @@ restaurant <- ids[labels == "restaurants"]
 transit <- ids[labels == "frequent_transit"]
 
 # Turn the city name into a GEOID and a centre point.
-city <- close$places("Somerville")$results[[1]]
+city <- close$places("Somerville")$data$places[[1]]
 ```
 
 ## See what is around
@@ -52,15 +52,18 @@ plot(st_geometry(groceries), col = "#058040", pch = 19, add = TRUE)
 plot(st_geometry(stops), col = "#f36e21", pch = 17, add = TRUE)
 ```
 
+![](home-search_files/figure-html/unnamed-chunk-3-1.png)
+
 ## Find the blocks that qualify
 
-Pull the per-block walk times for the whole city. The result is an sf
-table with one row per (block, category); block boundaries come from
-`tigris`, downloaded once and cached.
+Pull the per-block walk times for the blocks around the city centre. The
+result is an sf table with one row per (block, category); block
+boundaries come from `tigris`, downloaded once and cached.
 
 ``` r
 
-blocks <- close$place_blocks(city$geoid, mode = "walk",
+blocks <- close$blocks_query(center = list(lon = city$lon, lat = city$lat),
+                             radius_m = 3000, mode = "walk",
                              type = c(grocery, restaurant, transit))
 ```
 
@@ -83,6 +86,8 @@ plot(st_geometry(blocks), col = "#eef0f7", border = "white")
 plot(st_geometry(winners), col = "#f36e21", border = NA, add = TRUE)
 ```
 
+![](home-search_files/figure-html/unnamed-chunk-5-1.png)
+
 ## Narrow to a shared commute
 
 Suppose two of you work in different places. A transit isochrone from
@@ -100,6 +105,8 @@ plot(st_geometry(work_a), col = "#05804033", border = "#058040")
 plot(st_geometry(work_b), col = "#f36e2133", border = "#f36e21", add = TRUE)
 ```
 
+![](home-search_files/figure-html/unnamed-chunk-6-1.png)
+
 Keep the winning blocks that also sit inside both commutes. That short
 list is where to look.
 
@@ -111,3 +118,5 @@ shortlist <- winners[st_intersects(winners, both_commutes, sparse = FALSE)[, 1],
 plot(st_geometry(winners), col = "#eef0f7", border = "white")
 plot(st_geometry(shortlist), col = "#058040", border = NA, add = TRUE)
 ```
+
+![](home-search_files/figure-html/unnamed-chunk-7-1.png)

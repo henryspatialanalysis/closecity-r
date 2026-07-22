@@ -50,6 +50,6 @@ Make calls through its methods.
 ``` r
 if (FALSE) { # \dontrun{
 close <- close_client("ck_live_your_key")   # use your own key here
-close$block_summary("250173523004004", mode = "walk")
+close$block_summary("440070008001068", mode = "walk")
 } # }
 ```

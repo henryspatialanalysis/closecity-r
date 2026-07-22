@@ -35,7 +35,7 @@ basket <- c(
   cafe = ids[labels == "cafes"]
 )
 
-city <- close$places("Richmond")$results[[1]]
+city <- close$places("Richmond")$data$places[[1]]
 ```
 
 ## Pull the blocks, with population
@@ -69,6 +69,12 @@ for (name in names(basket)) {
   pop <- sum(one_per_block$population[one_per_block$geoid %in% covered])
   cat(sprintf("%-11s %3.0f%%\n", name, 100 * pop / total_pop))
 }
+#> grocery      10%
+#> library      38%
+#> park         88%
+#> transit       6%
+#> restaurant   58%
+#> cafe         52%
 ```
 
 Parks and restaurants tend to be everywhere; groceries and frequent
@@ -83,6 +89,8 @@ one_per_block$has_transit <- one_per_block$geoid %in% near_transit
 
 plot(one_per_block["has_transit"], pal = c("#eef0f7", "#058040"), border = NA)
 ```
+
+![](amenity-basket_files/figure-html/unnamed-chunk-5-1.png)
 
 ## Who can reach all six
 
@@ -101,10 +109,13 @@ for (name in names(basket)) {
 
 basket_pop <- sum(one_per_block$population[one_per_block$geoid %in% covered_all])
 cat(sprintf("All six amenities: %.0f%% of residents\n", 100 * basket_pop / total_pop))
+#> All six amenities: 5% of residents
 
 one_per_block$full_basket <- one_per_block$geoid %in% covered_all
 plot(one_per_block["full_basket"], pal = c("#eef0f7", "#f36e21"), border = NA)
 ```
+
+![](amenity-basket_files/figure-html/unnamed-chunk-6-1.png)
 
 ## Which amenity to add first
 
@@ -123,6 +134,12 @@ for (name in names(basket)) {
   pop <- sum(one_per_block$population[one_per_block$geoid %in% lacking])
   cat(sprintf("%-11s %6.0f residents would gain access\n", name, pop))
 }
+#> grocery       5301 residents would gain access
+#> library       3669 residents would gain access
+#> park           721 residents would gain access
+#> transit       5565 residents would gain access
+#> restaurant    2493 residents would gain access
+#> cafe          2809 residents would gain access
 ```
 
 Map the uncovered blocks to see where new amenities would do the most
@@ -133,3 +150,5 @@ good.
 one_per_block$uncovered <- one_per_block$geoid %in% uncovered
 plot(one_per_block["uncovered"], pal = c("#eef0f7", "#202a5b"), border = NA)
 ```
+
+![](amenity-basket_files/figure-html/unnamed-chunk-8-1.png)
