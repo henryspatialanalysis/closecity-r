@@ -40,23 +40,27 @@ library(closecity)
 # The key (ck_live_) comes from https://account.close.city (5,000 free tokens,
 # no card). Or set the CLOSECITY_KEY environment variable and call
 # close_client() with no argument.
-close <- close_client("ck_live_your_key")   # use your own key here
+close <- closecity::close_client(api_key = "ck_live_your_key")   # use your own key here
 ```
 
-```{r first-call, fig.alt = "Supermarkets near downtown Providence, drawn as points."}
+`close_map()` draws any result on an interactive CARTO Positron basemap in one line —
+bright hoverable points, or blocks shaded by travel time, zoomed to the data. (The
+image below is a snapshot; in a session or the [tutorials](https://henryspatialanalysis.github.io/closecity-r/articles/)
+the map is live and pannable.)
+
+```{r first-call, eval = FALSE}
 # Supermarkets within a 1.5 km walk of a point (type 30 is grocery stores):
 supermarkets <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1500, type = 30)
-plot(sf::st_geometry(supermarkets), pch = 19, col = "#e8590c")
+closecity::close_map(x = supermarkets, color = "#e8590c", label = "name")
 ```
 
-The tutorials draw results as one-line interactive maps with `close_map()` (bright
-hoverable points, or blocks shaded by travel time), on a CARTO Positron basemap.
+<img src="man/figures/README-first-call.png" alt="Supermarkets across Providence, drawn as orange points over a CARTO Positron basemap." />
 
 Catalog and lookup routes are free and need no key:
 
 ```{r}
-close$modes()                    # walk, bike, transit
-close$places("Providence")       # a city name to its GEOID and centre
+close$modes()                       # walk, bike, transit
+close$places(q = "Providence")      # a city name to its GEOID and centre
 ```
 
 ## Key terms
@@ -66,9 +70,8 @@ close$places("Providence")       # a city name to its GEOID and centre
 - **Destination type.** A category of place, such as grocery stores or libraries.
   Each type has a numeric id. Look them up with `close$destination_types()`.
 - **Mode.** How someone travels: walk, bike, or transit.
-- **Isochrone** or **catchment.** Two views of the same reachability: the area you
-  can reach from a point within a time limit (an isochrone), or every block that can
-  reach a place (a catchment).
+- **Isochrone** or **catchment**: the area you can reach starting from a point within
+  a time limit, by a selected travel mode.
 
 ## Choosing an output
 
@@ -84,8 +87,8 @@ Set `output` on the client, or per call:
 
 ```{r}
 close$output <- "raw"
-reply <- close$block_summary("440070008001068", mode = "walk")
-reply$results
+reply <- close$block_summary(geoid = "440070008001068", mode = "walk")
+str(reply$results, max.level = 2, list.len = 3)
 ```
 
 ## Handling errors
@@ -95,7 +98,7 @@ specific one such as `close_api_tokens_exhausted`.
 
 ```{r}
 tryCatch(
-  close$block_summary("000000000000000"),
+  close$block_summary(geoid = "000000000000000"),
   close_api_error = function(e) message(sprintf("%s (%d)", e$slug, e$status))
 )
 ```
@@ -106,6 +109,7 @@ request yourself.
 
 ## Reference
 
-- Documentation: <https://henryspatialanalysis.github.io/closecity-r/>
+- Package documentation: <https://henryspatialanalysis.github.io/closecity-r/>
+- API docs and guides: <https://docs.close.city>
 - Interactive API: <https://api.close.city/docs>
 - Machine-readable contract: <https://api.close.city/openapi.json>

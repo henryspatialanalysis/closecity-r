@@ -12,7 +12,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
                       eval = nzchar(Sys.getenv("CLOSECITY_KEY")))
 library(closecity)
 library(sf)
-close <- close_client(Sys.getenv("CLOSECITY_KEY"))
+close <- closecity::close_client(api_key = Sys.getenv("CLOSECITY_KEY"))
 ```
 
 Say you are moving to a new city and want to live near the amenities that are
@@ -21,7 +21,7 @@ walk of a supermarket, a 5-minute walk of a restaurant, and a 20-minute walk of 
 frequent-transit stop. Then, we narrow those blocks to the overlap of two commutes.
 The example city is Somerville, Massachusetts.
 
-*Running this tutorial uses about 2,900 tokens.*
+*Running this tutorial uses about 2,600 tokens.*
 
 ## Set up
 
@@ -31,34 +31,33 @@ memorising codes.
 ```r
 library(closecity)
 library(sf)
-close <- close_client("ck_live_your_key")   # use your own key here
+close <- closecity::close_client(api_key = "ck_live_your_key")   # use your own key here
 ```
 
 ```{r}
 # The catalog lists every category with its numeric id. Pull the ids you need.
-types <- close$destination_types()
-ids <- setNames(types$dest_type_id, types$label)
+amenity_types <- close$destination_types()
+ids <- setNames(amenity_types$dest_type_id, amenity_types$label)
 
 supermarket_dest_id <- ids[["grocery_stores"]]
 restaurant_dest_id <- ids[["restaurants"]]
 freq_transit_stop_dest_id <- ids[["frequent_transit"]]
 
-# Turn the city name into a GEOID and a centre point.
-city <- close$places("Somerville")[1, ]
+# Turn the city name into a GEOID and pull its boundary for context.
+city <- close$places(q = "Somerville")[1, ]
+city_boundary <- close$place_boundary(geoid = city$geoid)
 ```
 
 ## See what is around
 
-Look at the raw ingredients first. Each search returns points; give each category
-a colour and map them together.
+Look at the raw ingredients first: every supermarket, restaurant, and frequent-transit
+stop **within Somerville**, from `$place_pois()` — the city boundary, not a guessed
+radius, is the edge. Give each category a colour and map them together.
 
 ```{r}
-supermarkets <- close$pois_search(lat = city$lat, lon = city$lon,
-                                  radius_m = 3000, type = supermarket_dest_id)
-restaurants <- close$pois_search(lat = city$lat, lon = city$lon,
-                                 radius_m = 3000, type = restaurant_dest_id)
-stops <- close$pois_search(lat = city$lat, lon = city$lon,
-                           radius_m = 3000, type = freq_transit_stop_dest_id)
+supermarkets <- close$place_pois(geoid = city$geoid, type = supermarket_dest_id)
+restaurants <- close$place_pois(geoid = city$geoid, type = restaurant_dest_id)
+stops <- close$place_pois(geoid = city$geoid, type = freq_transit_stop_dest_id)
 
 supermarkets$kind <- "Supermarket"
 restaurants$kind <- "Restaurant"
@@ -67,68 +66,82 @@ around <- rbind(supermarkets[, "kind"], restaurants[, "kind"], stops[, "kind"])
 
 palette <- c(Supermarket = "#058040", Restaurant = "#c6cbe0",
              `Transit stop` = "#f36e21")
-close_map(around, color = palette[around$kind], label = "kind")
+closecity::close_map(x = around, color = palette[around$kind], label = "kind",
+                     boundary = city_boundary)
 ```
 
 ## Find the blocks that qualify
 
 Somerville is a census place, so one call by place GEOID pulls the per-block walk
 times for every block in the city — `$place_blocks()` reads every page and returns
-one sf table with one row per (block, category); block boundaries come from
-`tigris`, downloaded once and cached. (To search an arbitrary area instead, use
-`$blocks_query()` with a centre and radius or a polygon — we do that with a radius
-in the other tutorials only to keep their token cost low; a place GEOID pulls the
-whole city.)
+one sf row per (block, category); block boundaries come from `tigris`, downloaded
+once and cached. (To search an arbitrary area instead, use `$blocks_query()` with a
+centre and radius or a polygon — we do that with a radius in the other tutorials
+only to keep their token cost low; a place GEOID pulls the whole city.)
 
 ```{r}
-blocks <- close$place_blocks(city$geoid, mode = "walk",
+blocks <- close$place_blocks(geoid = city$geoid, mode = "walk",
                              type = c(supermarket_dest_id, restaurant_dest_id,
                                       freq_transit_stop_dest_id))
 ```
 
-Each amenity has its own rule, so pick the blocks that pass each one, then keep the
-blocks that pass all three. `intersect()` takes two sets, so fold it over the list.
+Reshape to one row per block, with a walk-time column for each amenity, so a block
+carries all three times at once (and the hover on the map shows them). Then flag the
+blocks that pass every rule.
 
 ```{r}
-near_supermarket <- unique(blocks$geoid[blocks$dest_type_id == supermarket_dest_id &
-                                          blocks$travel_time <= 10])
-near_restaurant <- unique(blocks$geoid[blocks$dest_type_id == restaurant_dest_id &
-                                         blocks$travel_time <= 5])
-near_transit <- unique(blocks$geoid[blocks$dest_type_id == freq_transit_stop_dest_id &
-                                      blocks$travel_time <= 20])
+city_blocks <- blocks[!duplicated(blocks$geoid), "geoid"]
+time_to <- function(type_id) {
+  sub <- blocks[blocks$dest_type_id == type_id, ]
+  setNames(sub$travel_time, sub$geoid)[city_blocks$geoid]
+}
+city_blocks$supermarket_min <- time_to(supermarket_dest_id)
+city_blocks$restaurant_min <- time_to(restaurant_dest_id)
+city_blocks$transit_min <- time_to(freq_transit_stop_dest_id)
 
-candidates <- Reduce(intersect, list(near_supermarket, near_restaurant, near_transit))
+city_blocks$qualifies <- (city_blocks$supermarket_min <= 10 &
+                          city_blocks$restaurant_min <= 5 &
+                          city_blocks$transit_min <= 20)
+city_blocks$qualifies[is.na(city_blocks$qualifies)] <- FALSE
 ```
 
-Show every block in the city, and highlight the ones that qualify.
+Show every block in the city, highlight the ones that qualify, and hover any block
+to read its walk time to each amenity.
 
 ```{r}
-city_blocks <- blocks[!duplicated(blocks$geoid), ]
-city_blocks$qualifies <- city_blocks$geoid %in% candidates
-close_map(city_blocks, highlight = "qualifies", color = "#f36e21")
+closecity::close_map(x = city_blocks, highlight = "qualifies", color = "#f36e21",
+                     boundary = city_boundary)
 ```
 
 ## Narrow to a shared commute
 
 Suppose two of you work in different places. A transit isochrone from each workplace
-shows how far each commute reaches.
+shows how far each commute reaches; drawn together, half-transparent, you can see
+both at once.
 
 ```{r}
 work_a <- close$isochrone(lon = -71.0865, lat = 42.3625, mode = "transit",
-                          direction = "from", minutes = 20)
+                          direction = "from", minutes = 20, format = "geojson")
 work_b <- close$isochrone(lon = -71.0589, lat = 42.3555, mode = "transit",
-                          direction = "from", minutes = 20)
+                          direction = "from", minutes = 20, format = "geojson")
 
-close_map(work_a, color = "#058040")
-close_map(work_b, color = "#f36e21")
+closecity::close_map(x = work_a, color = "#058040", opacity = 0.5,
+                     background = work_b, background_color = "#f36e21",
+                     background_opacity = 0.5)
 ```
 
-Keep the qualifying blocks that also sit inside both commutes. That short list is
-where to look.
+Keep the qualifying blocks that also sit inside both commutes. The final map shows
+those winning blocks, with the shortlist — inside both commutes — highlighted, over
+the two commute walksheds.
 
 ```{r}
-both_commutes <- st_intersection(st_union(work_a), st_union(work_b))
+both_commutes <- sf::st_intersection(sf::st_union(work_a), sf::st_union(work_b))
 winners <- city_blocks[city_blocks$qualifies, ]
-winners$shortlist <- st_intersects(winners, both_commutes, sparse = FALSE)[, 1]
-close_map(winners, highlight = "shortlist", color = "#058040")
+winners$shortlist <- sf::st_intersects(winners, both_commutes, sparse = FALSE)[, 1]
+
+closecity::close_map(x = winners, highlight = "shortlist", color = "#1f78b4",
+                     boundary = city_boundary,
+                     background = list(work_a, work_b),
+                     background_color = c("#058040", "#f36e21"),
+                     background_opacity = 0.5)
 ```

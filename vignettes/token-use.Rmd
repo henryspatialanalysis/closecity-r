@@ -11,7 +11,7 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
                       eval = nzchar(Sys.getenv("CLOSECITY_KEY")))
 library(closecity)
-close <- close_client(Sys.getenv("CLOSECITY_KEY"))
+close <- closecity::close_client(api_key = Sys.getenv("CLOSECITY_KEY"))
 ```
 
 The API is metered in tokens: one per returned row, minimum one per request, and
@@ -30,8 +30,8 @@ when you want the etag:
 
 ```{r}
 close$output <- "raw"
-first <- close$block_summary("440070008001068", mode = "walk")
-again <- close$block_summary("440070008001068", mode = "walk",
+first <- close$block_summary(geoid = "440070008001068", mode = "walk")
+again <- close$block_summary(geoid = "440070008001068", mode = "walk",
                              if_none_match = first$etag)
 again$not_modified   # TRUE, and nothing was charged
 ```
