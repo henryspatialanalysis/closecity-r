@@ -1,0 +1,87 @@
+# Competitor walksheds
+
+**Question.** For a given business in a given industry, which
+competitors also serve its walkshed — the residential blocks that can
+walk to it — and how much do their catchments overlap? We use
+**Providence, RI** and the coffee-shop trade (destination type `31`).
+
+## Pick the business and its industry
+
+``` r
+
+library(closecity)
+close <- close_client("ck_live_your_key_here")
+
+CAFE <- 31
+providence <- close_places(close, "Providence")$results[[1]]
+
+cafes <- close_records(close_pois_search, close,
+                       lat = providence$lat, lon = providence$lon,
+                       radius_m = 1200, type = CAFE)
+ours <- cafes[[1]]
+competitors <- cafes[2:6]
+ours$name
+```
+
+## Our walkshed
+
+Every block that can reach our shop within a 10-minute walk:
+
+``` r
+
+walkshed <- function(dest_id) {
+  rows <- close_records(close_poi_catchment, close, dest_id,
+                        mode = "walk", max_minutes = 10)
+  unique(vapply(rows, function(r) r$geoid, character(1)))
+}
+
+ours_shed <- walkshed(ours$dest_id)
+length(ours_shed)
+```
+
+## Which competitors contest it
+
+Local set math, free once the catchments are pulled:
+
+``` r
+
+for (c in competitors) {
+  shed <- walkshed(c$dest_id)
+  shared <- intersect(ours_shed, shed)
+  cat(sprintf("%-30s shares %3d blocks (%.0f%% of ours)\n",
+              c$name, length(shared), 100 * length(shared) / length(ours_shed)))
+}
+```
+
+## Map the contested ground
+
+``` r
+
+library(sf)
+pts <- close_as_sf(close_pois_search(close, lat = providence$lat,
+                                     lon = providence$lon, radius_m = 1200,
+                                     type = CAFE))
+shed_blocks <- close_as_sf(close_poi_catchment(close, ours$dest_id, mode = "walk",
+                                               max_minutes = 10), fetch = TRUE)
+
+plot(st_geometry(shed_blocks), col = "#eef0f7", border = "#c6cbe0")
+plot(st_geometry(pts), add = TRUE, col = "#202a5b", pch = 19)
+plot(st_geometry(pts[pts$dest_id == ours$dest_id, ]), add = TRUE,
+     col = "#f36e21", pch = 19, cex = 1.6)
+```
+
+## Scaling to a county or state
+
+The same recipe runs over a wider area — search a bounding box instead
+of a radius — but catchment pulls are metered per block, so a
+county-wide sweep can run into thousands of tokens. Keep `max_minutes`
+small and page in batches.
+
+## Token cost
+
+- `close_places` + one `close_pois_search`: free lookup + a few dozen
+  tokens.
+- Six 10-minute walk catchments (~50-150 blocks each): ~600 tokens.
+
+Well inside a 5,000-token month for a single business and its near
+neighbours.
