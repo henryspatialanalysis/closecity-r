@@ -13,19 +13,19 @@ here applied to Richmond, Virginia.
 ## Set up
 
 Read the six category ids from the free catalog, and turn the city name
-into a centre point.
+into a centre point and a boundary.
 
 ``` r
 
 library(closecity)
 library(sf)
-close <- close_client("ck_live_your_key")   # use your own key here
+close <- closecity::close_client(api_key = "ck_live_your_key")   # use your own key here
 ```
 
 ``` r
 
-types <- close$destination_types()
-ids <- setNames(types$dest_type_id, types$label)
+amenity_types <- close$destination_types()
+ids <- setNames(amenity_types$dest_type_id, amenity_types$label)
 
 basket <- c(
   supermarket = ids[["grocery_stores"]],
@@ -36,7 +36,8 @@ basket <- c(
   cafe = ids[["cafes"]]
 )
 
-city <- close$places("Richmond")[1, ]
+city <- close$places(q = "Richmond")[1, ]
+city_boundary <- close$place_boundary(geoid = city$geoid)
 ```
 
 ## Pull the blocks, with population
@@ -44,8 +45,8 @@ city <- close$places("Richmond")[1, ]
 `$blocks_query()` reads every page: the walk time from every block to
 each of the six categories, plus each block’s population, as one sf
 table. To keep this tutorial cheap we take the central blocks within a
-radius; `$place_blocks(city$geoid)` pulls **every** block in the city
-the same way (at a higher token cost).
+radius; `$place_blocks(geoid = city$geoid)` pulls **every** block in the
+city the same way (at a higher token cost).
 
 ``` r
 
@@ -80,23 +81,25 @@ for (name in names(basket)) {
 #> cafe         64%
 ```
 
-Parks and restaurants tend to be everywhere; supermarkets and frequent
-transit are usually the hardest to reach. Map one amenity — every block
-shown, the covered ones highlighted.
+Parks and restaurants tend to be everywhere; supermarkets and libraries
+are usually the hardest to reach. Map one amenity — every block shown,
+the covered ones highlighted, the city boundary behind.
 
 ``` r
 
-near_transit <- unique(blocks$geoid[blocks$dest_type_id == basket["transit"] &
+near_library <- unique(blocks$geoid[blocks$dest_type_id == basket["library"] &
                                       blocks$travel_time <= 15])
-one_per_block$has_transit <- one_per_block$geoid %in% near_transit
-close_map(one_per_block, highlight = "has_transit", color = "#058040")
+one_per_block$has_library <- one_per_block$geoid %in% near_library
+closecity::close_map(x = one_per_block, highlight = "has_library", color = "#058040",
+                     boundary = city_boundary)
 ```
 
 ## The 15-minute-city score
 
 Count, for each block, how many of the six amenities are within a
-15-minute walk. That score, from 0 to 6, is the map planners reach for.
-It reuses the data you already pulled, so it costs nothing more.
+15-minute walk. That score, from 0 to 6, is the map planners reach for;
+blue marks the best-served blocks. It reuses the data you already
+pulled, so it costs nothing more.
 
 ``` r
 
@@ -104,7 +107,7 @@ covered <- blocks[blocks$travel_time <= 15, ]
 score <- tapply(covered$dest_type_id, covered$geoid, function(x) length(unique(x)))
 one_per_block$score <- as.integer(score[one_per_block$geoid])
 one_per_block$score[is.na(one_per_block$score)] <- 0L
-close_map(one_per_block, fill = "score")
+closecity::close_map(x = one_per_block, fill = "score", boundary = city_boundary)
 ```
 
 ## Who can reach all six
@@ -125,7 +128,8 @@ cat(sprintf("All six amenities: %.0f%% of residents\n", 100 * basket_pop / total
 #> All six amenities: 4% of residents
 
 one_per_block$full_basket <- one_per_block$geoid %in% covered_all
-close_map(one_per_block, highlight = "full_basket", color = "#f36e21")
+closecity::close_map(x = one_per_block, highlight = "full_basket", color = "#f36e21",
+                     boundary = city_boundary)
 ```
 
 ## Which amenity to add first
@@ -153,17 +157,60 @@ for (name in names(basket)) {
 #> cafe         10798 residents would gain access
 ```
 
-## Site a new supermarket
+## Who is one or two amenities away
 
-The counts above say *which* amenity to add; the next question is
-*where*. Take a candidate site near the city centre and ask how many
-residents would newly gain a supermarket within a 15-minute walk if one
-opened there. A `direction = "to"` isochrone gives exactly the blocks
-that could reach the site on foot in 15 minutes.
+The residents worth targeting first are the ones *almost* there — a
+block that has five of the six is a much easier win than one that has
+none. Build a block-by-amenity coverage grid, count how many amenities
+each block is missing, and for the blocks short by just one or two,
+break down which amenities are the gap.
 
 ``` r
 
-reachable <- close$isochrone(lon = city$lon, lat = city$lat, mode = "walk",
+covered_by <- lapply(names(basket), function(name) {
+  unique(blocks$geoid[blocks$dest_type_id == basket[name] &
+                        blocks$travel_time <= 15])
+})
+names(covered_by) <- names(basket)
+
+# One logical row per block: is each amenity within 15 minutes?
+have <- vapply(covered_by, function(s) one_per_block$geoid %in% s,
+               logical(nrow(one_per_block)))
+n_missing <- rowSums(!have)
+gap <- apply(!have, 1, function(row) paste(names(basket)[row], collapse = " + "))
+
+# Residents who are short by exactly one or two amenities.
+almost <- n_missing %in% c(1, 2)
+almost_pop <- sum(one_per_block$population[almost])
+cat(sprintf("%.0f%% of residents are one or two amenities short of the full basket.\n\n",
+            100 * almost_pop / total_pop))
+#> 31% of residents are one or two amenities short of the full basket.
+
+pop_by_gap <- tapply(one_per_block$population[almost], gap[almost], sum)
+pop_by_gap <- sort(pop_by_gap, decreasing = TRUE)
+for (g in names(pop_by_gap)) {
+  cat(sprintf("  missing %-22s %3.0f%%\n", g, 100 * pop_by_gap[g] / almost_pop))
+}
+#>   missing supermarket + transit   78%
+#>   missing transit                 10%
+#>   missing library + transit        8%
+#>   missing supermarket              3%
+#>   missing library                  1%
+```
+
+## Site a new supermarket
+
+The counts above say *which* amenity to add; the next question is
+*where*. Take a candidate site on land north of the James River and ask
+how many residents would newly gain a supermarket within a 15-minute
+walk if one opened there. A `direction = "to"` isochrone gives exactly
+the blocks that could reach the site on foot in 15 minutes.
+
+``` r
+
+site_lon <- -77.437
+site_lat <- 37.548
+reachable <- close$isochrone(lon = site_lon, lat = site_lat, mode = "walk",
                              direction = "to", minutes = 15, format = "blocks")
 
 near_supermarket <- unique(blocks$geoid[blocks$dest_type_id == basket["supermarket"] &
@@ -180,5 +227,6 @@ Map the whole city and highlight the blocks that would newly gain access
 ``` r
 
 one_per_block$newly_served <- one_per_block$geoid %in% newly_served
-close_map(one_per_block, highlight = "newly_served", color = "#e8590c")
+closecity::close_map(x = one_per_block, highlight = "newly_served", color = "#e8590c",
+                     boundary = city_boundary)
 ```

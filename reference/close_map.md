@@ -4,7 +4,8 @@ Draw the [sf](https://r-spatial.github.io/sf/reference/sf.html) object a
 client method returns as an interactive map on a CARTO Positron basemap.
 Points (POIs, places) render as bright hoverable markers; polygons
 (census blocks) are filled, optionally greying the features that do not
-meet a criterion so the ones that matter stand out.
+meet a criterion so the ones that matter stand out. The view auto-zooms
+to fit every layer with a margin, and hover shows all attributes.
 
 ## Usage
 
@@ -14,12 +15,17 @@ close_map(
   color = "#e8590c",
   highlight = NULL,
   fill = NULL,
-  palette = "Viridis",
-  reverse = TRUE,
-  label = "name",
+  palette = "YlGnBu",
+  reverse = FALSE,
+  label = NULL,
   size = 9,
-  zoom = 10,
-  opacity = 0.65
+  opacity = 0.65,
+  boundary = NULL,
+  background = NULL,
+  background_color = "#3b6fb0",
+  background_opacity = 0.3,
+  buffer = 0.15,
+  zoom = NULL
 )
 ```
 
@@ -45,43 +51,72 @@ close_map(
 - fill:
 
   Optional. The name of a numeric column to shade features by, on a
-  continuous scale with a legend (e.g. travel time, or an access score).
-  Use this OR `highlight`, not both.
+  continuous ColorBrewer scale with a legend (e.g. travel time, or an
+  access score). Use this OR `highlight`, not both.
 
 - palette:
 
-  A plotly colorscale name for `fill` (default `"Viridis"`).
+  A plotly ColorBrewer colorscale name for `fill` (default `"YlGnBu"`).
 
 - reverse:
 
-  Reverse the `fill` colorscale (default `TRUE`, so smaller values —
-  e.g. shorter travel times — are the bright end).
+  Reverse the `fill` colorscale (default `FALSE`, so the blue end of
+  `YlGnBu` marks the high values). Pass `TRUE` when high values mean
+  *less* access, e.g. travel time, so blue still marks the
+  most-accessible end.
 
 - label:
 
-  Column shown on hover (default `"name"`).
+  Optional. A column shown first (bold) in the hover; the rest of the
+  attributes follow.
 
 - size:
 
   Marker size, for point maps.
 
-- zoom:
-
-  Initial zoom level.
-
 - opacity:
 
   Fill opacity, for polygon maps.
 
+- boundary:
+
+  Optional. A polygon
+  [sf](https://r-spatial.github.io/sf/reference/sf.html) drawn as a grey
+  outline underneath the data — e.g. a city boundary from
+  `place_boundary()`.
+
+- background:
+
+  Optional. A polygon
+  [sf](https://r-spatial.github.io/sf/reference/sf.html), or a list of
+  them, drawn as semi-transparent fills underneath the data — e.g.
+  commute isochrones, or a walkshed under its POIs.
+
+- background_color:
+
+  Fill colour(s) for `background`, recycled across the layers.
+
+- background_opacity:
+
+  Fill opacity for `background` layers.
+
+- buffer:
+
+  Fraction of the data extent to pad the view by (default 0.15).
+
+- zoom:
+
+  Deprecated/ignored; the view auto-zooms to the data.
+
 ## Value
 
-A [plotly](https://rdrr.io/pkg/plotly/man/plot_ly.html) htmlwidget.
+A plotly map object.
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
 close <- close_client()
-close_map(close$place_pois("4459000", type = 30), color = "#e8590c")
+close_map(close$place_pois(geoid = "4459000", type = 30), color = "#e8590c")
 } # }
 ```

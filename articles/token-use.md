@@ -18,8 +18,8 @@ Revalidation is free too. Keep a reply’s `etag` and pass it back as
 ``` r
 
 close$output <- "raw"
-first <- close$block_summary("440070008001068", mode = "walk")
-again <- close$block_summary("440070008001068", mode = "walk",
+first <- close$block_summary(geoid = "440070008001068", mode = "walk")
+again <- close$block_summary(geoid = "440070008001068", mode = "walk",
                              if_none_match = first$etag)
 again$not_modified   # TRUE, and nothing was charged
 #> [1] TRUE
@@ -73,7 +73,7 @@ supermarkets <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1200,
 attr(supermarkets, "tokens_charged")
 #> [1] 2
 attr(supermarkets, "tokens_remaining")
-#> [1] 999741206
+#> [1] 999697825
 ```
 
 When you only want the numbers, `output = "tabular"` skips the

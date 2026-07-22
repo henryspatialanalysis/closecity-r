@@ -13,7 +13,7 @@ applies, a data frame otherwise, or a close_reply when output is 'raw'."><meta p
 
     <a class="navbar-brand me-2" href="../index.html">closecity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,6 +88,7 @@ time, or override it per call with the method's <code>output</code> argument.</p
 <li><p><a href="#method-CloseClient-blocks_query"><code>CloseClient$blocks_query()</code></a></p></li>
 <li><p><a href="#method-CloseClient-place_blocks"><code>CloseClient$place_blocks()</code></a></p></li>
 <li><p><a href="#method-CloseClient-place_pois"><code>CloseClient$place_pois()</code></a></p></li>
+<li><p><a href="#method-CloseClient-place_boundary"><code>CloseClient$place_boundary()</code></a></p></li>
 <li><p><a href="#method-CloseClient-isochrone"><code>CloseClient$isochrone()</code></a></p></li>
 <li><p><a href="#method-CloseClient-isochrone_meta"><code>CloseClient$isochrone_meta()</code></a></p></li>
 <li><p><a href="#method-CloseClient-records"><code>CloseClient$records()</code></a></p></li>
@@ -731,11 +732,36 @@ set <code>FALSE</code> for the first page only.</p></dd>
 
 </div>
 
+<p></p><hr><a id="method-CloseClient-place_boundary"></a><div class="section">
+<h3 id="closeclient-place-boundary-"><code>CloseClient$place_boundary()</code><a class="anchor" aria-label="anchor" href="#closeclient-place-boundary-"></a></h3>
+<p>The boundary polygon of a census place, as a one-row
+<a href="https://r-spatial.github.io/sf/reference/sf.html" class="external-link">sf</a> — handy as a <code>boundary</code> layer for <code><a href="close_map.html">close_map()</a></code> when mapping
+a city's blocks or POIs. Free (no API key).</p><div class="section">
+<h4 id="usage-17">Usage<a class="anchor" aria-label="anchor" href="#usage-17"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">place_boundary</span><span class="op">(</span><span class="va">geoid</span>, output <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div><p></p><div class="section">
+<h4 id="arguments-15">Arguments<a class="anchor" aria-label="anchor" href="#arguments-15"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>geoid</code></dt>
+<dd><p>Census place GEOID.</p></dd>
+
+      <dt><code>output</code></dt>
+<dd><p>Override the client's output mode for this call.</p></dd>
+
+
+</dl><p></p></div>
+</div><p></p><div class="section">
+<h4 id="returns-16">Returns<a class="anchor" aria-label="anchor" href="#returns-16"></a></h4>
+<p>A one-row <a href="https://r-spatial.github.io/sf/reference/sf.html" class="external-link">sf</a> polygon (a <a href="close_reply.html">close_reply</a> when <code>output</code> is
+<code>'raw'</code>).</p>
+</div>
+
+</div>
+
 <p></p><hr><a id="method-CloseClient-isochrone"></a><div class="section">
 <h3 id="closeclient-isochrone-"><code>CloseClient$isochrone()</code><a class="anchor" aria-label="anchor" href="#closeclient-isochrone-"></a></h3>
 <p>Travel-time contours from a block or a lat/lon point. Give
 <code>minutes</code> for one threshold, or <code>contours</code> for up to four.</p><div class="section">
-<h4 id="usage-17">Usage<a class="anchor" aria-label="anchor" href="#usage-17"></a></h4>
+<h4 id="usage-18">Usage<a class="anchor" aria-label="anchor" href="#usage-18"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">isochrone</span><span class="op">(</span></span>
 <span>  block <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lon <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -750,7 +776,7 @@ set <code>FALSE</code> for the first page only.</p></dd>
 <span>  output <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
-<h4 id="arguments-15">Arguments<a class="anchor" aria-label="anchor" href="#arguments-15"></a></h4>
+<h4 id="arguments-16">Arguments<a class="anchor" aria-label="anchor" href="#arguments-16"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>block</code></dt>
 <dd><p>Origin block GEOID (or give <code>lon</code> + <code>lat</code>).</p></dd>
 
@@ -784,7 +810,7 @@ set <code>FALSE</code> for the first page only.</p></dd>
 
 </dl><p></p></div>
 </div><p></p><div class="section">
-<h4 id="returns-16">Returns<a class="anchor" aria-label="anchor" href="#returns-16"></a></h4>
+<h4 id="returns-17">Returns<a class="anchor" aria-label="anchor" href="#returns-17"></a></h4>
 <p>An <a href="https://r-spatial.github.io/sf/reference/sf.html" class="external-link">sf</a> (contour polygons for geojson, block polygons for
 blocks), a data frame in tabular mode, or a <a href="close_reply.html">close_reply</a> when <code>output</code>
 is <code>'raw'</code>.</p>
@@ -796,17 +822,17 @@ is <code>'raw'</code>.</p>
 <h3 id="closeclient-isochrone-meta-"><code>CloseClient$isochrone_meta()</code><a class="anchor" aria-label="anchor" href="#closeclient-isochrone-meta-"></a></h3>
 <p>Isochrone version, directions, modes, and assumptions (free).
 Always a raw <a href="close_reply.html">close_reply</a>.</p><div class="section">
-<h4 id="usage-18">Usage<a class="anchor" aria-label="anchor" href="#usage-18"></a></h4>
+<h4 id="usage-19">Usage<a class="anchor" aria-label="anchor" href="#usage-19"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">isochrone_meta</span><span class="op">(</span>if_none_match <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
-<h4 id="arguments-16">Arguments<a class="anchor" aria-label="anchor" href="#arguments-16"></a></h4>
+<h4 id="arguments-17">Arguments<a class="anchor" aria-label="anchor" href="#arguments-17"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>if_none_match</code></dt>
 <dd><p>An ETag to revalidate for free.</p></dd>
 
 
 </dl><p></p></div>
 </div><p></p><div class="section">
-<h4 id="returns-17">Returns<a class="anchor" aria-label="anchor" href="#returns-17"></a></h4>
+<h4 id="returns-18">Returns<a class="anchor" aria-label="anchor" href="#returns-18"></a></h4>
 <p>A <a href="close_reply.html">close_reply</a>.</p>
 </div>
 
@@ -817,10 +843,10 @@ Always a raw <a href="close_reply.html">close_reply</a>.</p><div class="section"
 <p>Read every record from a paginated method, following the cursor
 to the last page. The paginated methods now read every page by default, so
 this is rarely needed; it remains for explicit control and back-compat.</p><div class="section">
-<h4 id="usage-19">Usage<a class="anchor" aria-label="anchor" href="#usage-19"></a></h4>
+<h4 id="usage-20">Usage<a class="anchor" aria-label="anchor" href="#usage-20"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">records</span><span class="op">(</span><span class="va">endpoint</span>, <span class="va">...</span>, output <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
-<h4 id="arguments-17">Arguments<a class="anchor" aria-label="anchor" href="#arguments-17"></a></h4>
+<h4 id="arguments-18">Arguments<a class="anchor" aria-label="anchor" href="#arguments-18"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>endpoint</code></dt>
 <dd><p>Name of a paginated method, such as "pois_search".</p></dd>
 
@@ -833,7 +859,7 @@ this is rarely needed; it remains for explicit control and back-compat.</p><div 
 
 </dl><p></p></div>
 </div><p></p><div class="section">
-<h4 id="returns-18">Returns<a class="anchor" aria-label="anchor" href="#returns-18"></a></h4>
+<h4 id="returns-19">Returns<a class="anchor" aria-label="anchor" href="#returns-19"></a></h4>
 <p>A data frame (an <a href="https://r-spatial.github.io/sf/reference/sf.html" class="external-link">sf</a> in spatial mode), or a list of records
 when <code>output</code> is <code>'raw'</code>.</p>
 </div><p></p><div class="section">
@@ -846,10 +872,10 @@ when <code>output</code> is <code>'raw'</code>.</p>
 <p></p><hr><a id="method-CloseClient-clone"></a><div class="section">
 <h3 id="closeclient-clone-"><code>CloseClient$clone()</code><a class="anchor" aria-label="anchor" href="#closeclient-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
-<h4 id="usage-20">Usage<a class="anchor" aria-label="anchor" href="#usage-20"></a></h4>
+<h4 id="usage-21">Usage<a class="anchor" aria-label="anchor" href="#usage-21"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">CloseClient</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div><p></p><div class="section">
-<h4 id="arguments-18">Arguments<a class="anchor" aria-label="anchor" href="#arguments-18"></a></h4>
+<h4 id="arguments-19">Arguments<a class="anchor" aria-label="anchor" href="#arguments-19"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 

@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="index.html">closecity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,21 +90,21 @@
 <span><span class="co"># The key (ck_live_) comes from https://account.close.city (5,000 free tokens,</span></span>
 <span><span class="co"># no card). Or set the CLOSECITY_KEY environment variable and call</span></span>
 <span><span class="co"># close_client() with no argument.</span></span>
-<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key"</span><span class="op">)</span>   <span class="co"># use your own key here</span></span></code></pre></div>
+<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu">closecity</span><span class="fu">::</span><span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span>api_key <span class="op">=</span> <span class="st">"ck_live_your_key"</span><span class="op">)</span>   <span class="co"># use your own key here</span></span></code></pre></div>
+<p><code><a href="reference/close_map.html">close_map()</a></code> draws any result on an interactive CARTO Positron basemap in one line — bright hoverable points, or blocks shaded by travel time, zoomed to the data. (The image below is a snapshot; in a session or the <a href="https://henryspatialanalysis.github.io/closecity-r/articles/">tutorials</a> the map is live and pannable.)</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Supermarkets within a 1.5 km walk of a point (type 30 is grocery stores):</span></span>
 <span><span class="va">supermarkets</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span>lat <span class="op">=</span> <span class="fl">41.823</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.412</span>, radius_m <span class="op">=</span> <span class="fl">1500</span>, type <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">supermarkets</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="st">"#e8590c"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-first-call-1.png" alt="Supermarkets near downtown Providence, drawn as points."></p>
-<p>The tutorials draw results as one-line interactive maps with <code><a href="reference/close_map.html">close_map()</a></code> (bright hoverable points, or blocks shaded by travel time), on a CARTO Positron basemap.</p>
+<span><span class="fu">closecity</span><span class="fu">::</span><span class="fu"><a href="reference/close_map.html">close_map</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">supermarkets</span>, color <span class="op">=</span> <span class="st">"#e8590c"</span>, label <span class="op">=</span> <span class="st">"name"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-first-call.png" alt="Supermarkets across Providence, drawn as orange points over a CARTO Positron basemap."></p>
 <p>Catalog and lookup routes are free and need no key:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="fu">modes</span><span class="op">(</span><span class="op">)</span>                    <span class="co"># walk, bike, transit</span></span>
+<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="fu">modes</span><span class="op">(</span><span class="op">)</span>                       <span class="co"># walk, bike, transit</span></span>
 <span><span class="co">#&gt;   mode_id    mode    description</span></span>
 <span><span class="co">#&gt; 1       1    walk        Walking</span></span>
 <span><span class="co">#&gt; 2       2    bike         Biking</span></span>
 <span><span class="co">#&gt; 3       3 transit Public transit</span></span>
-<span><span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span><span class="st">"Providence"</span><span class="op">)</span>       <span class="co"># a city name to its GEOID and centre</span></span>
+<span><span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span>q <span class="op">=</span> <span class="st">"Providence"</span><span class="op">)</span>      <span class="co"># a city name to its GEOID and centre</span></span>
 <span><span class="co">#&gt; Simple feature collection with 9 features and 5 fields</span></span>
 <span><span class="co">#&gt; Geometry type: POINT</span></span>
 <span><span class="co">#&gt; Dimension:     XY</span></span>
@@ -142,7 +142,7 @@
 <li>
 <strong>Mode.</strong> How someone travels: walk, bike, or transit.</li>
 <li>
-<strong>Isochrone</strong> or <strong>catchment.</strong> Two views of the same reachability: the area you can reach from a point within a time limit (an isochrone), or every block that can reach a place (a catchment).</li>
+<strong>Isochrone</strong> or <strong>catchment</strong>: the area you can reach starting from a point within a time limit, by a selected travel mode.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -159,369 +159,22 @@
 </ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="va">output</span> <span class="op">&lt;-</span> <span class="st">"raw"</span></span>
-<span><span class="va">reply</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
-<span><span class="va">reply</span><span class="op">$</span><span class="va">results</span></span>
-<span><span class="co">#&gt; [[1]]</span></span>
-<span><span class="co">#&gt; [[1]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[1]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[1]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 10</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]</span></span>
-<span><span class="co">#&gt; [[2]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 5</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 26</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[3]]</span></span>
-<span><span class="co">#&gt; [[3]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 6</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[3]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[3]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 22</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[4]]</span></span>
-<span><span class="co">#&gt; [[4]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 7</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[4]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[4]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 10</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[5]]</span></span>
-<span><span class="co">#&gt; [[5]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 27</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[5]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[5]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 3</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[6]]</span></span>
-<span><span class="co">#&gt; [[6]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 28</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[6]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[6]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 3</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[7]]</span></span>
-<span><span class="co">#&gt; [[7]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 29</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[7]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[7]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 9</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[8]]</span></span>
-<span><span class="co">#&gt; [[8]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 30</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[8]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[8]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 6</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[9]]</span></span>
-<span><span class="co">#&gt; [[9]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 31</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[9]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[9]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 3</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[10]]</span></span>
-<span><span class="co">#&gt; [[10]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 32</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[10]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[10]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 15</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[11]]</span></span>
-<span><span class="co">#&gt; [[11]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 33</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[11]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[11]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 18</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[12]]</span></span>
-<span><span class="co">#&gt; [[12]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 34</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[12]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[12]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 9</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[13]]</span></span>
-<span><span class="co">#&gt; [[13]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 35</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[13]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[13]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 13</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[14]]</span></span>
-<span><span class="co">#&gt; [[14]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 38</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[14]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[14]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 17</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[15]]</span></span>
-<span><span class="co">#&gt; [[15]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 40</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[15]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[15]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 8</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[16]]</span></span>
-<span><span class="co">#&gt; [[16]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 41</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[16]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[16]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 9</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[17]]</span></span>
-<span><span class="co">#&gt; [[17]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 43</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[17]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[17]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 3</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[18]]</span></span>
-<span><span class="co">#&gt; [[18]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 60</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[18]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[18]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[19]]</span></span>
-<span><span class="co">#&gt; [[19]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 63</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[19]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[19]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 3</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[20]]</span></span>
-<span><span class="co">#&gt; [[20]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 64</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[20]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[20]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 4</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[21]]</span></span>
-<span><span class="co">#&gt; [[21]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 65</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[21]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[21]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 7</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[22]]</span></span>
-<span><span class="co">#&gt; [[22]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 66</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[22]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[22]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 13</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[23]]</span></span>
-<span><span class="co">#&gt; [[23]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 67</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[23]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[23]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 3</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[24]]</span></span>
-<span><span class="co">#&gt; [[24]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 126</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[24]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[24]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 10</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[25]]</span></span>
-<span><span class="co">#&gt; [[25]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 159</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[25]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[25]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 14</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[26]]</span></span>
-<span><span class="co">#&gt; [[26]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 160</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[26]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[26]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 24</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[27]]</span></span>
-<span><span class="co">#&gt; [[27]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 200</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[27]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[27]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[28]]</span></span>
-<span><span class="co">#&gt; [[28]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 204</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[28]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[28]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[29]]</span></span>
-<span><span class="co">#&gt; [[29]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 205</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[29]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[29]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[30]]</span></span>
-<span><span class="co">#&gt; [[30]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 206</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[30]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[30]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 4</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[31]]</span></span>
-<span><span class="co">#&gt; [[31]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 207</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[31]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[31]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 7</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[32]]</span></span>
-<span><span class="co">#&gt; [[32]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 208</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[32]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[32]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 3</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[33]]</span></span>
-<span><span class="co">#&gt; [[33]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 209</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[33]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[33]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 9</span></span></code></pre></div>
+<span><span class="va">reply</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span>geoid <span class="op">=</span> <span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">reply</span><span class="op">$</span><span class="va">results</span>, max.level <span class="op">=</span> <span class="fl">2</span>, list.len <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; List of 33</span></span>
+<span><span class="co">#&gt;  $ :List of 3</span></span>
+<span><span class="co">#&gt;   ..$ dest_type_id: int 1</span></span>
+<span><span class="co">#&gt;   ..$ mode        : chr "walk"</span></span>
+<span><span class="co">#&gt;   ..$ travel_time : num 10</span></span>
+<span><span class="co">#&gt;  $ :List of 3</span></span>
+<span><span class="co">#&gt;   ..$ dest_type_id: int 5</span></span>
+<span><span class="co">#&gt;   ..$ mode        : chr "walk"</span></span>
+<span><span class="co">#&gt;   ..$ travel_time : num 26</span></span>
+<span><span class="co">#&gt;  $ :List of 3</span></span>
+<span><span class="co">#&gt;   ..$ dest_type_id: int 6</span></span>
+<span><span class="co">#&gt;   ..$ mode        : chr "walk"</span></span>
+<span><span class="co">#&gt;   ..$ travel_time : num 22</span></span>
+<span><span class="co">#&gt;   [list output truncated]</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="handling-errors">Handling errors<a class="anchor" aria-label="anchor" href="#handling-errors"></a>
@@ -529,7 +182,7 @@
 <p>Failed requests raise a classed condition. Catch the base <code>close_api_error</code>, or a specific one such as <code>close_api_tokens_exhausted</code>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
-<span>  <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"000000000000000"</span><span class="op">)</span>,</span>
+<span>  <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span>geoid <span class="op">=</span> <span class="st">"000000000000000"</span><span class="op">)</span>,</span>
 <span>  close_api_error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s (%d)"</span>, <span class="va">e</span><span class="op">$</span><span class="va">slug</span>, <span class="va">e</span><span class="op">$</span><span class="va">status</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; block-not-found (404)</span></span></code></pre></div>
@@ -539,7 +192,9 @@
 <h2 id="reference">Reference<a class="anchor" aria-label="anchor" href="#reference"></a>
 </h2>
 <ul>
-<li>Documentation: <a href="https://henryspatialanalysis.github.io/closecity-r/" class="uri">https://henryspatialanalysis.github.io/closecity-r/</a>
+<li>Package documentation: <a href="https://henryspatialanalysis.github.io/closecity-r/" class="uri">https://henryspatialanalysis.github.io/closecity-r/</a>
+</li>
+<li>API docs and guides: <a href="https://docs.close.city" class="external-link uri">https://docs.close.city</a>
 </li>
 <li>Interactive API: <a href="https://api.close.city/docs" class="external-link uri">https://api.close.city/docs</a>
 </li>

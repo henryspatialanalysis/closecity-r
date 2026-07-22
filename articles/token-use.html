@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">closecity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,8 +95,8 @@ free <code>304</code>. Read <code>output = "raw"</code> when you want
 the etag:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="va">output</span> <span class="op">&lt;-</span> <span class="st">"raw"</span></span>
-<span><span class="va">first</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
-<span><span class="va">again</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span>,</span>
+<span><span class="va">first</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span>geoid <span class="op">=</span> <span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
+<span><span class="va">again</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span>geoid <span class="op">=</span> <span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span>,</span>
 <span>                             if_none_match <span class="op">=</span> <span class="va">first</span><span class="op">$</span><span class="va">etag</span><span class="op">)</span></span>
 <span><span class="va">again</span><span class="op">$</span><span class="va">not_modified</span>   <span class="co"># TRUE, and nothing was charged</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
@@ -157,7 +157,7 @@ radius:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">supermarkets</span>, <span class="st">"tokens_charged"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 2</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">supermarkets</span>, <span class="st">"tokens_remaining"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 999741206</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 999697825</span></span></code></pre></div>
 <p>When you only want the numbers, <code>output = "tabular"</code> skips
 the block-boundary download entirely. The block boundaries the spatial
 mode joins are cached locally, so re-running a script costs time, not

@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">closecity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,8 +82,9 @@
     
 <p><code>closecity</code> reads the Close API: travel times from every
 US census block to nearby places, on foot, by bike, and by public
-transit. This vignette is a short tour. The three tutorials go
-further.</p>
+transit. This vignette is a short tour. The three tutorials go further.
+The full list of query methods is on the <a href="../reference/CloseClient.html"><code>CloseClient</code></a>
+reference page, and the wider API is documented at <a href="https://docs.close.city" class="external-link">docs.close.city</a>.</p>
 <div class="section level2">
 <h2 id="key-terms">Key terms<a class="anchor" aria-label="anchor" href="#key-terms"></a>
 </h2>
@@ -91,7 +92,11 @@ further.</p>
 <ul>
 <li>
 <strong>Census block.</strong> The smallest area the Census Bureau
-publishes. Each one has a 15-digit id, its <strong>GEOID</strong>.</li>
+publishes. Each one has a 15-digit id, its <strong>GEOID</strong>. Block
+GEOIDs come from the census — look them up with the <code>tigris</code>
+or <code>tidycensus</code> packages, the Census Bureau geocoder/API, or
+read them straight off Close’s block routes
+(<code>$blocks_query()</code>, <code>$place_blocks()</code>).</li>
 <li>
 <strong>Destination type.</strong> A category of place, such as
 grocery stores or libraries. Every type has a numeric id.</li>
@@ -99,10 +104,9 @@ grocery stores or libraries. Every type has a numeric id.</li>
 <strong>Mode.</strong> How someone travels: walk, bike, or
 transit.</li>
 <li>
-<strong>Isochrone</strong> or <strong>catchment.</strong> Two views
-of the same reachability: the area reachable from a point within a time
-limit (an isochrone), or every block that can reach a given place (a
-catchment).</li>
+<strong>Isochrone</strong> or <strong>catchment</strong>: the area
+you can reach starting from a point within a time limit, by a selected
+travel mode.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -120,7 +124,7 @@ to an hour.</p>
 <p>You make every request through a client object.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://henryspatialanalysis.github.io/closecity-r">closecity</a></span><span class="op">)</span></span>
-<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/close_client.html">close_client</a></span><span class="op">(</span><span class="st">"ck_live_your_key"</span><span class="op">)</span>   <span class="co"># use your own key here</span></span></code></pre></div>
+<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu">closecity</span><span class="fu">::</span><span class="fu"><a href="../reference/close_client.html">close_client</a></span><span class="op">(</span>api_key <span class="op">=</span> <span class="st">"ck_live_your_key"</span><span class="op">)</span>   <span class="co"># use your own key here</span></span></code></pre></div>
 <p>The catalog and lookup routes are free, so
 <code><a href="../reference/close_client.html">close_client()</a></code> with no key also works for those.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -138,10 +142,10 @@ frames, so you filter and index them the usual way: read the numeric id
 for a category from the catalog, and turn a city name into a GEOID and a
 centre point.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">types</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">destination_types</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">supermarket_dest_type</span> <span class="op">&lt;-</span> <span class="va">types</span><span class="op">[</span><span class="va">types</span><span class="op">$</span><span class="va">label</span> <span class="op">==</span> <span class="st">"grocery_stores"</span>, <span class="op">]</span><span class="op">$</span><span class="va">dest_type_id</span></span>
+<code class="sourceCode R"><span><span class="va">amenity_types</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">destination_types</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">supermarket_type</span> <span class="op">&lt;-</span> <span class="va">amenity_types</span><span class="op">[</span><span class="va">amenity_types</span><span class="op">$</span><span class="va">label</span> <span class="op">==</span> <span class="st">"grocery_stores"</span>, <span class="op">]</span><span class="op">$</span><span class="va">dest_type_id</span></span>
 <span></span>
-<span><span class="va">providence_ri</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span><span class="st">"Providence"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
+<span><span class="va">providence_ri</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span>q <span class="op">=</span> <span class="st">"Providence"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
 <span><span class="va">providence_ri</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name"</span>, <span class="st">"state"</span>, <span class="st">"geoid"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; Simple feature collection with 1 feature and 3 fields</span></span>
 <span><span class="co">#&gt; Geometry type: POINT</span></span>
@@ -153,102 +157,95 @@ centre point.</p>
 <p>The catalog’s <code>name</code> column is the readable label
 (“Grocery stores”); the underscored <code>label</code> is the internal
 key you match on. A place lookup carries a <code>state</code>, so you
-can tell Providence, RI from the one in Utah.</p>
+can tell Providence, RI from the one in Utah. When you have a point
+rather than a block, <code>$point_summary(lat = , lon = )</code> reads
+the same travel times for a <code>lat</code>/<code>lon</code> starting
+point instead of a GEOID.</p>
 </div>
 <div class="section level2">
 <h2 id="make-a-call-and-map-it">Make a call and map it<a class="anchor" aria-label="anchor" href="#make-a-call-and-map-it"></a>
 </h2>
 <p>Routes with geometry return an <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> object.
 <code><a href="../reference/close_map.html">close_map()</a></code> draws it on an interactive basemap in one line
-— bright, hoverable points here.</p>
+— bright, hoverable points here, with the city boundary behind them and
+the view zoomed to fit.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">supermarkets</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">place_pois</span><span class="op">(</span><span class="va">providence_ri</span><span class="op">$</span><span class="va">geoid</span>, type <span class="op">=</span> <span class="va">supermarket_dest_type</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/close_map.html">close_map</a></span><span class="op">(</span><span class="va">supermarkets</span>, color <span class="op">=</span> <span class="st">"#e8590c"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">supermarkets</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">place_pois</span><span class="op">(</span>geoid <span class="op">=</span> <span class="va">providence_ri</span><span class="op">$</span><span class="va">geoid</span>, type <span class="op">=</span> <span class="va">supermarket_type</span><span class="op">)</span></span>
+<span><span class="va">city_boundary</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">place_boundary</span><span class="op">(</span>geoid <span class="op">=</span> <span class="va">providence_ri</span><span class="op">$</span><span class="va">geoid</span><span class="op">)</span></span>
+<span><span class="fu">closecity</span><span class="fu">::</span><span class="fu"><a href="../reference/close_map.html">close_map</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">supermarkets</span>, color <span class="op">=</span> <span class="st">"#e8590c"</span>,</span>
+<span>                     boundary <span class="op">=</span> <span class="va">city_boundary</span>, label <span class="op">=</span> <span class="st">"name"</span><span class="op">)</span></span></code></pre></div>
 <div class="plotly html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:700px;height:432.632880098888px;"></div>
-<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"visdat":{"1f3c5ba1c1c4":["function () ","plotlyVisDat"]},"cur_data":"1f3c5ba1c1c4","attrs":{"1f3c5ba1c1c4":{"lat":[41.820938066091557,41.836412199999998,41.845426799999998,41.837378899999997,41.792128893689863,41.825868253868748,41.816172776267905,41.823210500000002,41.827758628735822,41.832369700000001,41.7883985,41.818243762924929,41.800239900000001],"lon":[-71.468364128010464,-71.428854200000004,-71.412123199999996,-71.408532800000003,-71.415846389464022,-71.437903598364343,-71.424150974271228,-71.414751499999994,-71.38632148486694,-71.4668846,-71.433060900000001,-71.400445834638205,-71.417622100000003],"mode":"markers","marker":{"size":9,"color":"#e8590c"},"text":["Save A Lot","Aldi","Stop & Shop","Whole Foods Market","Good Fortune Supermarket","Price Rite Marketplace","Urban Greens Co-op Market","Maruichi Japanese Food & Deli","Whole Foods Market","Stop & Shop","Save-A-Lot","Trader Joe's","America's Food Basket of Broad Street"],"hoverinfo":"text","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scattermapbox"}},"layout":{"margin":{"b":0,"l":0,"t":0,"r":0},"mapbox":{"style":"carto-positron","zoom":10,"center":{"lon":-71.427342806438702,"lat":41.816912649999999}},"hovermode":"closest","showlegend":false},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"lat":[41.820938066091557,41.836412199999998,41.845426799999998,41.837378899999997,41.792128893689863,41.825868253868748,41.816172776267905,41.823210500000002,41.827758628735822,41.832369700000001,41.7883985,41.818243762924929,41.800239900000001],"lon":[-71.468364128010464,-71.428854200000004,-71.412123199999996,-71.408532800000003,-71.415846389464022,-71.437903598364343,-71.424150974271228,-71.414751499999994,-71.38632148486694,-71.4668846,-71.433060900000001,-71.400445834638205,-71.417622100000003],"mode":"markers","marker":{"color":"#e8590c","size":9,"line":{"color":"rgba(31,119,180,1)"}},"text":["Save A Lot","Aldi","Stop & Shop","Whole Foods Market","Good Fortune Supermarket","Price Rite Marketplace","Urban Greens Co-op Market","Maruichi Japanese Food & Deli","Whole Foods Market","Stop & Shop","Save-A-Lot","Trader Joe's","America's Food Basket of Broad Street"],"hoverinfo":["text","text","text","text","text","text","text","text","text","text","text","text","text"],"type":"scattermapbox","line":{"color":"rgba(31,119,180,1)"},"frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"visdat":{"1f381bb23146":["function () ","plotlyVisDat"]},"cur_data":"1f381bb23146","attrs":{"1f381bb23146":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scattermapbox","mode":"lines","lon":[-71.472476396999994,-71.471667398999998,-71.472459400000005,-71.434998492000005,-71.410996525000002,-71.409275524999998,-71.375021579999995,-71.372334573000003,-71.372247560999995,-71.373587541000006,-71.377434531000006,-71.385031505000001,-71.387083496000002,-71.393528484000001,-71.395258476999999,-71.393499472000002,-71.385199475999997,-71.379999471999994,-71.375797474999999,-71.374382475000004,-71.374798471999995,-71.374334474999998,-71.373277474999995,-71.373882472999995,-71.373234472999997,-71.372923470999993,-71.372883473000002,-71.372031473999996,-71.370535472,-71.371008470000007,-71.370106471,-71.369694465999999,-71.389413445000002,-71.404259425000006,-71.403051422000004,-71.403768417999999,-71.405114413999996,-71.408787407000005,-71.410036399000006,-71.411947393999995,-71.414879392000003,-71.419429390000005,-71.423810386,-71.420551403000005,-71.434207384999993,-71.436836385000007,-71.43753839,-71.439340393999998,-71.439266400999998,-71.442223404000003,-71.462306373000004,-71.464725369000007,-71.464686370999999,-71.467072365000007,-71.469165363000002,-71.469064364999994,-71.467945365999995,-71.467851367999998,-71.466803369999994,-71.468703371000004,-71.466551374000005,-71.471764383999997,-71.461936399999999,-71.462454402000006,-71.464021402,-71.464860404000007,-71.467673399999995,-71.472476396999994,null],"lat":[41.834364755999999,41.835599758999997,41.836981762000001,41.861824812999998,41.858931806000001,41.856601800999996,41.857449801000001,41.850548787000001,41.843337771999998,41.832486748999997,41.829288742999999,41.820195724000001,41.816372715999997,41.814756713000001,41.811669706000004,41.807100697000003,41.802100686000003,41.795300672000003,41.793564668000002,41.792073664999997,41.790880661999999,41.791950663999998,41.791073662999999,41.790385661000002,41.790274660999998,41.788316657000003,41.789611659999998,41.78985866,41.787500655000002,41.786694652999998,41.786165652000001,41.783058646000001,41.786335653000002,41.785849652000003,41.782979646000001,41.780956642,41.779328638999999,41.778125635999999,41.773760627000001,41.772381623999998,41.773144625999997,41.776340632,41.777267633999998,41.786181653,41.786320654000001,41.788738659000003,41.793032668000002,41.797241677000002,41.802027686999999,41.807203698000002,41.804965694000003,41.804964693999999,41.805946695999999,41.804470692999999,41.804864694000003,41.806059695999998,41.806091696000003,41.807251698999998,41.807800700000001,41.810600706000002,41.810742705999999,41.824153735000003,41.825115736000001,41.827481741,41.828939744000003,41.831181749000002,41.831520750000003,41.834364755999999,null],"line":{"color":"#666666","width":1.5},"hoverinfo":"skip","showlegend":false,"inherit":true},"1f381bb23146.1":{"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scattermapbox","mode":"markers","lon":[-71.468364128010464,-71.428854200000004,-71.412123199999996,-71.408532800000003,-71.415846389464022,-71.437903598364343,-71.424150974271228,-71.414751499999994,-71.38632148486694,-71.4668846,-71.433060900000001,-71.400445834638205,-71.417622100000003],"lat":[41.820938066091557,41.836412199999998,41.845426799999998,41.837378899999997,41.792128893689863,41.825868253868748,41.816172776267905,41.823210500000002,41.827758628735822,41.832369700000001,41.7883985,41.818243762924929,41.800239900000001],"marker":{"size":9,"color":"#e8590c"},"text":["<b>Save A Lot<\/b><br>dest_id: 2256185<br>lon: -71.46836<br>lat: 41.82094<br>address: ","<b>Aldi<\/b><br>dest_id: 2256787<br>lon: -71.42885<br>lat: 41.83641<br>address: Smith Street, Providence, RI, 02908-4362","<b>Stop & Shop<\/b><br>dest_id: 2256829<br>lon: -71.41212<br>lat: 41.84543<br>address: West River Street, Providence, RI, 02909","<b>Whole Foods Market<\/b><br>dest_id: 2257013<br>lon: -71.40853<br>lat: 41.83738<br>address: North Main Street, Providence, RI, 02904","<b>Good Fortune Supermarket<\/b><br>dest_id: 2257578<br>lon: -71.41585<br>lat: 41.79213<br>address: Cadillac Drive, Providence, RI, 02907","<b>Price Rite Marketplace<\/b><br>dest_id: 2257841<br>lon: -71.4379<br>lat: 41.82587<br>address: Valley Street, Providence, RI, 02940","<b>Urban Greens Co-op Market<\/b><br>dest_id: 2257895<br>lon: -71.42415<br>lat: 41.81617<br>address: Cranston Street, Providence, RI, 02907","<b>Maruichi Japanese Food & Deli<\/b><br>dest_id: 2258100<br>lon: -71.41475<br>lat: 41.82321<br>address: Washington Street, Providence, RI, 02903","<b>Whole Foods Market<\/b><br>dest_id: 2260262<br>lon: -71.38632<br>lat: 41.82776<br>address: Waterman Street, Providence, RI, 02906","<b>Stop & Shop<\/b><br>dest_id: 4261084<br>lon: -71.46688<br>lat: 41.83237<br>address: Manton Avenue, Providence, RI, 02909","<b>Save-A-Lot<\/b><br>dest_id: 4261089<br>lon: -71.43306<br>lat: 41.7884<br>address: ","<b>Trader Joe's<\/b><br>dest_id: 4261098<br>lon: -71.40045<br>lat: 41.81824<br>address: South Main Street, Providence, RI, 02903","<b>America's Food Basket of Broad Street<\/b><br>dest_id: 7287485<br>lon: -71.41762<br>lat: 41.80024<br>address: Broad Street, Providence, RI, 02907"],"hoverinfo":"text","showlegend":false,"inherit":true}},"layout":{"margin":{"b":0,"l":0,"t":0,"r":0},"mapbox":{"style":"carto-positron","zoom":10.895682906037937,"center":{"lon":-71.421085431499989,"lat":41.817103218499994}},"hovermode":"closest","showlegend":false},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"type":"scattermapbox","mode":"lines","lon":[-71.472476396999994,-71.471667398999998,-71.472459400000005,-71.434998492000005,-71.410996525000002,-71.409275524999998,-71.375021579999995,-71.372334573000003,-71.372247560999995,-71.373587541000006,-71.377434531000006,-71.385031505000001,-71.387083496000002,-71.393528484000001,-71.395258476999999,-71.393499472000002,-71.385199475999997,-71.379999471999994,-71.375797474999999,-71.374382475000004,-71.374798471999995,-71.374334474999998,-71.373277474999995,-71.373882472999995,-71.373234472999997,-71.372923470999993,-71.372883473000002,-71.372031473999996,-71.370535472,-71.371008470000007,-71.370106471,-71.369694465999999,-71.389413445000002,-71.404259425000006,-71.403051422000004,-71.403768417999999,-71.405114413999996,-71.408787407000005,-71.410036399000006,-71.411947393999995,-71.414879392000003,-71.419429390000005,-71.423810386,-71.420551403000005,-71.434207384999993,-71.436836385000007,-71.43753839,-71.439340393999998,-71.439266400999998,-71.442223404000003,-71.462306373000004,-71.464725369000007,-71.464686370999999,-71.467072365000007,-71.469165363000002,-71.469064364999994,-71.467945365999995,-71.467851367999998,-71.466803369999994,-71.468703371000004,-71.466551374000005,-71.471764383999997,-71.461936399999999,-71.462454402000006,-71.464021402,-71.464860404000007,-71.467673399999995,-71.472476396999994,null],"lat":[41.834364755999999,41.835599758999997,41.836981762000001,41.861824812999998,41.858931806000001,41.856601800999996,41.857449801000001,41.850548787000001,41.843337771999998,41.832486748999997,41.829288742999999,41.820195724000001,41.816372715999997,41.814756713000001,41.811669706000004,41.807100697000003,41.802100686000003,41.795300672000003,41.793564668000002,41.792073664999997,41.790880661999999,41.791950663999998,41.791073662999999,41.790385661000002,41.790274660999998,41.788316657000003,41.789611659999998,41.78985866,41.787500655000002,41.786694652999998,41.786165652000001,41.783058646000001,41.786335653000002,41.785849652000003,41.782979646000001,41.780956642,41.779328638999999,41.778125635999999,41.773760627000001,41.772381623999998,41.773144625999997,41.776340632,41.777267633999998,41.786181653,41.786320654000001,41.788738659000003,41.793032668000002,41.797241677000002,41.802027686999999,41.807203698000002,41.804965694000003,41.804964693999999,41.805946695999999,41.804470692999999,41.804864694000003,41.806059695999998,41.806091696000003,41.807251698999998,41.807800700000001,41.810600706000002,41.810742705999999,41.824153735000003,41.825115736000001,41.827481741,41.828939744000003,41.831181749000002,41.831520750000003,41.834364755999999,null],"line":{"color":"#666666","width":1.5},"hoverinfo":["skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip","skip"],"showlegend":false,"marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"frame":null},{"type":"scattermapbox","mode":"markers","lon":[-71.468364128010464,-71.428854200000004,-71.412123199999996,-71.408532800000003,-71.415846389464022,-71.437903598364343,-71.424150974271228,-71.414751499999994,-71.38632148486694,-71.4668846,-71.433060900000001,-71.400445834638205,-71.417622100000003],"lat":[41.820938066091557,41.836412199999998,41.845426799999998,41.837378899999997,41.792128893689863,41.825868253868748,41.816172776267905,41.823210500000002,41.827758628735822,41.832369700000001,41.7883985,41.818243762924929,41.800239900000001],"marker":{"color":"#e8590c","size":9,"line":{"color":"rgba(255,127,14,1)"}},"text":["<b>Save A Lot<\/b><br>dest_id: 2256185<br>lon: -71.46836<br>lat: 41.82094<br>address: ","<b>Aldi<\/b><br>dest_id: 2256787<br>lon: -71.42885<br>lat: 41.83641<br>address: Smith Street, Providence, RI, 02908-4362","<b>Stop & Shop<\/b><br>dest_id: 2256829<br>lon: -71.41212<br>lat: 41.84543<br>address: West River Street, Providence, RI, 02909","<b>Whole Foods Market<\/b><br>dest_id: 2257013<br>lon: -71.40853<br>lat: 41.83738<br>address: North Main Street, Providence, RI, 02904","<b>Good Fortune Supermarket<\/b><br>dest_id: 2257578<br>lon: -71.41585<br>lat: 41.79213<br>address: Cadillac Drive, Providence, RI, 02907","<b>Price Rite Marketplace<\/b><br>dest_id: 2257841<br>lon: -71.4379<br>lat: 41.82587<br>address: Valley Street, Providence, RI, 02940","<b>Urban Greens Co-op Market<\/b><br>dest_id: 2257895<br>lon: -71.42415<br>lat: 41.81617<br>address: Cranston Street, Providence, RI, 02907","<b>Maruichi Japanese Food & Deli<\/b><br>dest_id: 2258100<br>lon: -71.41475<br>lat: 41.82321<br>address: Washington Street, Providence, RI, 02903","<b>Whole Foods Market<\/b><br>dest_id: 2260262<br>lon: -71.38632<br>lat: 41.82776<br>address: Waterman Street, Providence, RI, 02906","<b>Stop & Shop<\/b><br>dest_id: 4261084<br>lon: -71.46688<br>lat: 41.83237<br>address: Manton Avenue, Providence, RI, 02909","<b>Save-A-Lot<\/b><br>dest_id: 4261089<br>lon: -71.43306<br>lat: 41.7884<br>address: ","<b>Trader Joe's<\/b><br>dest_id: 4261098<br>lon: -71.40045<br>lat: 41.81824<br>address: South Main Street, Providence, RI, 02903","<b>America's Food Basket of Broad Street<\/b><br>dest_id: 7287485<br>lon: -71.41762<br>lat: 41.80024<br>address: Broad Street, Providence, RI, 02907"],"hoverinfo":["text","text","text","text","text","text","text","text","text","text","text","text","text"],"showlegend":false,"line":{"color":"rgba(255,127,14,1)"},"frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="section level2">
 <h2 id="choose-an-output">Choose an output<a class="anchor" aria-label="anchor" href="#choose-an-output"></a>
 </h2>
-<p>Every route returns tabular data by default: an sf object where
-geometry applies, a data frame otherwise. The <code>output</code>
+<p>Every route returns tabular data by default: an sf object for
+inherently spatial data, a data frame otherwise. The <code>output</code>
 setting changes the shape — <code>"tabular"</code> never downloads
 boundaries, and <code>"raw"</code> gives the underlying reply with its
 metering and cursor fields. Set it on the client, or pass
 <code>output =</code> to one call.</p>
-<p>The same block summary as a data frame (the default):</p>
+<p>A block summary, with the readable category names merged on and
+sorted by time:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;              geoid dest_type_id mode travel_time</span></span>
-<span><span class="co">#&gt; 1  440070008001068            1 walk          10</span></span>
-<span><span class="co">#&gt; 2  440070008001068            5 walk          26</span></span>
-<span><span class="co">#&gt; 3  440070008001068            6 walk          22</span></span>
-<span><span class="co">#&gt; 4  440070008001068            7 walk          10</span></span>
-<span><span class="co">#&gt; 5  440070008001068           27 walk           3</span></span>
-<span><span class="co">#&gt; 6  440070008001068           28 walk           3</span></span>
-<span><span class="co">#&gt; 7  440070008001068           29 walk           9</span></span>
-<span><span class="co">#&gt; 8  440070008001068           30 walk           6</span></span>
-<span><span class="co">#&gt; 9  440070008001068           31 walk           3</span></span>
-<span><span class="co">#&gt; 10 440070008001068           32 walk          15</span></span>
-<span><span class="co">#&gt; 11 440070008001068           33 walk          18</span></span>
-<span><span class="co">#&gt; 12 440070008001068           34 walk           9</span></span>
-<span><span class="co">#&gt; 13 440070008001068           35 walk          13</span></span>
-<span><span class="co">#&gt; 14 440070008001068           38 walk          17</span></span>
-<span><span class="co">#&gt; 15 440070008001068           40 walk           8</span></span>
-<span><span class="co">#&gt; 16 440070008001068           41 walk           9</span></span>
-<span><span class="co">#&gt; 17 440070008001068           43 walk           3</span></span>
-<span><span class="co">#&gt; 18 440070008001068           60 walk           2</span></span>
-<span><span class="co">#&gt; 19 440070008001068           63 walk           3</span></span>
-<span><span class="co">#&gt; 20 440070008001068           64 walk           4</span></span>
-<span><span class="co">#&gt; 21 440070008001068           65 walk           7</span></span>
-<span><span class="co">#&gt; 22 440070008001068           66 walk          13</span></span>
-<span><span class="co">#&gt; 23 440070008001068           67 walk           3</span></span>
-<span><span class="co">#&gt; 24 440070008001068          126 walk          10</span></span>
-<span><span class="co">#&gt; 25 440070008001068          159 walk          14</span></span>
-<span><span class="co">#&gt; 26 440070008001068          160 walk          24</span></span>
-<span><span class="co">#&gt; 27 440070008001068          200 walk           2</span></span>
-<span><span class="co">#&gt; 28 440070008001068          204 walk           2</span></span>
-<span><span class="co">#&gt; 29 440070008001068          205 walk           2</span></span>
-<span><span class="co">#&gt; 30 440070008001068          206 walk           4</span></span>
-<span><span class="co">#&gt; 31 440070008001068          207 walk           7</span></span>
-<span><span class="co">#&gt; 32 440070008001068          208 walk           3</span></span>
-<span><span class="co">#&gt; 33 440070008001068          209 walk           9</span></span></code></pre></div>
-<p>…and as the raw reply, whose <code>results</code> you can index
-yourself:</p>
+<code class="sourceCode R"><span><span class="va">walk_times</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span>geoid <span class="op">=</span> <span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
+<span><span class="va">walk_times</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">walk_times</span>, <span class="va">amenity_types</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dest_type_id"</span>, <span class="st">"name"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>                    by <span class="op">=</span> <span class="st">"dest_type_id"</span><span class="op">)</span></span>
+<span><span class="va">walk_times</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">walk_times</span><span class="op">$</span><span class="va">travel_time</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name"</span>, <span class="st">"travel_time"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;                                name travel_time</span></span>
+<span><span class="co">#&gt; 18                All transit stops           2</span></span>
+<span><span class="co">#&gt; 27       Non-frequent transit stops           2</span></span>
+<span><span class="co">#&gt; 28 Non-frequent other transit stops           2</span></span>
+<span><span class="co">#&gt; 29              Other transit stops           2</span></span>
+<span><span class="co">#&gt; 5                       Restaurants           3</span></span>
+<span><span class="co">#&gt; 6                              Bars           3</span></span>
+<span><span class="co">#&gt; 9            Cafes and coffee shops           3</span></span>
+<span><span class="co">#&gt; 17                        Libraries           3</span></span>
+<span><span class="co">#&gt; 19                            Parks           3</span></span>
+<span><span class="co">#&gt; 23               Parks (&lt;0.5 acres)           3</span></span>
+<span><span class="co">#&gt; 32                 Public libraries           3</span></span>
+<span><span class="co">#&gt; 20              Parks (0.5–1 acres)           4</span></span>
+<span><span class="co">#&gt; 30               Parks (&gt;0.5 acres)           4</span></span>
+<span><span class="co">#&gt; 8                    Grocery stores           6</span></span>
+<span><span class="co">#&gt; 21               Parks (1–10 acres)           7</span></span>
+<span><span class="co">#&gt; 31                  Parks (&gt;1 acre)           7</span></span>
+<span><span class="co">#&gt; 15                       Bookstores           8</span></span>
+<span><span class="co">#&gt; 7                Convenience stores           9</span></span>
+<span><span class="co">#&gt; 12                       Pharmacies           9</span></span>
+<span><span class="co">#&gt; 16                       Bike shops           9</span></span>
+<span><span class="co">#&gt; 33     University/private libraries           9</span></span>
+<span><span class="co">#&gt; 1                    Public schools          10</span></span>
+<span><span class="co">#&gt; 4                      High schools          10</span></span>
+<span><span class="co">#&gt; 24                      Playgrounds          10</span></span>
+<span><span class="co">#&gt; 13                       Preschools          13</span></span>
+<span><span class="co">#&gt; 22                Parks (&gt;10 acres)          13</span></span>
+<span><span class="co">#&gt; 25                         Bakeries          14</span></span>
+<span><span class="co">#&gt; 10                         Dentists          15</span></span>
+<span><span class="co">#&gt; 14                Community centers          17</span></span>
+<span><span class="co">#&gt; 11        Gyms and exercise studios          18</span></span>
+<span><span class="co">#&gt; 3                    Middle schools          22</span></span>
+<span><span class="co">#&gt; 26                  Hardware stores          24</span></span>
+<span><span class="co">#&gt; 2                Elementary schools          26</span></span></code></pre></div>
+<p>…and the same call as the raw reply, whose <code>results</code> you
+can inspect yourself:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">raw</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span>, output <span class="op">=</span> <span class="st">"raw"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">raw</span><span class="op">$</span><span class="va">results</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [[1]]</span></span>
-<span><span class="co">#&gt; [[1]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[1]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[1]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 10</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]</span></span>
-<span><span class="co">#&gt; [[2]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 5</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 26</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[3]]</span></span>
-<span><span class="co">#&gt; [[3]]$dest_type_id</span></span>
-<span><span class="co">#&gt; [1] 6</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[3]]$mode</span></span>
-<span><span class="co">#&gt; [1] "walk"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[3]]$travel_time</span></span>
-<span><span class="co">#&gt; [1] 22</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">raw</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span>geoid <span class="op">=</span> <span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span>, output <span class="op">=</span> <span class="st">"raw"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">raw</span><span class="op">$</span><span class="va">results</span>, max.level <span class="op">=</span> <span class="fl">2</span>, list.len <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; List of 33</span></span>
+<span><span class="co">#&gt;  $ :List of 3</span></span>
+<span><span class="co">#&gt;   ..$ dest_type_id: int 1</span></span>
+<span><span class="co">#&gt;   ..$ mode        : chr "walk"</span></span>
+<span><span class="co">#&gt;   ..$ travel_time : num 10</span></span>
+<span><span class="co">#&gt;  $ :List of 3</span></span>
+<span><span class="co">#&gt;   ..$ dest_type_id: int 5</span></span>
+<span><span class="co">#&gt;   ..$ mode        : chr "walk"</span></span>
+<span><span class="co">#&gt;   ..$ travel_time : num 26</span></span>
+<span><span class="co">#&gt;  $ :List of 3</span></span>
+<span><span class="co">#&gt;   ..$ dest_type_id: int 6</span></span>
+<span><span class="co">#&gt;   ..$ mode        : chr "walk"</span></span>
+<span><span class="co">#&gt;   ..$ travel_time : num 22</span></span>
+<span><span class="co">#&gt;   [list output truncated]</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="handle-errors">Handle errors<a class="anchor" aria-label="anchor" href="#handle-errors"></a>
@@ -257,7 +254,7 @@ yourself:</p>
 <code>close_api_error</code>, or a specific one.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
-<span>  <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span><span class="st">"000000000000000"</span><span class="op">)</span>,</span>
+<span>  <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span>geoid <span class="op">=</span> <span class="st">"000000000000000"</span><span class="op">)</span>,</span>
 <span>  close_api_error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s (%d)"</span>, <span class="va">e</span><span class="op">$</span><span class="va">slug</span>, <span class="va">e</span><span class="op">$</span><span class="va">status</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; block-not-found (404)</span></span></code></pre></div>

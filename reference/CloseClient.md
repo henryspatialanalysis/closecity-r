@@ -55,6 +55,8 @@ when `output` is `'raw'`.
 
 - [`CloseClient$place_pois()`](#method-CloseClient-place_pois)
 
+- [`CloseClient$place_boundary()`](#method-CloseClient-place_boundary)
+
 - [`CloseClient$isochrone()`](#method-CloseClient-isochrone)
 
 - [`CloseClient$isochrone_meta()`](#method-CloseClient-isochrone_meta)
@@ -817,6 +819,37 @@ page by default.
 
 An [sf](https://r-spatial.github.io/sf/reference/sf.html) of points (a
 data frame in tabular mode, a
+[close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
+when `output` is `'raw'`).
+
+------------------------------------------------------------------------
+
+### `CloseClient$place_boundary()`
+
+The boundary polygon of a census place, as a one-row
+[sf](https://r-spatial.github.io/sf/reference/sf.html) — handy as a
+`boundary` layer for
+[`close_map()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_map.md)
+when mapping a city's blocks or POIs. Free (no API key).
+
+#### Usage
+
+    CloseClient$place_boundary(geoid, output = NULL)
+
+#### Arguments
+
+- `geoid`:
+
+  Census place GEOID.
+
+- `output`:
+
+  Override the client's output mode for this call.
+
+#### Returns
+
+A one-row [sf](https://r-spatial.github.io/sf/reference/sf.html) polygon
+(a
 [close_reply](https://henryspatialanalysis.github.io/closecity-r/reference/close_reply.md)
 when `output` is `'raw'`).
 
