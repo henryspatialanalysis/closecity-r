@@ -40,13 +40,14 @@ city <- close$places("Richmond")$data$places[[1]]
 
 ## Pull the blocks, with population
 
-One call gets the walk time from every block near downtown to each of
-the six categories, along with each block’s population. The result is an
-sf table.
+`$records()` reads every page of a block query: the walk time from every
+block near downtown to each of the six categories, along with each
+block’s population. The result is one sf table.
 
 ``` r
 
-blocks <- close$blocks_query(
+blocks <- close$records(
+  "blocks_query",
   center = list(lon = city$lon, lat = city$lat), radius_m = 2500,
   mode = "walk", type = unname(basket), include_population = TRUE
 )
@@ -69,12 +70,12 @@ for (name in names(basket)) {
   pop <- sum(one_per_block$population[one_per_block$geoid %in% covered])
   cat(sprintf("%-11s %3.0f%%\n", name, 100 * pop / total_pop))
 }
-#> grocery      10%
+#> grocery      13%
 #> library      38%
-#> park         88%
-#> transit       6%
-#> restaurant   58%
-#> cafe         52%
+#> park         89%
+#> transit       5%
+#> restaurant   71%
+#> cafe         64%
 ```
 
 Parks and restaurants tend to be everywhere; groceries and frequent
@@ -109,7 +110,7 @@ for (name in names(basket)) {
 
 basket_pop <- sum(one_per_block$population[one_per_block$geoid %in% covered_all])
 cat(sprintf("All six amenities: %.0f%% of residents\n", 100 * basket_pop / total_pop))
-#> All six amenities: 5% of residents
+#> All six amenities: 4% of residents
 
 one_per_block$full_basket <- one_per_block$geoid %in% covered_all
 plot(one_per_block["full_basket"], pal = c("#eef0f7", "#f36e21"), border = NA)
@@ -134,12 +135,12 @@ for (name in names(basket)) {
   pop <- sum(one_per_block$population[one_per_block$geoid %in% lacking])
   cat(sprintf("%-11s %6.0f residents would gain access\n", name, pop))
 }
-#> grocery       5301 residents would gain access
-#> library       3669 residents would gain access
-#> park           721 residents would gain access
-#> transit       5565 residents would gain access
-#> restaurant    2493 residents would gain access
-#> cafe          2809 residents would gain access
+#> grocery      26219 residents would gain access
+#> library      18720 residents would gain access
+#> park          3373 residents would gain access
+#> transit      28424 residents would gain access
+#> restaurant    8732 residents would gain access
+#> cafe         10798 residents would gain access
 ```
 
 Map the uncovered blocks to see where new amenities would do the most

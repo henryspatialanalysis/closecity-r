@@ -123,14 +123,16 @@ plot the three amenities as three layers.</p>
 <div class="section level2">
 <h2 id="find-the-blocks-that-qualify">Find the blocks that qualify<a class="anchor" aria-label="anchor" href="#find-the-blocks-that-qualify"></a>
 </h2>
-<p>Pull the per-block walk times for the blocks around the city centre.
-The result is an sf table with one row per (block, category); block
-boundaries come from <code>tigris</code>, downloaded once and
-cached.</p>
+<p>Somerville is a census place, so one call by place GEOID pulls the
+per-block walk times for every block in the city.
+<code>$records()</code> reads every page and returns one sf table with
+one row per (block, category); block boundaries come from
+<code>tigris</code>, downloaded once and cached. To search an arbitrary
+area instead, use <code>$blocks_query()</code> with a centre and radius
+or a polygon.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">blocks</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">blocks_query</span><span class="op">(</span>center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="va">city</span><span class="op">$</span><span class="va">lon</span>, lat <span class="op">=</span> <span class="va">city</span><span class="op">$</span><span class="va">lat</span><span class="op">)</span>,</span>
-<span>                             radius_m <span class="op">=</span> <span class="fl">3000</span>, mode <span class="op">=</span> <span class="st">"walk"</span>,</span>
-<span>                             type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">grocery</span>, <span class="va">restaurant</span>, <span class="va">transit</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">blocks</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">records</span><span class="op">(</span><span class="st">"place_blocks"</span>, <span class="va">city</span><span class="op">$</span><span class="va">geoid</span>, mode <span class="op">=</span> <span class="st">"walk"</span>,</span>
+<span>                        type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">grocery</span>, <span class="va">restaurant</span>, <span class="va">transit</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Each amenity has its own rule, so pick the blocks that pass each one,
 then keep the blocks that pass all three.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">

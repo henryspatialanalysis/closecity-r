@@ -109,11 +109,12 @@ name into a centre point.</p>
 <div class="section level2">
 <h2 id="pull-the-blocks-with-population">Pull the blocks, with population<a class="anchor" aria-label="anchor" href="#pull-the-blocks-with-population"></a>
 </h2>
-<p>One call gets the walk time from every block near downtown to each of
-the six categories, along with each block’s population. The result is an
-sf table.</p>
+<p><code>$records()</code> reads every page of a block query: the walk
+time from every block near downtown to each of the six categories, along
+with each block’s population. The result is one sf table.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">blocks</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">blocks_query</span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">blocks</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">records</span><span class="op">(</span></span>
+<span>  <span class="st">"blocks_query"</span>,</span>
 <span>  center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="va">city</span><span class="op">$</span><span class="va">lon</span>, lat <span class="op">=</span> <span class="va">city</span><span class="op">$</span><span class="va">lat</span><span class="op">)</span>, radius_m <span class="op">=</span> <span class="fl">2500</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"walk"</span>, type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="va">basket</span><span class="op">)</span>, include_population <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
@@ -134,12 +135,12 @@ sf table.</p>
 <span>  <span class="va">pop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">one_per_block</span><span class="op">$</span><span class="va">population</span><span class="op">[</span><span class="va">one_per_block</span><span class="op">$</span><span class="va">geoid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">covered</span><span class="op">]</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%-11s %3.0f%%\n"</span>, <span class="va">name</span>, <span class="fl">100</span> <span class="op">*</span> <span class="va">pop</span> <span class="op">/</span> <span class="va">total_pop</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; grocery      10%</span></span>
+<span><span class="co">#&gt; grocery      13%</span></span>
 <span><span class="co">#&gt; library      38%</span></span>
-<span><span class="co">#&gt; park         88%</span></span>
-<span><span class="co">#&gt; transit       6%</span></span>
-<span><span class="co">#&gt; restaurant   58%</span></span>
-<span><span class="co">#&gt; cafe         52%</span></span></code></pre></div>
+<span><span class="co">#&gt; park         89%</span></span>
+<span><span class="co">#&gt; transit       5%</span></span>
+<span><span class="co">#&gt; restaurant   71%</span></span>
+<span><span class="co">#&gt; cafe         64%</span></span></code></pre></div>
 <p>Parks and restaurants tend to be everywhere; groceries and frequent
 transit are usually the hardest to reach. Map one amenity to see the
 pattern.</p>
@@ -167,7 +168,7 @@ amenity.</p>
 <span></span>
 <span><span class="va">basket_pop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">one_per_block</span><span class="op">$</span><span class="va">population</span><span class="op">[</span><span class="va">one_per_block</span><span class="op">$</span><span class="va">geoid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">covered_all</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"All six amenities: %.0f%% of residents\n"</span>, <span class="fl">100</span> <span class="op">*</span> <span class="va">basket_pop</span> <span class="op">/</span> <span class="va">total_pop</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; All six amenities: 5% of residents</span></span>
+<span><span class="co">#&gt; All six amenities: 4% of residents</span></span>
 <span></span>
 <span><span class="va">one_per_block</span><span class="op">$</span><span class="va">full_basket</span> <span class="op">&lt;-</span> <span class="va">one_per_block</span><span class="op">$</span><span class="va">geoid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">covered_all</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">one_per_block</span><span class="op">[</span><span class="st">"full_basket"</span><span class="op">]</span>, pal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#eef0f7"</span>, <span class="st">"#f36e21"</span><span class="op">)</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span></code></pre></div>
@@ -189,12 +190,12 @@ lack is the one to add first.</p>
 <span>  <span class="va">pop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">one_per_block</span><span class="op">$</span><span class="va">population</span><span class="op">[</span><span class="va">one_per_block</span><span class="op">$</span><span class="va">geoid</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">lacking</span><span class="op">]</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%-11s %6.0f residents would gain access\n"</span>, <span class="va">name</span>, <span class="va">pop</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; grocery       5301 residents would gain access</span></span>
-<span><span class="co">#&gt; library       3669 residents would gain access</span></span>
-<span><span class="co">#&gt; park           721 residents would gain access</span></span>
-<span><span class="co">#&gt; transit       5565 residents would gain access</span></span>
-<span><span class="co">#&gt; restaurant    2493 residents would gain access</span></span>
-<span><span class="co">#&gt; cafe          2809 residents would gain access</span></span></code></pre></div>
+<span><span class="co">#&gt; grocery      26219 residents would gain access</span></span>
+<span><span class="co">#&gt; library      18720 residents would gain access</span></span>
+<span><span class="co">#&gt; park          3373 residents would gain access</span></span>
+<span><span class="co">#&gt; transit      28424 residents would gain access</span></span>
+<span><span class="co">#&gt; restaurant    8732 residents would gain access</span></span>
+<span><span class="co">#&gt; cafe         10798 residents would gain access</span></span></code></pre></div>
 <p>Map the uncovered blocks to see where new amenities would do the most
 good.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
