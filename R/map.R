@@ -78,9 +78,9 @@
 #'   score). Use this OR `highlight`, not both.
 #' @param palette A plotly ColorBrewer colorscale name for `fill` (default
 #'   `"YlGnBu"`).
-#' @param reverse Reverse the `fill` colorscale (default `FALSE`, so the blue end
-#'   of `YlGnBu` marks the high values). Pass `TRUE` when high values mean *less*
-#'   access, e.g. travel time, so blue still marks the most-accessible end.
+#' @param reverse Which end of the `YlGnBu` scale is blue. `FALSE` (default) puts
+#'   blue at the low values, `TRUE` at the high values. Choose so blue marks the
+#'   most-accessible end: `FALSE` for travel time (low is best), `TRUE` for a score.
 #' @param label Optional. A column shown first (bold) in the hover; the rest of
 #'   the attributes follow.
 #' @param size Marker size, for point maps.
@@ -93,7 +93,7 @@
 #' @param background_color Fill colour(s) for `background`, recycled across the
 #'   layers.
 #' @param background_opacity Fill opacity for `background` layers.
-#' @param mark Optional. A point to mark on top with an "✕" — either a
+#' @param mark Optional. A point to mark on top with an X — either a
 #'   `c(lon, lat)` pair or a point [sf][sf::sf]/`sfc` (e.g. a starting point).
 #' @param buffer Fraction of the data extent to pad the view by (default 0.15).
 #' @param zoom Deprecated/ignored; the view auto-zooms to the data.
@@ -216,7 +216,8 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
     }
   }
 
-  # A point marked with an X, drawn last so it sits on top of everything.
+  # A point marked with an X (two crossing line segments \u2014 mapbox text glyphs do
+  # not render on the raster basemap), drawn last so it sits on top of everything.
   if (!is.null(mark)) {
     if (inherits(mark, c("sf", "sfc", "sfg"))) {
       mc <- sf::st_coordinates(sf::st_transform(sf::st_geometry(mark), 4326))
@@ -226,10 +227,18 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
     }
     boxes <- c(boxes, list(c(xmin = min(mlon), ymin = min(mlat),
                              xmax = max(mlon), ymax = max(mlat))))
+    sx <- range(vapply(boxes, function(b) c(b[["xmin"]], b[["xmax"]]), numeric(2)))
+    sy <- range(vapply(boxes, function(b) c(b[["ymin"]], b[["ymax"]]), numeric(2)))
+    hs <- max(diff(sx), diff(sy)) * 0.02
+    lons <- numeric(0); lats <- numeric(0)
+    for (j in seq_along(mlon)) {
+      dlat <- hs * cos(mlat[j] * pi / 180)   # square the X against the Mercator stretch
+      lons <- c(lons, mlon[j] - hs, mlon[j] + hs, NA, mlon[j] - hs, mlon[j] + hs, NA)
+      lats <- c(lats, mlat[j] - dlat, mlat[j] + dlat, NA, mlat[j] + dlat, mlat[j] - dlat, NA)
+    }
     p <- plotly::add_trace(
-      p, type = "scattermapbox", mode = "text", lon = mlon, lat = mlat,
-      text = rep("\u2715", length(mlon)),
-      textfont = list(size = 22, color = "#111111"),
+      p, type = "scattermapbox", mode = "lines", lon = lons, lat = lats,
+      line = list(color = "#111111", width = 3),
       hoverinfo = "skip", showlegend = FALSE
     )
   }

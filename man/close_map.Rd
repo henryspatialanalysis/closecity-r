@@ -40,9 +40,9 @@ score). Use this OR \code{highlight}, not both.}
 \item{palette}{A plotly ColorBrewer colorscale name for \code{fill} (default
 \code{"YlGnBu"}).}
 
-\item{reverse}{Reverse the \code{fill} colorscale (default \code{FALSE}, so the blue end
-of \code{YlGnBu} marks the high values). Pass \code{TRUE} when high values mean \emph{less}
-access, e.g. travel time, so blue still marks the most-accessible end.}
+\item{reverse}{Which end of the \code{YlGnBu} scale is blue. \code{FALSE} (default) puts
+blue at the low values, \code{TRUE} at the high values. Choose so blue marks the
+most-accessible end: \code{FALSE} for travel time (low is best), \code{TRUE} for a score.}
 
 \item{label}{Optional. A column shown first (bold) in the hover; the rest of
 the attributes follow.}
@@ -63,7 +63,7 @@ layers.}
 
 \item{background_opacity}{Fill opacity for \code{background} layers.}
 
-\item{mark}{Optional. A point to mark on top with an "✕" — either a
+\item{mark}{Optional. A point to mark on top with an X — either a
 \code{c(lon, lat)} pair or a point \link[sf:sf]{sf}/\code{sfc} (e.g. a starting point).}
 
 \item{buffer}{Fraction of the data extent to pad the view by (default 0.15).}

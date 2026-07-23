@@ -51,7 +51,7 @@ test_that("close_map marks a point with an X on top", {
   m <- close_map(make_points(), mark = c(-71.41, 41.82))
   built <- plotly::plotly_build(m)
   last <- built$x$data[[length(built$x$data)]]
-  expect_identical(last$mode, "text")
+  expect_identical(last$mode, "lines")
 })
 
 
