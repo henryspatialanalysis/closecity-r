@@ -170,25 +170,47 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
     )
   } else {
     x[["feature_id"]] <- as.character(seq_len(nrow(x)))
-    gj <- jsonlite::fromJSON(
-      geojsonsf::sf_geojson(x[, "feature_id"]), simplifyVector = FALSE
-    )
-    common <- list(
-      type = "choroplethmapbox", geojson = gj, locations = x[["feature_id"]],
-      featureidkey = "properties.feature_id",
-      marker = list(opacity = opacity, line = list(width = 0)),
-      text = hover, hoverinfo = "text", showlegend = FALSE
-    )
-    if (!is.null(fv)) {
-      args <- c(common, list(z = fv, colorscale = palette, reversescale = reverse,
-                             showscale = TRUE, colorbar = list(title = fill)))
+    if (!is.null(fv) && nrow(x) <= 12) {
+      # Filled polygons that may overlap (nested isochrone contours): one trace
+      # each, largest first, so every one stays hoverable; a shared coloraxis
+      # gives them a single colorbar.
+      for (i in order(as.numeric(sf::st_area(x)), decreasing = TRUE)) {
+        gj <- jsonlite::fromJSON(
+          geojsonsf::sf_geojson(x[i, "feature_id"]), simplifyVector = FALSE
+        )
+        p <- plotly::add_trace(
+          p, type = "choroplethmapbox", geojson = gj,
+          locations = x[["feature_id"]][i], z = fv[i], coloraxis = "coloraxis",
+          featureidkey = "properties.feature_id",
+          marker = list(opacity = opacity, line = list(width = 0)),
+          text = hover[i], hoverinfo = "text", showlegend = FALSE
+        )
+      }
+      p <- plotly::layout(p, coloraxis = list(
+        colorscale = palette, reversescale = reverse,
+        cmin = min(fv), cmax = max(fv), colorbar = list(title = fill)
+      ))
     } else {
-      z <- if (is.null(hl)) rep(1, nrow(x)) else as.integer(hl)
-      scale <- if (is.null(hl)) list(list(0, color), list(1, color))
-               else list(list(0, "#888888"), list(1, color))
-      args <- c(common, list(z = z, colorscale = scale, showscale = FALSE))
+      gj <- jsonlite::fromJSON(
+        geojsonsf::sf_geojson(x[, "feature_id"]), simplifyVector = FALSE
+      )
+      common <- list(
+        type = "choroplethmapbox", geojson = gj, locations = x[["feature_id"]],
+        featureidkey = "properties.feature_id",
+        marker = list(opacity = opacity, line = list(width = 0)),
+        text = hover, hoverinfo = "text", showlegend = FALSE
+      )
+      if (!is.null(fv)) {
+        args <- c(common, list(z = fv, colorscale = palette, reversescale = reverse,
+                               showscale = TRUE, colorbar = list(title = fill)))
+      } else {
+        z <- if (is.null(hl)) rep(1, nrow(x)) else as.integer(hl)
+        scale <- if (is.null(hl)) list(list(0, color), list(1, color))
+                 else list(list(0, "#888888"), list(1, color))
+        args <- c(common, list(z = z, colorscale = scale, showscale = FALSE))
+      }
+      p <- do.call(function(...) plotly::add_trace(p, ...), args)
     }
-    p <- do.call(function(...) plotly::add_trace(p, ...), args)
   }
 
   cz <- .close_center_zoom(boxes, buffer)
