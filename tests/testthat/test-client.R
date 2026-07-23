@@ -145,6 +145,84 @@ test_that("blocks_query is a POST carrying the cursor in the body", {
 })
 
 
+test_that("a vector of GEOIDs routes block_summary to the batch POST", {
+  captured <- NULL
+  mock <- function(req) {
+    captured <<- req
+    json_response(body = list(
+      results = list(list(geoid = "g1", dest_type_id = 30, mode = "walk",
+                          travel_time = 6.5)),
+      blocks = list(), errors = list(), truncated = list()
+    ))
+  }
+  reply <- httr2::with_mocked_responses(mock, {
+    client$block_summary(c("g1", "g2"), mode = "walk", type = 30)
+  })
+  expect_equal(captured$method, "POST")
+  expect_match(captured$url, "/v1/blocks/summary$")
+  expect_equal(captured$body$data$origins, list("g1", "g2"))
+  # Scalar mode/type are forced to arrays for the POST body.
+  expect_equal(captured$body$data$mode, list("walk"))
+  expect_equal(captured$body$data$type, list(30))
+  expect_equal(reply$data$results[[1]]$geoid, "g1")
+})
+
+
+test_that("a scalar GEOID still uses the single-block GET", {
+  captured <- NULL
+  mock <- function(req) {
+    captured <<- req
+    json_response(body = list(block = list(geoid = "g"), results = list()))
+  }
+  httr2::with_mocked_responses(mock, {
+    client$block_summary("250173523004004")
+  })
+  expect_equal(captured$method, "GET")
+  expect_match(captured$url, "/v1/blocks/250173523004004/summary")
+})
+
+
+test_that("equal-length lat/lon vectors route point_summary to the batch POST", {
+  captured <- NULL
+  mock <- function(req) {
+    captured <<- req
+    json_response(body = list(results = list(), origins = list(),
+                              errors = list(), truncated = list()))
+  }
+  httr2::with_mocked_responses(mock, {
+    client$point_summary(c(44.0, 45.0), c(-123.0, -122.0))
+  })
+  expect_equal(captured$method, "POST")
+  expect_match(captured$url, "/v1/point/summary$")
+  # Each origin is a {lon, lat} object, in the API's field order.
+  expect_equal(captured$body$data$origins,
+               list(list(lon = -123.0, lat = 44.0),
+                    list(lon = -122.0, lat = 45.0)))
+})
+
+
+test_that("point_summary rejects mismatched lat/lon lengths", {
+  expect_error(client$point_summary(c(44.0, 45.0), c(-123.0)),
+               "same length")
+})
+
+
+test_that("a vector of dest_ids routes poi_catchment to the batch POST", {
+  captured <- NULL
+  mock <- function(req) {
+    captured <<- req
+    json_response(body = list(results = list(), errors = list(),
+                              truncated = list()))
+  }
+  httr2::with_mocked_responses(mock, {
+    client$poi_catchment(c(4181, 4182), mode = "walk")
+  })
+  expect_equal(captured$method, "POST")
+  expect_match(captured$url, "/v1/pois/catchment$")
+  expect_equal(captured$body$data$dest_ids, list(4181, 4182))
+})
+
+
 test_that("paginated methods read every page by default", {
   pages <- list(
     `NA` = list(results = list(list(dest_id = 1), list(dest_id = 2)),

@@ -212,7 +212,8 @@ census place GEOID and centre point.
 \if{latex}{\out{\hypertarget{method-CloseClient-block_summary}{}}}
 \subsection{\code{CloseClient$block_summary()}}{
   Fastest travel time from a census block to each destination
-category, by mode.
+category, by mode. Pass a vector of GEOIDs to query many blocks in one
+call (one request, one rate-limit tick).
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$block_summary(
@@ -227,10 +228,13 @@ category, by mode.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{geoid}}{15-digit census block GEOID.}
+      \item{\code{geoid}}{A 15-digit census block GEOID, or a vector of them for a single
+multi-origin call. Every result row carries its origin \code{geoid}; per-origin
+\code{errors} / \code{truncated} / \code{truncated_reason} ride on the frame's attributes.}
       \item{\code{mode}}{Travel mode(s) to keep: "walk", "bike", "transit".}
       \item{\code{type}}{Destination type id(s) to keep.}
-      \item{\code{if_none_match}}{An ETag from an earlier reply, to revalidate for free.}
+      \item{\code{if_none_match}}{An ETag from an earlier reply, to revalidate for free
+(single-block form only).}
       \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
@@ -246,7 +250,9 @@ when \code{output} is \code{'raw'}.
 \if{latex}{\out{\hypertarget{method-CloseClient-block_pois}{}}}
 \subsection{\code{CloseClient$block_pois()}}{
   Nearby points of interest and their travel time from a block,
-one row per (POI, mode). Reads every page by default.
+one row per (POI, mode). Reads every page by default. Pass a vector of
+GEOIDs to query many blocks in one call (one request, one rate-limit tick;
+the multi-origin form is not paginated).
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$block_pois(
@@ -265,12 +271,14 @@ one row per (POI, mode). Reads every page by default.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{geoid}}{15-digit census block GEOID.}
+      \item{\code{geoid}}{A 15-digit census block GEOID, or a vector of them for a single
+multi-origin call. Every row carries its origin \code{geoid}; per-origin
+\code{errors} / \code{truncated} ride on the frame's attributes.}
       \item{\code{mode}}{Travel mode(s) to keep.}
       \item{\code{type}}{Destination type id(s) to keep.}
       \item{\code{dest_id}}{Specific destination id(s) to keep.}
       \item{\code{max_minutes}}{Upper bound on travel time (up to 30).}
-      \item{\code{limit}}{Rows per page (up to 1000).}
+      \item{\code{limit}}{Rows per page (up to 1000; single-block form only).}
       \item{\code{cursor}}{Page cursor from a previous reply's \code{next_cursor}; supplying
 one fetches only that page.}
       \item{\code{paginate}}{Follow \code{next_cursor} and return every page (the default);
@@ -291,7 +299,8 @@ set \code{FALSE} for the first page only.}
 \subsection{\code{CloseClient$point_summary()}}{
   Like \verb{$block_summary()}, but from the block containing a
 lat/lon point. The resolved block is echoed as \code{resolved_block} and
-broadcast to a \code{geoid} column.
+broadcast to a \code{geoid} column. Pass equal-length \code{lat} / \code{lon} vectors to
+query many points in one call (one request, one rate-limit tick).
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$point_summary(
@@ -307,11 +316,13 @@ broadcast to a \code{geoid} column.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{lat}}{Latitude.}
-      \item{\code{lon}}{Longitude.}
+      \item{\code{lat}}{Latitude, or a vector of latitudes for a multi-origin call.}
+      \item{\code{lon}}{Longitude, or a matching vector of longitudes. In the
+multi-origin form each row carries its \code{origin_lat} / \code{origin_lon}, and
+resolved blocks / \code{errors} / \code{truncated} ride on the frame's attributes.}
       \item{\code{mode}}{Travel mode(s) to keep.}
       \item{\code{type}}{Destination type id(s) to keep.}
-      \item{\code{if_none_match}}{An ETag to revalidate for free.}
+      \item{\code{if_none_match}}{An ETag to revalidate for free (single-point form only).}
       \item{\code{output}}{Override the client's output mode for this call.}
     }
     \if{html}{\out{</div>}}
@@ -326,7 +337,9 @@ broadcast to a \code{geoid} column.
 \if{latex}{\out{\hypertarget{method-CloseClient-point_pois}{}}}
 \subsection{\code{CloseClient$point_pois()}}{
   Like \verb{$block_pois()}, but from the block containing a lat/lon
-point. Reads every page by default.
+point. Reads every page by default. Pass equal-length \code{lat} / \code{lon}
+vectors to query many points in one call (one request, one rate-limit
+tick; the multi-origin form is not paginated).
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$point_pois(
@@ -346,13 +359,14 @@ point. Reads every page by default.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{lat}}{Latitude.}
-      \item{\code{lon}}{Longitude.}
+      \item{\code{lat}}{Latitude, or a vector of latitudes for a multi-origin call.}
+      \item{\code{lon}}{Longitude, or a matching vector of longitudes. In the
+multi-origin form each row carries its \code{origin_lat} / \code{origin_lon}.}
       \item{\code{mode}}{Travel mode(s) to keep.}
       \item{\code{type}}{Destination type id(s) to keep.}
       \item{\code{dest_id}}{Specific destination id(s) to keep.}
       \item{\code{max_minutes}}{Upper bound on travel time (up to 30).}
-      \item{\code{limit}}{Rows per page (up to 1000).}
+      \item{\code{limit}}{Rows per page (up to 1000; single-point form only).}
       \item{\code{cursor}}{Page cursor; supplying one fetches only that page.}
       \item{\code{paginate}}{Follow \code{next_cursor} and return every page (the default);
 set \code{FALSE} for the first page only.}
@@ -440,7 +454,9 @@ set \code{FALSE} for the first page only.}
 \if{latex}{\out{\hypertarget{method-CloseClient-poi_catchment}{}}}
 \subsection{\code{CloseClient$poi_catchment()}}{
   Every census block that can reach a point of interest, one row
-per (block, mode). Reads every page by default.
+per (block, mode). Reads every page by default. Pass a vector of dest_ids
+to query many POIs in one call (one request, one rate-limit tick; the
+multi-origin form is not paginated).
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{CloseClient$poi_catchment(
@@ -458,11 +474,13 @@ per (block, mode). Reads every page by default.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{dest_id}}{Destination id.}
+      \item{\code{dest_id}}{A destination id, or a vector of them for a single
+multi-origin call. Every row carries its origin \code{dest_id}; per-POI
+\code{errors} / \code{truncated} ride on the frame's attributes.}
       \item{\code{mode}}{Travel mode(s) to keep.}
       \item{\code{block}}{Specific block id(s) to keep.}
       \item{\code{max_minutes}}{Upper bound on travel time (up to 30).}
-      \item{\code{limit}}{Rows per page (up to 1000).}
+      \item{\code{limit}}{Rows per page (up to 1000; single-POI form only).}
       \item{\code{cursor}}{Page cursor; supplying one fetches only that page.}
       \item{\code{paginate}}{Follow \code{next_cursor} and return every page (the default);
 set \code{FALSE} for the first page only.}

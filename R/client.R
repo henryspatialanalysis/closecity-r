@@ -136,17 +136,29 @@ CloseClient <- R6::R6Class(
     },
 
     #' @description Fastest travel time from a census block to each destination
-    #'   category, by mode.
-    #' @param geoid 15-digit census block GEOID.
+    #'   category, by mode. Pass a vector of GEOIDs to query many blocks in one
+    #'   call (one request, one rate-limit tick).
+    #' @param geoid A 15-digit census block GEOID, or a vector of them for a single
+    #'   multi-origin call. Every result row carries its origin `geoid`; per-origin
+    #'   `errors` / `truncated` / `truncated_reason` ride on the frame's attributes.
     #' @param mode Travel mode(s) to keep: "walk", "bike", "transit".
     #' @param type Destination type id(s) to keep.
-    #' @param if_none_match An ETag from an earlier reply, to revalidate for free.
+    #' @param if_none_match An ETag from an earlier reply, to revalidate for free
+    #'   (single-block form only).
     #' @param output Override the client's output mode for this call.
     #' @return A data frame with a broadcast `geoid` column, or a [close_reply]
     #'   when `output` is `'raw'`.
     block_summary = function(
       geoid, mode = NULL, type = NULL, if_none_match = NULL, output = NULL
     ){
+      if(length(geoid) > 1){
+        reply <- private$post_json('/v1/blocks/summary', list(
+          origins = as.list(geoid), mode = .close_as_array(mode),
+          type = .close_as_array(type)
+        ))
+        return(private$deliver(reply, geometry = FALSE, key = 'results',
+          output = output))
+      }
       private$deliver(
         private$get(
           sprintf('/v1/blocks/%s/summary', geoid),
@@ -157,13 +169,17 @@ CloseClient <- R6::R6Class(
     },
 
     #' @description Nearby points of interest and their travel time from a block,
-    #'   one row per (POI, mode). Reads every page by default.
-    #' @param geoid 15-digit census block GEOID.
+    #'   one row per (POI, mode). Reads every page by default. Pass a vector of
+    #'   GEOIDs to query many blocks in one call (one request, one rate-limit tick;
+    #'   the multi-origin form is not paginated).
+    #' @param geoid A 15-digit census block GEOID, or a vector of them for a single
+    #'   multi-origin call. Every row carries its origin `geoid`; per-origin
+    #'   `errors` / `truncated` ride on the frame's attributes.
     #' @param mode Travel mode(s) to keep.
     #' @param type Destination type id(s) to keep.
     #' @param dest_id Specific destination id(s) to keep.
     #' @param max_minutes Upper bound on travel time (up to 30).
-    #' @param limit Rows per page (up to 1000).
+    #' @param limit Rows per page (up to 1000; single-block form only).
     #' @param cursor Page cursor from a previous reply's `next_cursor`; supplying
     #'   one fetches only that page.
     #' @param paginate Follow `next_cursor` and return every page (the default);
@@ -175,6 +191,14 @@ CloseClient <- R6::R6Class(
       geoid, mode = NULL, type = NULL, dest_id = NULL, max_minutes = NULL,
       limit = NULL, cursor = NULL, paginate = TRUE, output = NULL
     ){
+      if(length(geoid) > 1){
+        reply <- private$post_json('/v1/blocks/pois', list(
+          origins = as.list(geoid), mode = .close_as_array(mode),
+          type = .close_as_array(type), dest_id = .close_as_array(dest_id),
+          max_minutes = max_minutes
+        ))
+        return(private$deliver(reply, geometry = TRUE, output = output))
+      }
       fetch_page <- function(cur) private$get(
         sprintf('/v1/blocks/%s/pois', geoid),
         list(
@@ -190,17 +214,32 @@ CloseClient <- R6::R6Class(
 
     #' @description Like `$block_summary()`, but from the block containing a
     #'   lat/lon point. The resolved block is echoed as `resolved_block` and
-    #'   broadcast to a `geoid` column.
-    #' @param lat Latitude.
-    #' @param lon Longitude.
+    #'   broadcast to a `geoid` column. Pass equal-length `lat` / `lon` vectors to
+    #'   query many points in one call (one request, one rate-limit tick).
+    #' @param lat Latitude, or a vector of latitudes for a multi-origin call.
+    #' @param lon Longitude, or a matching vector of longitudes. In the
+    #'   multi-origin form each row carries its `origin_lat` / `origin_lon`, and
+    #'   resolved blocks / `errors` / `truncated` ride on the frame's attributes.
     #' @param mode Travel mode(s) to keep.
     #' @param type Destination type id(s) to keep.
-    #' @param if_none_match An ETag to revalidate for free.
+    #' @param if_none_match An ETag to revalidate for free (single-point form only).
     #' @param output Override the client's output mode for this call.
     #' @return A data frame, or a [close_reply] when `output` is `'raw'`.
     point_summary = function(
       lat, lon, mode = NULL, type = NULL, if_none_match = NULL, output = NULL
     ){
+      if(length(lat) > 1 || length(lon) > 1){
+        if(length(lat) != length(lon)){
+          stop('lat and lon must have the same length.', call. = FALSE)
+        }
+        origins <- unname(Map(function(la, lo) list(lon = lo, lat = la), lat, lon))
+        reply <- private$post_json('/v1/point/summary', list(
+          origins = origins, mode = .close_as_array(mode),
+          type = .close_as_array(type)
+        ))
+        return(private$deliver(reply, geometry = FALSE, key = 'results',
+          output = output))
+      }
       private$deliver(
         private$get(
           '/v1/point/summary',
@@ -211,14 +250,17 @@ CloseClient <- R6::R6Class(
     },
 
     #' @description Like `$block_pois()`, but from the block containing a lat/lon
-    #'   point. Reads every page by default.
-    #' @param lat Latitude.
-    #' @param lon Longitude.
+    #'   point. Reads every page by default. Pass equal-length `lat` / `lon`
+    #'   vectors to query many points in one call (one request, one rate-limit
+    #'   tick; the multi-origin form is not paginated).
+    #' @param lat Latitude, or a vector of latitudes for a multi-origin call.
+    #' @param lon Longitude, or a matching vector of longitudes. In the
+    #'   multi-origin form each row carries its `origin_lat` / `origin_lon`.
     #' @param mode Travel mode(s) to keep.
     #' @param type Destination type id(s) to keep.
     #' @param dest_id Specific destination id(s) to keep.
     #' @param max_minutes Upper bound on travel time (up to 30).
-    #' @param limit Rows per page (up to 1000).
+    #' @param limit Rows per page (up to 1000; single-point form only).
     #' @param cursor Page cursor; supplying one fetches only that page.
     #' @param paginate Follow `next_cursor` and return every page (the default);
     #'   set `FALSE` for the first page only.
@@ -229,6 +271,18 @@ CloseClient <- R6::R6Class(
       lat, lon, mode = NULL, type = NULL, dest_id = NULL, max_minutes = NULL,
       limit = NULL, cursor = NULL, paginate = TRUE, output = NULL
     ){
+      if(length(lat) > 1 || length(lon) > 1){
+        if(length(lat) != length(lon)){
+          stop('lat and lon must have the same length.', call. = FALSE)
+        }
+        origins <- unname(Map(function(la, lo) list(lon = lo, lat = la), lat, lon))
+        reply <- private$post_json('/v1/point/pois', list(
+          origins = origins, mode = .close_as_array(mode),
+          type = .close_as_array(type), dest_id = .close_as_array(dest_id),
+          max_minutes = max_minutes
+        ))
+        return(private$deliver(reply, geometry = TRUE, output = output))
+      }
       fetch_page <- function(cur) private$get(
         '/v1/point/pois',
         list(
@@ -287,12 +341,16 @@ CloseClient <- R6::R6Class(
     },
 
     #' @description Every census block that can reach a point of interest, one row
-    #'   per (block, mode). Reads every page by default.
-    #' @param dest_id Destination id.
+    #'   per (block, mode). Reads every page by default. Pass a vector of dest_ids
+    #'   to query many POIs in one call (one request, one rate-limit tick; the
+    #'   multi-origin form is not paginated).
+    #' @param dest_id A destination id, or a vector of them for a single
+    #'   multi-origin call. Every row carries its origin `dest_id`; per-POI
+    #'   `errors` / `truncated` ride on the frame's attributes.
     #' @param mode Travel mode(s) to keep.
     #' @param block Specific block id(s) to keep.
     #' @param max_minutes Upper bound on travel time (up to 30).
-    #' @param limit Rows per page (up to 1000).
+    #' @param limit Rows per page (up to 1000; single-POI form only).
     #' @param cursor Page cursor; supplying one fetches only that page.
     #' @param paginate Follow `next_cursor` and return every page (the default);
     #'   set `FALSE` for the first page only.
@@ -303,6 +361,13 @@ CloseClient <- R6::R6Class(
       dest_id, mode = NULL, block = NULL, max_minutes = NULL, limit = NULL,
       cursor = NULL, paginate = TRUE, output = NULL
     ){
+      if(length(dest_id) > 1){
+        reply <- private$post_json('/v1/pois/catchment', list(
+          dest_ids = as.list(dest_id), mode = .close_as_array(mode),
+          block = .close_as_array(block), max_minutes = max_minutes
+        ))
+        return(private$deliver(reply, geometry = TRUE, output = output))
+      }
       fetch_page <- function(cur) private$get(
         sprintf('/v1/pois/%s/catchment', dest_id),
         list(

@@ -1,3 +1,15 @@
+# closecity 1.5.0
+
+* Multi-origin calls. `$block_summary()`, `$block_pois()`, `$point_summary()`,
+  `$point_pois()`, and `$poi_catchment()` now accept many origins in one
+  request: pass a vector of GEOIDs (or `dest_id`s), or equal-length `lat` / `lon`
+  vectors, and the whole set is queried in a single call — one request against
+  the 300/minute rate limit instead of one per origin. Results come back as a
+  flat data frame tagged by origin (`geoid`, or `origin_lat` / `origin_lon`, or
+  `dest_id`); per-origin `errors` and any `truncated` origins ride on the frame's
+  attributes. A batch is charged only for what the account can pay for, so a huge
+  query stops at the balance rather than overspending.
+
 # closecity 1.4.0
 
 * `$place_boundary()` — the boundary polygon of a census place, as a one-row `sf`.
