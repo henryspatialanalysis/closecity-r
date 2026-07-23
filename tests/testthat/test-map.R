@@ -46,6 +46,15 @@ test_that("close_map shades by a numeric fill column", {
 })
 
 
+test_that("close_map marks a point with an X on top", {
+  skip_if_not_installed("plotly")
+  m <- close_map(make_points(), mark = c(-71.41, 41.82))
+  built <- plotly::plotly_build(m)
+  last <- built$x$data[[length(built$x$data)]]
+  expect_identical(last$mode, "text")
+})
+
+
 test_that("close_map draws boundary and background layers under the data", {
   skip_if_not_installed("plotly")
   skip_if_not_installed("geojsonsf")

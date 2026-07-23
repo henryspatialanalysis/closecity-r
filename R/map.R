@@ -93,6 +93,8 @@
 #' @param background_color Fill colour(s) for `background`, recycled across the
 #'   layers.
 #' @param background_opacity Fill opacity for `background` layers.
+#' @param mark Optional. A point to mark on top with an "✕" — either a
+#'   `c(lon, lat)` pair or a point [sf][sf::sf]/`sfc` (e.g. a starting point).
 #' @param buffer Fraction of the data extent to pad the view by (default 0.15).
 #' @param zoom Deprecated/ignored; the view auto-zooms to the data.
 #' @return A plotly map object.
@@ -106,7 +108,8 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
                       palette = "YlGnBu", reverse = FALSE, label = NULL,
                       size = 9, opacity = 0.65, boundary = NULL,
                       background = NULL, background_color = "#3b6fb0",
-                      background_opacity = 0.3, buffer = 0.15, zoom = NULL) {
+                      background_opacity = 0.3, mark = NULL, buffer = 0.15,
+                      zoom = NULL) {
   if (!requireNamespace("plotly", quietly = TRUE)) {
     stop("close_map() needs the plotly package: install.packages('plotly')")
   }
@@ -211,6 +214,24 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
       }
       p <- do.call(function(...) plotly::add_trace(p, ...), args)
     }
+  }
+
+  # A point marked with an X, drawn last so it sits on top of everything.
+  if (!is.null(mark)) {
+    if (inherits(mark, c("sf", "sfc", "sfg"))) {
+      mc <- sf::st_coordinates(sf::st_transform(sf::st_geometry(mark), 4326))
+      mlon <- mc[, 1]; mlat <- mc[, 2]
+    } else {
+      mlon <- mark[[1]]; mlat <- mark[[2]]
+    }
+    boxes <- c(boxes, list(c(xmin = min(mlon), ymin = min(mlat),
+                             xmax = max(mlon), ymax = max(mlat))))
+    p <- plotly::add_trace(
+      p, type = "scattermapbox", mode = "text", lon = mlon, lat = mlat,
+      text = rep("\u2715", length(mlon)),
+      textfont = list(size = 22, color = "#111111"),
+      hoverinfo = "skip", showlegend = FALSE
+    )
   }
 
   cz <- .close_center_zoom(boxes, buffer)

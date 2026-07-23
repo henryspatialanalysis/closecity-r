@@ -18,6 +18,7 @@ close_map(
   background = NULL,
   background_color = "#3b6fb0",
   background_opacity = 0.3,
+  mark = NULL,
   buffer = 0.15,
   zoom = NULL
 )
@@ -61,6 +62,9 @@ a walkshed under its POIs.}
 layers.}
 
 \item{background_opacity}{Fill opacity for \code{background} layers.}
+
+\item{mark}{Optional. A point to mark on top with an "✕" — either a
+\code{c(lon, lat)} pair or a point \link[sf:sf]{sf}/\code{sfc} (e.g. a starting point).}
 
 \item{buffer}{Fraction of the data extent to pad the view by (default 0.15).}
 

@@ -6,7 +6,8 @@
   data, shows every attribute on hover, defaults to the ColorBrewer `YlGnBu`
   scale (blue = most accessible), and takes a `boundary` outline and
   semi-transparent `background` layers (e.g. a city boundary, commute isochrones,
-  or a walkshed under its POIs).
+  or a walkshed under its POIs). A `mark` argument drops an X on a point of
+  interest (e.g. a starting point).
 
 # closecity 1.3.0
 
