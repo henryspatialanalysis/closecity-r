@@ -104,7 +104,8 @@ closecity::close_map(
   x = nearby_supermarkets,
   color = "#e8590c",
   boundary = city_boundary,
-  label = "name"
+  label = "name",
+  mark = c(start_lon, start_lat)
 )
 ```
 

@@ -74,6 +74,7 @@ auto-zooms to fit every layer with a margin, and hover shows all attributes.</p>
 <span>  background <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  background_color <span class="op">=</span> <span class="st">"#3b6fb0"</span>,</span>
 <span>  background_opacity <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  mark <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  buffer <span class="op">=</span> <span class="fl">0.15</span>,</span>
 <span>  zoom <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -146,6 +147,11 @@ layers.</p></dd>
 
 <dt id="arg-background-opacity">background_opacity<a class="anchor" aria-label="anchor" href="#arg-background-opacity"></a></dt>
 <dd><p>Fill opacity for <code>background</code> layers.</p></dd>
+
+
+<dt id="arg-mark">mark<a class="anchor" aria-label="anchor" href="#arg-mark"></a></dt>
+<dd><p>Optional. A point to mark on top with an "✕" — either a
+<code>c(lon, lat)</code> pair or a point <a href="https://r-spatial.github.io/sf/reference/sf.html" class="external-link">sf</a>/<code>sfc</code> (e.g. a starting point).</p></dd>
 
 
 <dt id="arg-buffer">buffer<a class="anchor" aria-label="anchor" href="#arg-buffer"></a></dt>

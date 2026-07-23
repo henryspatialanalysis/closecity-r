@@ -24,6 +24,7 @@ close_map(
   background = NULL,
   background_color = "#3b6fb0",
   background_opacity = 0.3,
+  mark = NULL,
   buffer = 0.15,
   zoom = NULL
 )
@@ -99,6 +100,13 @@ close_map(
 - background_opacity:
 
   Fill opacity for `background` layers.
+
+- mark:
+
+  Optional. A point to mark on top with an "✕" — either a `c(lon, lat)`
+  pair or a point
+  [sf](https://r-spatial.github.io/sf/reference/sf.html)/`sfc` (e.g. a
+  starting point).
 
 - buffer:
 
