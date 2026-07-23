@@ -183,6 +183,64 @@ str(raw$results, max.level = 2, list.len = 3)
 #>   [list output truncated]
 ```
 
+## The client methods
+
+Every data-getting method lives on the client. Follow any name to its
+arguments and return value on the
+[`CloseClient`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.md)
+reference page.
+
+Catalog and lookups (free, no key):
+
+- [`$modes()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-modes)
+  — the travel modes: walk, bike, transit.
+- [`$destination_types()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-destination_types)
+  — the catalog of amenity categories and their numeric ids.
+- [`$places()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-places)
+  — a city name to its GEOID and centre point.
+- [`$place_boundary()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-place_boundary)
+  — the boundary polygon of a census place.
+- [`$vintage()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-vintage)
+  — the data vintage.
+- [`$last_updated()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-last_updated)
+  — when the data was last refreshed.
+- [`$isochrone_meta()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-isochrone_meta)
+  — isochrone modes, directions, and assumptions.
+- [`$health()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-health)
+  — a service health check.
+
+Travel times from a block or a point:
+
+- [`$block_summary()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-block_summary)
+  — walk/bike/transit time from a block to each amenity type.
+- [`$point_summary()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-point_summary)
+  — the same, from a `lat`/`lon` point.
+- [`$block_pois()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-block_pois)
+  — the individual POIs reachable from a block, each with its travel
+  time.
+- [`$point_pois()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-point_pois)
+  — the same, from a `lat`/`lon` point.
+
+Points of interest:
+
+- [`$pois_search()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-pois_search)
+  — search POIs by radius or bounding box.
+- [`$poi()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-poi)
+  — the details of one POI.
+- [`$poi_catchment()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-poi_catchment)
+  — the blocks that can walk to a POI (its catchment).
+
+Whole areas:
+
+- [`$blocks_query()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-blocks_query)
+  — per-block travel times for a polygon, or a centre and radius.
+- [`$place_blocks()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-place_blocks)
+  — per-block travel times for every block in a place.
+- [`$place_pois()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-place_pois)
+  — every POI within a place’s boundary.
+- [`$isochrone()`](https://henryspatialanalysis.github.io/closecity-r/reference/CloseClient.html#method-CloseClient-isochrone)
+  — travel-time contours from a block or a point.
+
 ## Handle errors
 
 Failed requests raise a classed condition. Catch the base
