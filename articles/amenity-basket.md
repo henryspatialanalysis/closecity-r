@@ -114,7 +114,12 @@ covered <- blocks[blocks$travel_time <= 15, ]
 score <- tapply(covered$dest_type_id, covered$geoid, function(x) length(unique(x)))
 one_per_block$score <- as.integer(score[one_per_block$geoid])
 one_per_block$score[is.na(one_per_block$score)] <- 0L
-closecity::close_map(x = one_per_block, fill = "score", boundary = city_boundary)
+closecity::close_map(
+  x = one_per_block,
+  fill = "score",
+  reverse = TRUE,
+  boundary = city_boundary
+)
 ```
 
 ## Who can reach all six

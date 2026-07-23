@@ -86,8 +86,9 @@ the routing answer it directly: `$point_pois()` returns every POI
 reachable from the starting point within `max_minutes`, each carrying
 its walk time — no isochrone to overlay.
 [`close_map()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_map.md)
-draws the result on an interactive basemap in one line, with the city
-boundary behind it for context.
+draws them in one line, shaded by that walk time (blue = closest), with
+the starting point marked by an X and the city boundary behind for
+context.
 
 ``` r
 
@@ -102,7 +103,7 @@ nearby_supermarkets <- close$point_pois(
 city_boundary <- close$place_boundary(geoid = providence_ri$geoid)
 closecity::close_map(
   x = nearby_supermarkets,
-  color = "#e8590c",
+  fill = "travel_time",
   boundary = city_boundary,
   label = "name",
   mark = c(start_lon, start_lat)
@@ -125,7 +126,7 @@ rings <- close$isochrone(
   contours = c(10, 20, 30),
   format = "geojson"
 )
-closecity::close_map(x = rings, fill = "contour", reverse = TRUE)
+closecity::close_map(x = rings, fill = "contour")
 ```
 
 ## Walk versus transit

@@ -111,9 +111,9 @@ score). Use this OR <code>highlight</code>, not both.</p></dd>
 
 
 <dt id="arg-reverse">reverse<a class="anchor" aria-label="anchor" href="#arg-reverse"></a></dt>
-<dd><p>Reverse the <code>fill</code> colorscale (default <code>FALSE</code>, so the blue end
-of <code>YlGnBu</code> marks the high values). Pass <code>TRUE</code> when high values mean <em>less</em>
-access, e.g. travel time, so blue still marks the most-accessible end.</p></dd>
+<dd><p>Which end of the <code>YlGnBu</code> scale is blue. <code>FALSE</code> (default) puts
+blue at the low values, <code>TRUE</code> at the high values. Choose so blue marks the
+most-accessible end: <code>FALSE</code> for travel time (low is best), <code>TRUE</code> for a score.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
@@ -150,7 +150,7 @@ layers.</p></dd>
 
 
 <dt id="arg-mark">mark<a class="anchor" aria-label="anchor" href="#arg-mark"></a></dt>
-<dd><p>Optional. A point to mark on top with an "✕" — either a
+<dd><p>Optional. A point to mark on top with an X — either a
 <code>c(lon, lat)</code> pair or a point <a href="https://r-spatial.github.io/sf/reference/sf.html" class="external-link">sf</a>/<code>sfc</code> (e.g. a starting point).</p></dd>
 
 

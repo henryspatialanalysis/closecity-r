@@ -61,10 +61,10 @@ close_map(
 
 - reverse:
 
-  Reverse the `fill` colorscale (default `FALSE`, so the blue end of
-  `YlGnBu` marks the high values). Pass `TRUE` when high values mean
-  *less* access, e.g. travel time, so blue still marks the
-  most-accessible end.
+  Which end of the `YlGnBu` scale is blue. `FALSE` (default) puts blue
+  at the low values, `TRUE` at the high values. Choose so blue marks the
+  most-accessible end: `FALSE` for travel time (low is best), `TRUE` for
+  a score.
 
 - label:
 
@@ -103,7 +103,7 @@ close_map(
 
 - mark:
 
-  Optional. A point to mark on top with an "✕" — either a `c(lon, lat)`
+  Optional. A point to mark on top with an X — either a `c(lon, lat)`
   pair or a point
   [sf](https://r-spatial.github.io/sf/reference/sf.html)/`sfc` (e.g. a
   starting point).
