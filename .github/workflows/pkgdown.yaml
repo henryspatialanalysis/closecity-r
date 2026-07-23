@@ -1,4 +1,7 @@
-# Build the pkgdown site and deploy it to the gh-pages branch.
+# Build the pkgdown site and publish it with the GitHub Pages deploy action, which
+# purges the CDN on every deploy. The older gh-pages-branch push relied on the edge
+# cache expiring on its own, so an update could sit stale for up to ten minutes.
+# For this to publish, set the repository Pages source to "GitHub Actions".
 on:
   push:
     branches: [main]
@@ -8,18 +11,22 @@ on:
 
 name: pkgdown
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
-  pkgdown:
+  build:
     runs-on: ubuntu-latest
-    concurrency:
-      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       # Set this repo secret to render live output and maps in the README and
       # vignettes. Without it, the examples are shown but not run.
       CLOSECITY_KEY: ${{ secrets.CLOSECITY_KEY }}
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -42,12 +49,18 @@ jobs:
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
-      - name: Deploy to GitHub pages
-        if: github.event_name != 'pull_request'
-        uses: JamesIves/github-pages-deploy-action@v4.5.0
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          # clean: true so reference pages orphaned by the R6 refactor (the old
-          # close_*() functional API) are purged from gh-pages, not left behind.
-          clean: true
-          branch: gh-pages
-          folder: docs
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
