@@ -18,6 +18,9 @@ close_map(
   background = NULL,
   background_color = "#3b6fb0",
   background_opacity = 0.3,
+  background_fill = TRUE,
+  points = NULL,
+  points_color = "#e8590c",
   mark = NULL,
   buffer = 0.15,
   zoom = NULL
@@ -62,6 +65,14 @@ a walkshed under its POIs.}
 layers.}
 
 \item{background_opacity}{Fill opacity for \code{background} layers.}
+
+\item{background_fill}{Fill the \code{background} layers (default \code{TRUE}); \code{FALSE}
+draws them as outlines only.}
+
+\item{points}{Optional. A point \link[sf:sf]{sf} drawn as markers on top of the
+main layer — e.g. POI locations over a block map.}
+
+\item{points_color}{Marker colour for \code{points}.}
 
 \item{mark}{Optional. A point to mark on top with an X — either a
 \code{c(lon, lat)} pair or a point \link[sf:sf]{sf}/\code{sfc} (e.g. a starting point).}

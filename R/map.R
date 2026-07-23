@@ -93,6 +93,11 @@
 #' @param background_color Fill colour(s) for `background`, recycled across the
 #'   layers.
 #' @param background_opacity Fill opacity for `background` layers.
+#' @param background_fill Fill the `background` layers (default `TRUE`); `FALSE`
+#'   draws them as outlines only.
+#' @param points Optional. A point [sf][sf::sf] drawn as markers on top of the
+#'   main layer — e.g. POI locations over a block map.
+#' @param points_color Marker colour for `points`.
 #' @param mark Optional. A point to mark on top with an X — either a
 #'   `c(lon, lat)` pair or a point [sf][sf::sf]/`sfc` (e.g. a starting point).
 #' @param buffer Fraction of the data extent to pad the view by (default 0.15).
@@ -108,8 +113,9 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
                       palette = "YlGnBu", reverse = FALSE, label = NULL,
                       size = 15, opacity = 0.65, boundary = NULL,
                       background = NULL, background_color = "#3b6fb0",
-                      background_opacity = 0.3, mark = NULL, buffer = 0.15,
-                      zoom = NULL) {
+                      background_opacity = 0.3, background_fill = TRUE,
+                      points = NULL, points_color = "#e8590c",
+                      mark = NULL, buffer = 0.15, zoom = NULL) {
   if (!requireNamespace("plotly", quietly = TRUE)) {
     stop("close_map() needs the plotly package: install.packages('plotly')")
   }
@@ -125,13 +131,21 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
       geom <- sf::st_transform(sf::st_geometry(background[[i]]), 4326)
       boxes <- c(boxes, list(sf::st_bbox(geom)))
       xy <- .close_polygon_lines(geom)
-      p <- plotly::add_trace(
-        p, type = "scattermapbox", mode = "lines", lon = xy$lon, lat = xy$lat,
-        fill = "toself", fillcolor = .close_rgba(cols[i], background_opacity),
-        line = list(color = .close_rgba(cols[i], min(1, background_opacity + 0.3)),
-                    width = 1),
-        hoverinfo = "skip", showlegend = FALSE
-      )
+      if (background_fill) {
+        p <- plotly::add_trace(
+          p, type = "scattermapbox", mode = "lines", lon = xy$lon, lat = xy$lat,
+          fill = "toself", fillcolor = .close_rgba(cols[i], background_opacity),
+          line = list(color = .close_rgba(cols[i], min(1, background_opacity + 0.3)),
+                      width = 1),
+          hoverinfo = "skip", showlegend = FALSE
+        )
+      } else {
+        p <- plotly::add_trace(
+          p, type = "scattermapbox", mode = "lines", lon = xy$lon, lat = xy$lat,
+          line = list(color = cols[i], width = 2),
+          hoverinfo = "skip", showlegend = FALSE
+        )
+      }
     }
   }
 
@@ -181,6 +195,9 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
     )
   } else {
     x[["feature_id"]] <- as.character(seq_len(nrow(x)))
+    # Outline the polygons in black when there are few of them (e.g. isochrone
+    # contours); skip it on dense block maps, where every border would clutter.
+    poly_line <- list(color = "#000000", width = if (nrow(x) <= 12) 1.5 else 0)
     if (!is.null(fv) && nrow(x) <= 12) {
       # Filled polygons that may overlap (nested isochrone contours): one trace
       # each, largest first, so every one stays hoverable; a shared coloraxis
@@ -193,7 +210,7 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
           p, type = "choroplethmapbox", geojson = gj,
           locations = x[["feature_id"]][i], z = fv[i], coloraxis = "coloraxis",
           featureidkey = "properties.feature_id",
-          marker = list(opacity = opacity, line = list(width = 0)),
+          marker = list(opacity = opacity, line = poly_line),
           text = hover[i], hoverinfo = "text", showlegend = FALSE
         )
       }
@@ -208,7 +225,7 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
       common <- list(
         type = "choroplethmapbox", geojson = gj, locations = x[["feature_id"]],
         featureidkey = "properties.feature_id",
-        marker = list(opacity = opacity, line = list(width = 0)),
+        marker = list(opacity = opacity, line = poly_line),
         text = hover, hoverinfo = "text", showlegend = FALSE
       )
       if (!is.null(fv)) {
@@ -222,6 +239,24 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
       }
       p <- do.call(function(...) plotly::add_trace(p, ...), args)
     }
+  }
+
+  # Extra POI points drawn on top of the main layer (e.g. library locations),
+  # with the same black hairline border as the main point markers.
+  if (!is.null(points)) {
+    pgeo <- sf::st_transform(points, 4326)
+    pxy <- sf::st_coordinates(pgeo)
+    boxes <- c(boxes, list(sf::st_bbox(pgeo)))
+    p <- plotly::add_trace(
+      p, type = "scattermapbox", mode = "markers", lon = pxy[, 1], lat = pxy[, 2],
+      marker = list(size = size + 2, color = "#000000"),
+      hoverinfo = "skip", showlegend = FALSE
+    )
+    p <- plotly::add_trace(
+      p, type = "scattermapbox", mode = "markers", lon = pxy[, 1], lat = pxy[, 2],
+      marker = list(size = size, color = points_color),
+      text = .close_hover(pgeo, label), hoverinfo = "text", showlegend = FALSE
+    )
   }
 
   # A point marked with an X (two crossing line segments \u2014 mapbox text glyphs do
