@@ -2,9 +2,9 @@ Package: closecity
 Title: Client for the Close API (api.close.city)
 Version: 1.4.0
 Authors@R: c(
-    person("Nathaniel", "Henry", role = c("aut", "cre"),
+    person("Henry Spatial Analysis", role = c("aut", "cre", "cph", "fnd"),
            email = "nat@henryspatialanalysis.com"),
-    person("Henry Spatial Analysis", role = c("cph", "fnd")))
+    person("Nathaniel", "Henry", role = "aut"))
 Description: Access travel times from every US census block to nearby points of
     interest, by walking, biking, and public transit, over the Close API. Wraps
     the metered, read-only public endpoints with keyset pagination, ETag/304
