@@ -8,8 +8,11 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
-                      eval = nzchar(Sys.getenv("CLOSECITY_KEY")))
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = nzchar(Sys.getenv("CLOSECITY_KEY"))
+)
 library(closecity)
 close <- closecity::close_client(api_key = Sys.getenv("CLOSECITY_KEY"))
 ```
@@ -31,8 +34,11 @@ when you want the etag:
 ```{r}
 close$output <- "raw"
 first <- close$block_summary(geoid = "440070008001068", mode = "walk")
-again <- close$block_summary(geoid = "440070008001068", mode = "walk",
-                             if_none_match = first$etag)
+again <- close$block_summary(
+  geoid = "440070008001068",
+  mode = "walk",
+  if_none_match = first$etag
+)
 again$not_modified   # TRUE, and nothing was charged
 ```
 
@@ -61,8 +67,12 @@ returns every reachable block with its minutes. A whole walkshed for 10 tokens,
 where a catchment or block query charges per block:
 
 ```{r}
-shed <- close$isochrone(block = "440070008001068", minutes = 30, mode = "walk",
-                        format = "blocks")
+shed <- close$isochrone(
+  block = "440070008001068",
+  minutes = 30,
+  mode = "walk",
+  format = "blocks"
+)
 ```
 
 ## Watch what you spend
@@ -77,8 +87,12 @@ close$output <- "tabular"
 types <- close$destination_types()
 supermarket_dest_type <- types[types$label == "grocery_stores", ]$dest_type_id
 
-supermarkets <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1200,
-                                  type = supermarket_dest_type)
+supermarkets <- close$pois_search(
+  lat = 41.823,
+  lon = -71.412,
+  radius_m = 1200,
+  type = supermarket_dest_type
+)
 attr(supermarkets, "tokens_charged")
 attr(supermarkets, "tokens_remaining")
 ```

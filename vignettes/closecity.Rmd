@@ -11,8 +11,11 @@ vignette: >
 # Examples run when a key is present (on the docs site), and are shown but not run
 # otherwise (on CRAN, and locally without a key). The displayed client uses a
 # placeholder; the real one is built here from an environment variable.
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
-                      eval = nzchar(Sys.getenv("CLOSECITY_KEY")))
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = nzchar(Sys.getenv("CLOSECITY_KEY"))
+)
 library(closecity)
 close <- closecity::close_client(api_key = Sys.getenv("CLOSECITY_KEY"))
 ```
@@ -89,8 +92,12 @@ points here, with the city boundary behind them and the view zoomed to fit.
 ```{r}
 supermarkets <- close$place_pois(geoid = providence_ri$geoid, type = supermarket_type)
 city_boundary <- close$place_boundary(geoid = providence_ri$geoid)
-closecity::close_map(x = supermarkets, color = "#e8590c",
-                     boundary = city_boundary, label = "name")
+closecity::close_map(
+  x = supermarkets,
+  color = "#e8590c",
+  boundary = city_boundary,
+  label = "name"
+)
 ```
 
 ## Choose an output
@@ -104,8 +111,11 @@ A block summary, with the readable category names merged on and sorted by time:
 
 ```{r}
 walk_times <- close$block_summary(geoid = "440070008001068", mode = "walk")
-walk_times <- merge(walk_times, amenity_types[, c("dest_type_id", "name")],
-                    by = "dest_type_id")
+walk_times <- merge(
+  walk_times,
+  amenity_types[, c("dest_type_id", "name")],
+  by = "dest_type_id"
+)
 walk_times[order(walk_times$travel_time), c("name", "travel_time")]
 ```
 
