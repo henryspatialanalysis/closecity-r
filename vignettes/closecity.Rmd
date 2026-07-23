@@ -126,6 +126,42 @@ raw <- close$block_summary(geoid = "440070008001068", mode = "walk", output = "r
 str(raw$results, max.level = 2, list.len = 3)
 ```
 
+## The client methods
+
+Every data-getting method lives on the client. Follow any name to its arguments and
+return value on the [`CloseClient`](../reference/CloseClient.html) reference page.
+
+Catalog and lookups (free, no key):
+
+- [`$modes()`](../reference/CloseClient.html#method-CloseClient-modes) — the travel modes: walk, bike, transit.
+- [`$destination_types()`](../reference/CloseClient.html#method-CloseClient-destination_types) — the catalog of amenity categories and their numeric ids.
+- [`$places()`](../reference/CloseClient.html#method-CloseClient-places) — a city name to its GEOID and centre point.
+- [`$place_boundary()`](../reference/CloseClient.html#method-CloseClient-place_boundary) — the boundary polygon of a census place.
+- [`$vintage()`](../reference/CloseClient.html#method-CloseClient-vintage) — the data vintage.
+- [`$last_updated()`](../reference/CloseClient.html#method-CloseClient-last_updated) — when the data was last refreshed.
+- [`$isochrone_meta()`](../reference/CloseClient.html#method-CloseClient-isochrone_meta) — isochrone modes, directions, and assumptions.
+- [`$health()`](../reference/CloseClient.html#method-CloseClient-health) — a service health check.
+
+Travel times from a block or a point:
+
+- [`$block_summary()`](../reference/CloseClient.html#method-CloseClient-block_summary) — walk/bike/transit time from a block to each amenity type.
+- [`$point_summary()`](../reference/CloseClient.html#method-CloseClient-point_summary) — the same, from a `lat`/`lon` point.
+- [`$block_pois()`](../reference/CloseClient.html#method-CloseClient-block_pois) — the individual POIs reachable from a block, each with its travel time.
+- [`$point_pois()`](../reference/CloseClient.html#method-CloseClient-point_pois) — the same, from a `lat`/`lon` point.
+
+Points of interest:
+
+- [`$pois_search()`](../reference/CloseClient.html#method-CloseClient-pois_search) — search POIs by radius or bounding box.
+- [`$poi()`](../reference/CloseClient.html#method-CloseClient-poi) — the details of one POI.
+- [`$poi_catchment()`](../reference/CloseClient.html#method-CloseClient-poi_catchment) — the blocks that can walk to a POI (its catchment).
+
+Whole areas:
+
+- [`$blocks_query()`](../reference/CloseClient.html#method-CloseClient-blocks_query) — per-block travel times for a polygon, or a centre and radius.
+- [`$place_blocks()`](../reference/CloseClient.html#method-CloseClient-place_blocks) — per-block travel times for every block in a place.
+- [`$place_pois()`](../reference/CloseClient.html#method-CloseClient-place_pois) — every POI within a place's boundary.
+- [`$isochrone()`](../reference/CloseClient.html#method-CloseClient-isochrone) — travel-time contours from a block or a point.
+
 ## Handle errors
 
 Failed requests raise a classed condition. Catch the base `close_api_error`, or a
