@@ -81,11 +81,11 @@
 #' that do not meet a criterion so the ones that matter stand out. The view
 #' auto-zooms to fit every layer with a margin, and hover shows all attributes.
 #'
-#' @param x An [sf][sf::sf] from a client method — points or polygons.
+#' @param x An [sf][sf::sf] from a client method: points or polygons.
 #' @param color Marker/fill colour for flat features (or for highlighted ones).
 #' @param highlight Optional. A logical vector (length `nrow(x)`) or the name of
 #'   a logical/0-1 column in `x`. When supplied, features that do not meet it
-#'   render grey (`#888`) and the rest use `color` — so you can show every block
+#'   render grey (`#888`) and the rest use `color`, so you can show every block
 #'   in a study area and pick out the matches, rather than dropping the others.
 #' @param fill Optional. The name of a numeric column to shade features by, on a
 #'   continuous ColorBrewer scale with a legend (e.g. travel time, or an access
@@ -100,9 +100,9 @@
 #' @param size Marker size, for point maps.
 #' @param opacity Fill opacity, for polygon maps.
 #' @param boundary Optional. A polygon [sf][sf::sf] drawn as a grey outline
-#'   underneath the data — e.g. a city boundary from `place_boundary()`.
+#'   underneath the data, e.g. a city boundary from `place_boundary()`.
 #' @param background Optional. A polygon [sf][sf::sf], or a list of them, drawn
-#'   as semi-transparent fills underneath the data — e.g. commute isochrones, or
+#'   as semi-transparent fills underneath the data, e.g. commute isochrones, or
 #'   a walkshed under its POIs.
 #' @param background_color Fill colour(s) for `background`, recycled across the
 #'   layers.
@@ -110,9 +110,9 @@
 #' @param background_fill Fill the `background` layers (default `TRUE`); `FALSE`
 #'   draws them as outlines only.
 #' @param points Optional. A point [sf][sf::sf] drawn as markers on top of the
-#'   main layer — e.g. POI locations over a block map.
+#'   main layer, e.g. POI locations over a block map.
 #' @param points_color Marker colour for `points`.
-#' @param mark Optional. A point to mark on top with an X — either a
+#' @param mark Optional. A point to mark on top with an X, either a
 #'   `c(lon, lat)` pair or a point [sf][sf::sf]/`sfc` (e.g. a starting point).
 #' @param buffer Fraction of the data extent to pad the view by (default 0.15).
 #' @param zoom Deprecated/ignored; the view auto-zooms to the data.

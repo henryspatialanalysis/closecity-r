@@ -27,13 +27,13 @@ close_map(
 )
 }
 \arguments{
-\item{x}{An \link[sf:sf]{sf} from a client method — points or polygons.}
+\item{x}{An \link[sf:sf]{sf} from a client method: points or polygons.}
 
 \item{color}{Marker/fill colour for flat features (or for highlighted ones).}
 
 \item{highlight}{Optional. A logical vector (length \code{nrow(x)}) or the name of
 a logical/0-1 column in \code{x}. When supplied, features that do not meet it
-render grey (\verb{#888}) and the rest use \code{color} — so you can show every block
+render grey (\verb{#888}) and the rest use \code{color}, so you can show every block
 in a study area and pick out the matches, rather than dropping the others.}
 
 \item{fill}{Optional. The name of a numeric column to shade features by, on a
@@ -55,10 +55,10 @@ the attributes follow.}
 \item{opacity}{Fill opacity, for polygon maps.}
 
 \item{boundary}{Optional. A polygon \link[sf:sf]{sf} drawn as a grey outline
-underneath the data — e.g. a city boundary from \code{place_boundary()}.}
+underneath the data, e.g. a city boundary from \code{place_boundary()}.}
 
 \item{background}{Optional. A polygon \link[sf:sf]{sf}, or a list of them, drawn
-as semi-transparent fills underneath the data — e.g. commute isochrones, or
+as semi-transparent fills underneath the data, e.g. commute isochrones, or
 a walkshed under its POIs.}
 
 \item{background_color}{Fill colour(s) for \code{background}, recycled across the
@@ -70,11 +70,11 @@ layers.}
 draws them as outlines only.}
 
 \item{points}{Optional. A point \link[sf:sf]{sf} drawn as markers on top of the
-main layer — e.g. POI locations over a block map.}
+main layer, e.g. POI locations over a block map.}
 
 \item{points_color}{Marker colour for \code{points}.}
 
-\item{mark}{Optional. A point to mark on top with an X — either a
+\item{mark}{Optional. A point to mark on top with an X, either a
 \code{c(lon, lat)} pair or a point \link[sf:sf]{sf}/\code{sfc} (e.g. a starting point).}
 
 \item{buffer}{Fraction of the data extent to pad the view by (default 0.15).}

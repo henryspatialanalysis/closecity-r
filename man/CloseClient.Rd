@@ -628,7 +628,7 @@ set \code{FALSE} for the first page only.}
 \if{latex}{\out{\hypertarget{method-CloseClient-place_boundary}{}}}
 \subsection{\code{CloseClient$place_boundary()}}{
   The boundary polygon of a census place, as a one-row
-\link[sf:sf]{sf} — handy as a \code{boundary} layer for \code{\link[=close_map]{close_map()}} when mapping
+\link[sf:sf]{sf}, handy as a \code{boundary} layer for \code{\link[=close_map]{close_map()}} when mapping
 a city's blocks or POIs. Free (no API key).
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}

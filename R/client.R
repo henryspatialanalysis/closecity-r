@@ -477,7 +477,7 @@ CloseClient <- R6::R6Class(
     },
 
     #' @description The boundary polygon of a census place, as a one-row
-    #'   [sf][sf::sf] — handy as a `boundary` layer for [close_map()] when mapping
+    #'   [sf][sf::sf], handy as a `boundary` layer for [close_map()] when mapping
     #'   a city's blocks or POIs. Free (no API key).
     #' @param geoid Census place GEOID.
     #' @param output Override the client's output mode for this call.
@@ -703,7 +703,10 @@ CloseClient <- R6::R6Class(
     )
   } else NULL
   message <- sprintf('%d %s: %s', status, slug, body$title %||% '')
-  if(!is.null(hint)) message <- paste0(message, ' -- ', hint)
+  if(!is.null(hint)){
+    sep <- if(grepl('[.!?]$', message)) ' ' else '. '
+    message <- paste0(message, sep, hint)
+  }
   rlang::abort(
     message = message,
     class = c(paste0('close_api_', slug), 'close_api_error'),

@@ -9,9 +9,10 @@ output:
 
 # closecity <img src="man/figures/logo.png" align="right" height="120" alt="" />
 
-R client for the Close API. Get travel times from every US census block to nearby
-places, on foot, by bike, and by public transit. This is the data behind
-[close.city](https://close.city), read over the [Close API](https://api.close.city).
+This is the R software development kit for the Close.City API. It returns travel
+times from every US census block to nearby places, on foot, by bike, and by public
+transit. The data behind [close.city](https://close.city) is served over the
+[Close API](https://api.close.city).
 
 ## Install
 
@@ -24,8 +25,8 @@ remotes::install_github("henryspatialanalysis/closecity-r")
 
 New to the package? Start with the guide, then work through a tutorial.
 
-- [Get started](https://henryspatialanalysis.github.io/closecity-r/articles/closecity.html)
-  — key terms, building a client, making a call and mapping it, output modes, and
+- [Get started](https://henryspatialanalysis.github.io/closecity-r/articles/closecity.html):
+  key terms, building a client, making a call and mapping it, output modes, and
   error handling.
 - Tutorials
   - [Your first walkability map](https://henryspatialanalysis.github.io/closecity-r/articles/first-map.html)
@@ -33,8 +34,8 @@ New to the package? Start with the guide, then work through a tutorial.
   - [The amenity basket](https://henryspatialanalysis.github.io/closecity-r/articles/amenity-basket.html)
   - [Competitor walksheds](https://henryspatialanalysis.github.io/closecity-r/articles/competitor-walksheds.html)
   - [Efficient token use](https://henryspatialanalysis.github.io/closecity-r/articles/token-use.html)
-- [Function reference](https://henryspatialanalysis.github.io/closecity-r/reference/index.html)
-  — every client method and helper.
+- [Function reference](https://henryspatialanalysis.github.io/closecity-r/reference/index.html):
+  every client method and helper.
 
 ## Reference
 

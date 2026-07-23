@@ -71,7 +71,7 @@ blocks <- close$blocks_query(
 
 Reshape to one row per block: keep just the GEOID and geometry, add the population,
 and add a walk-time column for each amenity (`NA` when it is more than 30 minutes
-away). One clean table, no leftover census-block metadata.
+away). The result is one clean table, with no leftover census-block metadata.
 
 ```{r}
 one_per_block <- blocks[!duplicated(blocks$geoid), "geoid"]
@@ -103,8 +103,8 @@ for (i in seq_len(nrow(basket))) {
 ```
 
 Parks and restaurants tend to be everywhere; supermarkets and libraries are usually
-the hardest to reach. Map the library coverage — every block shown, the covered ones
-highlighted, the library locations as points, the city boundary behind.
+the hardest to reach. Map the library coverage: every block shown, the covered ones
+highlighted, the library locations as points, and the city boundary behind.
 
 ```{r}
 one_per_block$has_library <- within_15[, basket$amenity == "library"]
@@ -171,7 +171,7 @@ for (i in seq_len(nrow(basket))) {
 
 ## Who is one or two amenities away
 
-The residents worth targeting first are the ones *almost* there — a block that has
+The residents worth targeting first are the ones *almost* there: a block that has
 five of the six is a much easier win than one that has none. Count how many amenities
 each block is missing, and for the blocks short by just one or two, break down which
 amenities are the gap.
@@ -195,8 +195,8 @@ for (g in names(pop_by_gap)) {
 ## Site a new supermarket
 
 The counts above say *which* amenity to add; the next question is *where*. Pick the
-candidate site automatically: the uncovered block — no supermarket within a 15-minute
-walk — nearest the middle of the study area. A `direction = "to"` isochrone then gives
+candidate site automatically: the uncovered block (no supermarket within a 15-minute
+walk) nearest the middle of the study area. A `direction = "to"` isochrone then gives
 the blocks that could reach the site on foot in 15 minutes, and the ones not already
 served are the population this site would newly reach.
 

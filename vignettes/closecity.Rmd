@@ -22,7 +22,7 @@ close <- closecity::close_client(api_key = Sys.getenv("CLOSECITY_KEY"))
 
 `closecity` reads the Close API: travel times from every US census block to nearby
 places, on foot, by bike, and by public transit. This vignette is a short tour.
-The three tutorials go further. The full list of query methods is on the
+The tutorials go further. The full list of query methods is on the
 [`CloseClient`](../reference/CloseClient.html) reference page, and the wider API is
 documented at [docs.close.city](https://docs.close.city).
 
@@ -31,7 +31,7 @@ documented at [docs.close.city](https://docs.close.city).
 A few terms come up throughout:
 
 - **Census block.** The smallest area the Census Bureau publishes. Each one has a
-  15-digit id, its **GEOID**. Block GEOIDs come from the census — look them up with
+  15-digit id, its **GEOID**. Block GEOIDs come from the census. Look them up with
   the `tigris` or `tidycensus` packages, the Census Bureau geocoder/API, or read
   them straight off Close's block routes (`$blocks_query()`, `$place_blocks()`).
 - **Destination type.** A category of place, such as grocery stores or libraries.
@@ -86,7 +86,7 @@ for a `lat`/`lon` starting point instead of a GEOID.
 ## Make a call and map it
 
 Routes with geometry return an [sf](https://r-spatial.github.io/sf/) object.
-`close_map()` draws it on an interactive basemap in one line — bright, hoverable
+`close_map()` draws it on an interactive basemap in one line: bright, hoverable
 points here, with the city boundary behind them and the view zoomed to fit.
 
 ```{r}
@@ -103,7 +103,7 @@ closecity::close_map(
 ## Choose an output
 
 Every route returns tabular data by default: an sf object for inherently spatial
-data, a data frame otherwise. The `output` setting changes the shape — `"tabular"`
+data, a data frame otherwise. The `output` setting changes the shape: `"tabular"`
 never downloads boundaries, and `"raw"` gives the underlying reply with its
 metering and cursor fields. Set it on the client, or pass `output =` to one call.
 
@@ -133,34 +133,34 @@ return value on the [`CloseClient`](../reference/CloseClient.html) reference pag
 
 Catalog and lookups (free, no key):
 
-- [`$modes()`](../reference/CloseClient.html#method-CloseClient-modes) — the travel modes: walk, bike, transit.
-- [`$destination_types()`](../reference/CloseClient.html#method-CloseClient-destination_types) — the catalog of amenity categories and their numeric ids.
-- [`$places()`](../reference/CloseClient.html#method-CloseClient-places) — a city name to its GEOID and centre point.
-- [`$place_boundary()`](../reference/CloseClient.html#method-CloseClient-place_boundary) — the boundary polygon of a census place.
-- [`$vintage()`](../reference/CloseClient.html#method-CloseClient-vintage) — the data vintage.
-- [`$last_updated()`](../reference/CloseClient.html#method-CloseClient-last_updated) — when the data was last refreshed.
-- [`$isochrone_meta()`](../reference/CloseClient.html#method-CloseClient-isochrone_meta) — isochrone modes, directions, and assumptions.
-- [`$health()`](../reference/CloseClient.html#method-CloseClient-health) — a service health check.
+- [`$modes()`](../reference/CloseClient.html#method-CloseClient-modes): the travel modes, walk, bike, and transit.
+- [`$destination_types()`](../reference/CloseClient.html#method-CloseClient-destination_types): the catalog of amenity categories and their numeric ids.
+- [`$places()`](../reference/CloseClient.html#method-CloseClient-places): a city name to its GEOID and centre point.
+- [`$place_boundary()`](../reference/CloseClient.html#method-CloseClient-place_boundary): the boundary polygon of a census place.
+- [`$vintage()`](../reference/CloseClient.html#method-CloseClient-vintage): the data vintage.
+- [`$last_updated()`](../reference/CloseClient.html#method-CloseClient-last_updated): when the data was last refreshed.
+- [`$isochrone_meta()`](../reference/CloseClient.html#method-CloseClient-isochrone_meta): isochrone modes, directions, and assumptions.
+- [`$health()`](../reference/CloseClient.html#method-CloseClient-health): a service health check.
 
 Travel times from a block or a point:
 
-- [`$block_summary()`](../reference/CloseClient.html#method-CloseClient-block_summary) — walk/bike/transit time from a block to each amenity type.
-- [`$point_summary()`](../reference/CloseClient.html#method-CloseClient-point_summary) — the same, from a `lat`/`lon` point.
-- [`$block_pois()`](../reference/CloseClient.html#method-CloseClient-block_pois) — the individual POIs reachable from a block, each with its travel time.
-- [`$point_pois()`](../reference/CloseClient.html#method-CloseClient-point_pois) — the same, from a `lat`/`lon` point.
+- [`$block_summary()`](../reference/CloseClient.html#method-CloseClient-block_summary): walk/bike/transit time from a block to each amenity type.
+- [`$point_summary()`](../reference/CloseClient.html#method-CloseClient-point_summary): the same, from a `lat`/`lon` point.
+- [`$block_pois()`](../reference/CloseClient.html#method-CloseClient-block_pois): the individual POIs reachable from a block, each with its travel time.
+- [`$point_pois()`](../reference/CloseClient.html#method-CloseClient-point_pois): the same, from a `lat`/`lon` point.
 
 Points of interest:
 
-- [`$pois_search()`](../reference/CloseClient.html#method-CloseClient-pois_search) — search POIs by radius or bounding box.
-- [`$poi()`](../reference/CloseClient.html#method-CloseClient-poi) — the details of one POI.
-- [`$poi_catchment()`](../reference/CloseClient.html#method-CloseClient-poi_catchment) — the blocks that can walk to a POI (its catchment).
+- [`$pois_search()`](../reference/CloseClient.html#method-CloseClient-pois_search): search POIs by radius or bounding box.
+- [`$poi()`](../reference/CloseClient.html#method-CloseClient-poi): the details of one POI.
+- [`$poi_catchment()`](../reference/CloseClient.html#method-CloseClient-poi_catchment): the blocks that can walk to a POI (its catchment).
 
 Whole areas:
 
-- [`$blocks_query()`](../reference/CloseClient.html#method-CloseClient-blocks_query) — per-block travel times for a polygon, or a centre and radius.
-- [`$place_blocks()`](../reference/CloseClient.html#method-CloseClient-place_blocks) — per-block travel times for every block in a place.
-- [`$place_pois()`](../reference/CloseClient.html#method-CloseClient-place_pois) — every POI within a place's boundary.
-- [`$isochrone()`](../reference/CloseClient.html#method-CloseClient-isochrone) — travel-time contours from a block or a point.
+- [`$blocks_query()`](../reference/CloseClient.html#method-CloseClient-blocks_query): per-block travel times for a polygon, or a centre and radius.
+- [`$place_blocks()`](../reference/CloseClient.html#method-CloseClient-place_blocks): per-block travel times for every block in a place.
+- [`$place_pois()`](../reference/CloseClient.html#method-CloseClient-place_pois): every POI within a place's boundary.
+- [`$isochrone()`](../reference/CloseClient.html#method-CloseClient-isochrone): travel-time contours from a block or a point.
 
 ## Handle errors
 

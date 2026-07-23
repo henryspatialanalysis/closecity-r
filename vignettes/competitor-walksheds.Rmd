@@ -71,7 +71,7 @@ closecity::close_map(
 
 Now split the walkshed by block. A single `$block_pois()` call takes the whole
 vector of walkshed blocks and returns, for every block, each cafe its residents can
-walk to within 10 minutes — the real routed answer, not a straight-line guess, and
+walk to within 10 minutes: the real routed answer, not a straight-line guess, and
 one request rather than one per block. Passing a vector of GEOIDs tags every row with
 its origin `geoid`, so grouping by it reads two things per block: how many cafes are
 in reach, and which one is closest by walk time.
@@ -95,13 +95,16 @@ our_shed$closest_cafe <- unname(closest[as.character(our_shed$geoid)])
 ## How many cafes each block can reach
 
 Shade every block in the walkshed by the number of cafes within a 10-minute walk;
-blue marks the blocks with the most choice.
+blue marks the blocks with the most choice, and the cafes those blocks can reach are
+drawn on top as points.
 
 ```{r}
+reachable <- cafes[cafes$dest_id %in% unique(reach$dest_id), ]
 closecity::close_map(
   x = our_shed,
   fill = "n_cafes",
   reverse = TRUE,
+  points = reachable,
   boundary = city_boundary
 )
 ```
@@ -110,7 +113,7 @@ closecity::close_map(
 
 Give each cafe that wins at least one block a colour, then paint every block with the
 colour of its closest cafe. The cafe points share those colours. The result is the
-contested ground — where our shop's catchment gives way to a competitor's.
+contested ground: where our shop's catchment gives way to a competitor's.
 
 ```{r}
 closest <- unique(stats::na.omit(our_shed$closest_cafe))
