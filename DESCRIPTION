@@ -1,19 +1,19 @@
 Package: closecity
-Title: Client for the Close API (api.close.city)
+Title: Client for the 'Close' API
 Version: 1.5.0
 Authors@R: c(
-    person("Henry Spatial Analysis", role = c("aut", "cre", "cph", "fnd"),
+    person("Nathaniel", "Henry", role = c("aut", "cre"),
            email = "nat@henryspatialanalysis.com"),
-    person("Nathaniel", "Henry", role = "aut"))
+    person("Henry Spatial Analysis", role = c("aut", "cph", "fnd")))
 Description: Access travel times from every US census block to nearby points of
-    interest, by walking, biking, and public transit, over the Close API. Wraps
+    interest, by walking, biking, and public transit, over the 'Close' API. Wraps
     the metered, read-only public endpoints with keyset pagination, ETag/304
     conditional requests, token accounting, typed RFC 9457 error handling, and
     tabular output by default ('sf' where geometry applies, a data frame
     otherwise).
 License: MIT + file LICENSE
 Encoding: UTF-8
-URL: https://henryspatialanalysis.github.io/closecity-r,
+URL: https://henryspatialanalysis.github.io/closecity-r/,
     https://github.com/henryspatialanalysis/closecity-r
 BugReports: https://github.com/henryspatialanalysis/closecity-r/issues
 Depends: R (>= 4.1)

@@ -12,7 +12,7 @@ output:
 This is the R software development kit for the Close.City API. It returns travel
 times from every US census block to nearby places, on foot, by bike, and by public
 transit. The data behind [close.city](https://close.city) is served over the
-[Close API](https://api.close.city).
+[Close API](https://docs.close.city).
 
 ## Install
 
