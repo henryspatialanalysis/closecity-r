@@ -106,7 +106,7 @@
 #' @export
 close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
                       palette = "YlGnBu", reverse = FALSE, label = NULL,
-                      size = 9, opacity = 0.65, boundary = NULL,
+                      size = 15, opacity = 0.65, boundary = NULL,
                       background = NULL, background_color = "#3b6fb0",
                       background_opacity = 0.3, mark = NULL, buffer = 0.15,
                       zoom = NULL) {
@@ -158,6 +158,14 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
 
   if (any(grepl("POINT", as.character(sf::st_geometry_type(x))))) {
     xy <- sf::st_coordinates(x)
+    # Hairline black border: a slightly larger black marker underneath
+    # (scattermapbox markers have no line/stroke of their own).
+    p <- plotly::add_trace(
+      p, type = "scattermapbox", mode = "markers",
+      lon = xy[, 1], lat = xy[, 2],
+      marker = list(size = size + 2, color = "#000000"),
+      hoverinfo = "skip", showlegend = FALSE
+    )
     if (!is.null(fv)) {
       marker <- list(size = size, color = fv, colorscale = palette,
                      reversescale = reverse, showscale = TRUE,

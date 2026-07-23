@@ -12,7 +12,7 @@ close_map(
   palette = "YlGnBu",
   reverse = FALSE,
   label = NULL,
-  size = 9,
+  size = 15,
   opacity = 0.65,
   boundary = NULL,
   background = NULL,

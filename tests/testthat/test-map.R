@@ -63,6 +63,6 @@ test_that("close_map draws boundary and background layers under the data", {
   m <- close_map(make_points(), boundary = boundary,
                  background = list(polys), background_color = "#3b6fb0")
   built <- plotly::plotly_build(m)
-  # one background fill + one boundary outline + the point layer
-  expect_equal(length(built$x$data), 3L)
+  # background fill + boundary outline + point border-halo + points
+  expect_equal(length(built$x$data), 4L)
 })
