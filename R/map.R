@@ -163,10 +163,10 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
     }
   }
 
-  # City-boundary outline (no fill), above the background fills.
+  # City-boundary outline (no fill), above the background fills. It is context, so
+  # it does not drive the zoom — the view frames the data, not the whole city.
   if (!is.null(boundary)) {
     geom <- sf::st_transform(sf::st_geometry(boundary), 4326)
-    boxes <- c(boxes, list(sf::st_bbox(geom)))
     xy <- .close_polygon_lines(geom)
     p <- plotly::add_trace(
       p, type = "scattermapbox", mode = "lines", lon = xy$lon, lat = xy$lat,
@@ -232,6 +232,24 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
         colorscale = .close_scale(palette), reversescale = reverse,
         cmin = min(fv), cmax = max(fv), colorbar = list(title = fill)
       ))
+    } else if (is.null(fv) && is.null(hl) &&
+               length(color) == nrow(x) && nrow(x) > 1) {
+      # Per-polygon categorical colours (e.g. blocks by their closest POI): one
+      # flat trace per distinct colour.
+      for (col in unique(color)) {
+        idx <- which(color == col)
+        gj <- jsonlite::fromJSON(
+          geojsonsf::sf_geojson(x[idx, "feature_id"]), simplifyVector = FALSE
+        )
+        p <- plotly::add_trace(
+          p, type = "choroplethmapbox", geojson = gj,
+          locations = x[["feature_id"]][idx], z = rep(1, length(idx)),
+          colorscale = list(list(0, col), list(1, col)), showscale = FALSE,
+          featureidkey = "properties.feature_id",
+          marker = list(opacity = opacity, line = poly_line),
+          text = hover[idx], hoverinfo = "text", showlegend = FALSE
+        )
+      }
     } else {
       gj <- jsonlite::fromJSON(
         geojsonsf::sf_geojson(x[, "feature_id"]), simplifyVector = FALSE
