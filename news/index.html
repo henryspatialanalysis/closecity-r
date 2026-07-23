@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">closecity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,10 @@
       <small>Source: <a href="https://github.com/henryspatialanalysis/closecity-r/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.5.0" id="closecity-150">closecity 1.5.0<a class="anchor" aria-label="anchor" href="#closecity-150"></a></h2>
+<ul><li>Multi-origin calls. <code>$block_summary()</code>, <code>$block_pois()</code>, <code>$point_summary()</code>, <code>$point_pois()</code>, and <code>$poi_catchment()</code> now accept many origins in one request: pass a vector of GEOIDs (or <code>dest_id</code>s), or equal-length <code>lat</code> / <code>lon</code> vectors, and the whole set is queried in a single call — one request against the 300/minute rate limit instead of one per origin. Results come back as a flat data frame tagged by origin (<code>geoid</code>, or <code>origin_lat</code> / <code>origin_lon</code>, or <code>dest_id</code>); per-origin <code>errors</code> and any <code>truncated</code> origins ride on the frame’s attributes. A batch is charged only for what the account can pay for, so a huge query stops at the balance rather than overspending.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.4.0" id="closecity-140">closecity 1.4.0<a class="anchor" aria-label="anchor" href="#closecity-140"></a></h2>
 <ul><li>

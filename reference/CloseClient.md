@@ -235,7 +235,8 @@ when `output` is `'raw'`).
 ### `CloseClient$block_summary()`
 
 Fastest travel time from a census block to each destination category, by
-mode.
+mode. Pass a vector of GEOIDs to query many blocks in one call (one
+request, one rate-limit tick).
 
 #### Usage
 
@@ -251,7 +252,10 @@ mode.
 
 - `geoid`:
 
-  15-digit census block GEOID.
+  A 15-digit census block GEOID, or a vector of them for a single
+  multi-origin call. Every result row carries its origin `geoid`;
+  per-origin `errors` / `truncated` / `truncated_reason` ride on the
+  frame's attributes.
 
 - `mode`:
 
@@ -263,7 +267,8 @@ mode.
 
 - `if_none_match`:
 
-  An ETag from an earlier reply, to revalidate for free.
+  An ETag from an earlier reply, to revalidate for free (single-block
+  form only).
 
 - `output`:
 
@@ -280,7 +285,9 @@ when `output` is `'raw'`.
 ### `CloseClient$block_pois()`
 
 Nearby points of interest and their travel time from a block, one row
-per (POI, mode). Reads every page by default.
+per (POI, mode). Reads every page by default. Pass a vector of GEOIDs to
+query many blocks in one call (one request, one rate-limit tick; the
+multi-origin form is not paginated).
 
 #### Usage
 
@@ -300,7 +307,9 @@ per (POI, mode). Reads every page by default.
 
 - `geoid`:
 
-  15-digit census block GEOID.
+  A 15-digit census block GEOID, or a vector of them for a single
+  multi-origin call. Every row carries its origin `geoid`; per-origin
+  `errors` / `truncated` ride on the frame's attributes.
 
 - `mode`:
 
@@ -320,7 +329,7 @@ per (POI, mode). Reads every page by default.
 
 - `limit`:
 
-  Rows per page (up to 1000).
+  Rows per page (up to 1000; single-block form only).
 
 - `cursor`:
 
@@ -349,7 +358,8 @@ when `output` is `'raw'`).
 
 Like `$block_summary()`, but from the block containing a lat/lon point.
 The resolved block is echoed as `resolved_block` and broadcast to a
-`geoid` column.
+`geoid` column. Pass equal-length `lat` / `lon` vectors to query many
+points in one call (one request, one rate-limit tick).
 
 #### Usage
 
@@ -366,11 +376,13 @@ The resolved block is echoed as `resolved_block` and broadcast to a
 
 - `lat`:
 
-  Latitude.
+  Latitude, or a vector of latitudes for a multi-origin call.
 
 - `lon`:
 
-  Longitude.
+  Longitude, or a matching vector of longitudes. In the multi-origin
+  form each row carries its `origin_lat` / `origin_lon`, and resolved
+  blocks / `errors` / `truncated` ride on the frame's attributes.
 
 - `mode`:
 
@@ -382,7 +394,7 @@ The resolved block is echoed as `resolved_block` and broadcast to a
 
 - `if_none_match`:
 
-  An ETag to revalidate for free.
+  An ETag to revalidate for free (single-point form only).
 
 - `output`:
 
@@ -399,7 +411,9 @@ when `output` is `'raw'`.
 ### `CloseClient$point_pois()`
 
 Like `$block_pois()`, but from the block containing a lat/lon point.
-Reads every page by default.
+Reads every page by default. Pass equal-length `lat` / `lon` vectors to
+query many points in one call (one request, one rate-limit tick; the
+multi-origin form is not paginated).
 
 #### Usage
 
@@ -420,11 +434,12 @@ Reads every page by default.
 
 - `lat`:
 
-  Latitude.
+  Latitude, or a vector of latitudes for a multi-origin call.
 
 - `lon`:
 
-  Longitude.
+  Longitude, or a matching vector of longitudes. In the multi-origin
+  form each row carries its `origin_lat` / `origin_lon`.
 
 - `mode`:
 
@@ -444,7 +459,7 @@ Reads every page by default.
 
 - `limit`:
 
-  Rows per page (up to 1000).
+  Rows per page (up to 1000; single-point form only).
 
 - `cursor`:
 
@@ -570,7 +585,9 @@ when `output` is `'raw'`).
 ### `CloseClient$poi_catchment()`
 
 Every census block that can reach a point of interest, one row per
-(block, mode). Reads every page by default.
+(block, mode). Reads every page by default. Pass a vector of dest_ids to
+query many POIs in one call (one request, one rate-limit tick; the
+multi-origin form is not paginated).
 
 #### Usage
 
@@ -589,7 +606,9 @@ Every census block that can reach a point of interest, one row per
 
 - `dest_id`:
 
-  Destination id.
+  A destination id, or a vector of them for a single multi-origin call.
+  Every row carries its origin `dest_id`; per-POI `errors` / `truncated`
+  ride on the frame's attributes.
 
 - `mode`:
 
@@ -605,7 +624,7 @@ Every census block that can reach a point of interest, one row per
 
 - `limit`:
 
-  Rows per page (up to 1000).
+  Rows per page (up to 1000; single-POI form only).
 
 - `cursor`:
 
