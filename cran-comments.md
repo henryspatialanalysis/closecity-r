@@ -11,8 +11,9 @@
 
 ## Notes
 
-* Examples that call the live Close API are wrapped in `\dontrun{}`, and the
-  vignettes are not evaluated (`eval = FALSE`), so the check makes no network
-  requests. The unit tests use mocked HTTP responses (httr2 + webfakes).
+* Examples that call the live Close API are wrapped in `\dontrun{}`. The vignette
+  code chunks only run when a `CLOSECITY_KEY` environment variable is set, which it
+  is not during `R CMD check`, so the check makes no network requests. The unit
+  tests use mocked HTTP responses via `httr2::with_mocked_responses()`.
 * `sf` and `tigris` are used only in the optional `close_as_sf()` path and are
   in Suggests, guarded by `requireNamespace()`.
