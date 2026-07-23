@@ -161,11 +161,4 @@ closecity::close_map(x = walk, color = "#058040")
 closecity::close_map(x = transit, color = "#202a5b")
 ```
 
-## Where to next
-
-- **Looking for a home**: find blocks near several amenities at once,
-  then narrow to a commute.
-- **The amenity basket**: population-weighted walkability coverage
-  across a whole city.
-- **Competitor walksheds**: who else draws from your neighbourhood.
-  \`\`\`
+\`\`\`
