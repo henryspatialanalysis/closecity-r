@@ -96,8 +96,12 @@ fit.
 
 supermarkets <- close$place_pois(geoid = providence_ri$geoid, type = supermarket_type)
 city_boundary <- close$place_boundary(geoid = providence_ri$geoid)
-closecity::close_map(x = supermarkets, color = "#e8590c",
-                     boundary = city_boundary, label = "name")
+closecity::close_map(
+  x = supermarkets,
+  color = "#e8590c",
+  boundary = city_boundary,
+  label = "name"
+)
 ```
 
 ## Choose an output
@@ -114,8 +118,11 @@ by time:
 ``` r
 
 walk_times <- close$block_summary(geoid = "440070008001068", mode = "walk")
-walk_times <- merge(walk_times, amenity_types[, c("dest_type_id", "name")],
-                    by = "dest_type_id")
+walk_times <- merge(
+  walk_times,
+  amenity_types[, c("dest_type_id", "name")],
+  by = "dest_type_id"
+)
 walk_times[order(walk_times$travel_time), c("name", "travel_time")]
 #>                                name travel_time
 #> 18                All transit stops           2

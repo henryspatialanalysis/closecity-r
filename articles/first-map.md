@@ -37,8 +37,11 @@ and sort by time, so the nearest things are on top.
 ``` r
 
 walk_times <- close$point_summary(lat = start_lat, lon = start_lon, mode = "walk")
-walk_times <- merge(walk_times, amenity_types[, c("dest_type_id", "name")],
-                    by = "dest_type_id")
+walk_times <- merge(
+  walk_times,
+  amenity_types[, c("dest_type_id", "name")],
+  by = "dest_type_id"
+)
 walk_times[order(walk_times$travel_time), c("name", "travel_time")]
 #>                                name travel_time
 #> 18                All transit stops           0
@@ -88,13 +91,21 @@ boundary behind it for context.
 
 ``` r
 
-nearby_supermarkets <- close$point_pois(lat = start_lat, lon = start_lon,
-                                        mode = "walk", type = supermarket_type,
-                                        max_minutes = 30)
+nearby_supermarkets <- close$point_pois(
+  lat = start_lat,
+  lon = start_lon,
+  mode = "walk",
+  type = supermarket_type,
+  max_minutes = 30
+)
 
 city_boundary <- close$place_boundary(geoid = providence_ri$geoid)
-closecity::close_map(x = nearby_supermarkets, color = "#e8590c",
-                     boundary = city_boundary, label = "name")
+closecity::close_map(
+  x = nearby_supermarkets,
+  color = "#e8590c",
+  boundary = city_boundary,
+  label = "name"
+)
 ```
 
 ## Draw how far you can walk
@@ -105,9 +116,14 @@ nearest, most-reachable ring.
 
 ``` r
 
-rings <- close$isochrone(lon = start_lon, lat = start_lat, mode = "walk",
-                         direction = "from", contours = c(10, 20, 30),
-                         format = "geojson")
+rings <- close$isochrone(
+  lon = start_lon,
+  lat = start_lat,
+  mode = "walk",
+  direction = "from",
+  contours = c(10, 20, 30),
+  format = "geojson"
+)
 closecity::close_map(x = rings, fill = "contour", reverse = TRUE)
 ```
 
@@ -118,10 +134,22 @@ bus — the clearest way to see what transit buys you.
 
 ``` r
 
-walk <- close$isochrone(lon = start_lon, lat = start_lat, mode = "walk",
-                        direction = "from", minutes = 30, format = "geojson")
-transit <- close$isochrone(lon = start_lon, lat = start_lat, mode = "transit",
-                           direction = "from", minutes = 30, format = "geojson")
+walk <- close$isochrone(
+  lon = start_lon,
+  lat = start_lat,
+  mode = "walk",
+  direction = "from",
+  minutes = 30,
+  format = "geojson"
+)
+transit <- close$isochrone(
+  lon = start_lon,
+  lat = start_lat,
+  mode = "transit",
+  direction = "from",
+  minutes = 30,
+  format = "geojson"
+)
 
 closecity::close_map(x = walk, color = "#058040")
 ```

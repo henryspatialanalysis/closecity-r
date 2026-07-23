@@ -54,10 +54,13 @@ restaurants$kind <- "Restaurant"
 stops$kind <- "Transit stop"
 around <- rbind(supermarkets[, "kind"], restaurants[, "kind"], stops[, "kind"])
 
-palette <- c(Supermarket = "#058040", Restaurant = "#c6cbe0",
-             `Transit stop` = "#f36e21")
-closecity::close_map(x = around, color = palette[around$kind], label = "kind",
-                     boundary = city_boundary)
+palette <- c(Supermarket = "#058040", Restaurant = "#c6cbe0", `Transit stop` = "#f36e21")
+closecity::close_map(
+  x = around,
+  color = palette[around$kind],
+  label = "kind",
+  boundary = city_boundary
+)
 ```
 
 ## Find the blocks that qualify
@@ -72,9 +75,11 @@ keep their token cost low; a place GEOID pulls the whole city.)
 
 ``` r
 
-blocks <- close$place_blocks(geoid = city$geoid, mode = "walk",
-                             type = c(supermarket_dest_id, restaurant_dest_id,
-                                      freq_transit_stop_dest_id))
+blocks <- close$place_blocks(
+  geoid = city$geoid,
+  mode = "walk",
+  type = c(supermarket_dest_id, restaurant_dest_id, freq_transit_stop_dest_id)
+)
 ```
 
 Reshape to one row per block, with a walk-time column for each amenity,
@@ -103,8 +108,12 @@ any block to read its walk time to each amenity.
 
 ``` r
 
-closecity::close_map(x = city_blocks, highlight = "qualifies", color = "#f36e21",
-                     boundary = city_boundary)
+closecity::close_map(
+  x = city_blocks,
+  highlight = "qualifies",
+  color = "#f36e21",
+  boundary = city_boundary
+)
 ```
 
 ## Narrow to a shared commute
@@ -115,14 +124,31 @@ half-transparent, you can see both at once.
 
 ``` r
 
-work_a <- close$isochrone(lon = -71.0865, lat = 42.3625, mode = "transit",
-                          direction = "from", minutes = 20, format = "geojson")
-work_b <- close$isochrone(lon = -71.0589, lat = 42.3555, mode = "transit",
-                          direction = "from", minutes = 20, format = "geojson")
+work_a <- close$isochrone(
+  lon = -71.0865,
+  lat = 42.3625,
+  mode = "transit",
+  direction = "from",
+  minutes = 20,
+  format = "geojson"
+)
+work_b <- close$isochrone(
+  lon = -71.0589,
+  lat = 42.3555,
+  mode = "transit",
+  direction = "from",
+  minutes = 20,
+  format = "geojson"
+)
 
-closecity::close_map(x = work_a, color = "#058040", opacity = 0.5,
-                     background = work_b, background_color = "#f36e21",
-                     background_opacity = 0.5)
+closecity::close_map(
+  x = work_a,
+  color = "#058040",
+  opacity = 0.5,
+  background = work_b,
+  background_color = "#f36e21",
+  background_opacity = 0.5
+)
 ```
 
 Keep the qualifying blocks that also sit inside both commutes. The final
@@ -135,9 +161,13 @@ both_commutes <- sf::st_intersection(sf::st_union(work_a), sf::st_union(work_b))
 winners <- city_blocks[city_blocks$qualifies, ]
 winners$shortlist <- sf::st_intersects(winners, both_commutes, sparse = FALSE)[, 1]
 
-closecity::close_map(x = winners, highlight = "shortlist", color = "#1f78b4",
-                     boundary = city_boundary,
-                     background = list(work_a, work_b),
-                     background_color = c("#058040", "#f36e21"),
-                     background_opacity = 0.5)
+closecity::close_map(
+  x = winners,
+  highlight = "shortlist",
+  color = "#1f78b4",
+  boundary = city_boundary,
+  background = list(work_a, work_b),
+  background_color = c("#058040", "#f36e21"),
+  background_opacity = 0.5
+)
 ```

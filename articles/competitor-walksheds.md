@@ -43,8 +43,7 @@ ours$name
 #> [1] "Little Sister"
 cafes$is_ours <- cafes$dest_id == ours$dest_id
 
-our_shed <- close$poi_catchment(dest_id = ours$dest_id, mode = "walk",
-                                max_minutes = 10)
+our_shed <- close$poi_catchment(dest_id = ours$dest_id, mode = "walk", max_minutes = 10)
 walkshed <- sf::st_union(our_shed)
 ```
 
@@ -52,9 +51,14 @@ Draw the walkshed, with the cafes on top and our shop in orange.
 
 ``` r
 
-closecity::close_map(x = cafes, color = ifelse(cafes$is_ours, "#f36e21", "#202a5b"),
-                     label = "name", background = walkshed,
-                     background_color = "#74b9ff", boundary = city_boundary)
+closecity::close_map(
+  x = cafes,
+  color = ifelse(cafes$is_ours, "#f36e21", "#202a5b"),
+  label = "name",
+  background = walkshed,
+  background_color = "#74b9ff",
+  boundary = city_boundary
+)
 ```
 
 ## Who else those blocks can reach
@@ -81,9 +85,12 @@ shared <- vapply(nearest$dest_id, function(id) {
 competing <- nearest[shared > 0, ]
 for (i in order(shared, decreasing = TRUE)) {
   if (shared[i] == 0) next
-  cat(sprintf("%-28s %3d shared blocks (%.0f%% of ours)\n",
-              nearest$name[i], shared[i],
-              100 * shared[i] / length(our_geoids)))
+  cat(sprintf(
+    "%-28s %3d shared blocks (%.0f%% of ours)\n",
+    nearest$name[i],
+    shared[i],
+    100 * shared[i] / length(our_geoids)
+  ))
 }
 #> Cafe Zoey                     90 shared blocks (85% of ours)
 #> Seven Stars Bakery            79 shared blocks (75% of ours)
@@ -100,11 +107,19 @@ are the ones fighting for the same walk-in traffic.
 
 ``` r
 
-cafe_color <- ifelse(cafes$is_ours, "#f36e21",
-                     ifelse(cafes$is_competitor, "#e03131", "#202a5b"))
-closecity::close_map(x = cafes, color = cafe_color, label = "name",
-                     background = walkshed, background_color = "#74b9ff",
-                     boundary = city_boundary)
+cafe_color <- ifelse(
+  cafes$is_ours,
+  "#f36e21",
+  ifelse(cafes$is_competitor, "#e03131", "#202a5b")
+)
+closecity::close_map(
+  x = cafes,
+  color = cafe_color,
+  label = "name",
+  background = walkshed,
+  background_color = "#74b9ff",
+  boundary = city_boundary
+)
 ```
 
 The same recipe scales up: raise the cafe count you check, or compare

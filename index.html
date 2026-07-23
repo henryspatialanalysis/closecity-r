@@ -73,7 +73,6 @@
 </h1>
 </div>
 <p>R client for the Close API. Get travel times from every US census block to nearby places, on foot, by bike, and by public transit. This is the data behind <a href="https://close.city" class="external-link">close.city</a>, read over the <a href="https://api.close.city" class="external-link">Close API</a>.</p>
-<p><strong>Documentation:</strong> <a href="https://henryspatialanalysis.github.io/closecity-r/" class="uri">https://henryspatialanalysis.github.io/closecity-r/</a></p>
 <div class="section level2">
 <h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
 </h2>
@@ -82,118 +81,29 @@
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"henryspatialanalysis/closecity-r"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="a-first-call">A first call<a class="anchor" aria-label="anchor" href="#a-first-call"></a>
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
-<p>You make requests through a client object. Feature results come back as <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> objects, so you can map them right away.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://henryspatialanalysis.github.io/closecity-r">closecity</a></span><span class="op">)</span></span>
-<span><span class="co"># The key (ck_live_) comes from https://account.close.city (5,000 free tokens,</span></span>
-<span><span class="co"># no card). Or set the CLOSECITY_KEY environment variable and call</span></span>
-<span><span class="co"># close_client() with no argument.</span></span>
-<span><span class="va">close</span> <span class="op">&lt;-</span> <span class="fu">closecity</span><span class="fu">::</span><span class="fu"><a href="reference/close_client.html">close_client</a></span><span class="op">(</span>api_key <span class="op">=</span> <span class="st">"ck_live_your_key"</span><span class="op">)</span>   <span class="co"># use your own key here</span></span></code></pre></div>
-<p><code><a href="reference/close_map.html">close_map()</a></code> draws any result on an interactive CARTO Positron basemap in one line — bright hoverable points, or blocks shaded by travel time, zoomed to the data. (The image below is a snapshot; in a session or the <a href="https://henryspatialanalysis.github.io/closecity-r/articles/">tutorials</a> the map is live and pannable.)</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Supermarkets within a 1.5 km walk of a point (type 30 is grocery stores):</span></span>
-<span><span class="va">supermarkets</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">pois_search</span><span class="op">(</span>lat <span class="op">=</span> <span class="fl">41.823</span>, lon <span class="op">=</span> <span class="op">-</span><span class="fl">71.412</span>, radius_m <span class="op">=</span> <span class="fl">1500</span>, type <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
-<span><span class="fu">closecity</span><span class="fu">::</span><span class="fu"><a href="reference/close_map.html">close_map</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">supermarkets</span>, color <span class="op">=</span> <span class="st">"#e8590c"</span>, label <span class="op">=</span> <span class="st">"name"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-first-call.png" alt="Supermarkets across Providence, drawn as orange points over a CARTO Positron basemap."></p>
-<p>Catalog and lookup routes are free and need no key:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="fu">modes</span><span class="op">(</span><span class="op">)</span>                       <span class="co"># walk, bike, transit</span></span>
-<span><span class="co">#&gt;   mode_id    mode    description</span></span>
-<span><span class="co">#&gt; 1       1    walk        Walking</span></span>
-<span><span class="co">#&gt; 2       2    bike         Biking</span></span>
-<span><span class="co">#&gt; 3       3 transit Public transit</span></span>
-<span><span class="va">close</span><span class="op">$</span><span class="fu">places</span><span class="op">(</span>q <span class="op">=</span> <span class="st">"Providence"</span><span class="op">)</span>      <span class="co"># a city name to its GEOID and centre</span></span>
-<span><span class="co">#&gt; Simple feature collection with 9 features and 5 fields</span></span>
-<span><span class="co">#&gt; Geometry type: POINT</span></span>
-<span><span class="co">#&gt; Dimension:     XY</span></span>
-<span><span class="co">#&gt; Bounding box:  xmin: -111.8133 ymin: 32.34238 xmax: -71.35821 ymax: 42.28133</span></span>
-<span><span class="co">#&gt; Geodetic CRS:  WGS 84</span></span>
-<span><span class="co">#&gt;                 name   geoid state        lon      lat</span></span>
-<span><span class="co">#&gt; 1         Providence 4459000    RI  -71.41872 41.82301</span></span>
-<span><span class="co">#&gt; 2         Providence 4962360    UT -111.81331 41.70341</span></span>
-<span><span class="co">#&gt; 3 Providence Village 4859748    TX  -96.95432 33.23890</span></span>
-<span><span class="co">#&gt; 4         Providence 2163372    KY  -87.75094 37.39935</span></span>
-<span><span class="co">#&gt; 5         Providence 0162688    AL  -87.77611 32.34238</span></span>
-<span><span class="co">#&gt; 6    East Providence 4422960    RI  -71.35821 41.80049</span></span>
-<span><span class="co">#&gt; 7     New Providence 3451810    NJ  -74.40343 40.69964</span></span>
-<span><span class="co">#&gt; 8    Lake Providence 2241400    LA  -91.18247 32.81322</span></span>
-<span><span class="co">#&gt; 9     New Providence 1956415    IA  -93.17162 42.28133</span></span>
-<span><span class="co">#&gt;                     geometry</span></span>
-<span><span class="co">#&gt; 1 POINT (-71.41872 41.82301)</span></span>
-<span><span class="co">#&gt; 2 POINT (-111.8133 41.70341)</span></span>
-<span><span class="co">#&gt; 3  POINT (-96.95432 33.2389)</span></span>
-<span><span class="co">#&gt; 4 POINT (-87.75094 37.39935)</span></span>
-<span><span class="co">#&gt; 5 POINT (-87.77611 32.34238)</span></span>
-<span><span class="co">#&gt; 6 POINT (-71.35821 41.80049)</span></span>
-<span><span class="co">#&gt; 7 POINT (-74.40343 40.69964)</span></span>
-<span><span class="co">#&gt; 8 POINT (-91.18247 32.81322)</span></span>
-<span><span class="co">#&gt; 9 POINT (-93.17162 42.28133)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="key-terms">Key terms<a class="anchor" aria-label="anchor" href="#key-terms"></a>
-</h2>
+<p>New to the package? Start with the guide, then work through a tutorial.</p>
 <ul>
 <li>
-<strong>Census block.</strong> The smallest area the Census Bureau publishes. Each one has a 15-digit id called a <strong>GEOID</strong>.</li>
-<li>
-<strong>Destination type.</strong> A category of place, such as grocery stores or libraries. Each type has a numeric id. Look them up with <code>close$destination_types()</code>.</li>
-<li>
-<strong>Mode.</strong> How someone travels: walk, bike, or transit.</li>
-<li>
-<strong>Isochrone</strong> or <strong>catchment</strong>: the area you can reach starting from a point within a time limit, by a selected travel mode.</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="choosing-an-output">Choosing an output<a class="anchor" aria-label="anchor" href="#choosing-an-output"></a>
-</h2>
-<p>Set <code>output</code> on the client, or per call:</p>
+<a href="https://henryspatialanalysis.github.io/closecity-r/articles/closecity.html">Get started</a> — key terms, building a client, making a call and mapping it, output modes, and error handling.</li>
+<li>Tutorials
 <ul>
-<li>
-<code>output = "spatial"</code> (the default) returns an <code>sf</code> object where geometry applies and a <code>data.frame</code> otherwise. Block routes join census-block boundaries with the <code>tigris</code> package, downloaded once and cached.</li>
-<li>
-<code>output = "tabular"</code> returns a <code>data.frame</code> for every route and never downloads boundaries. Reach for it when you only want the numbers.</li>
-<li>
-<code>output = "raw"</code> returns the underlying <code>close_reply</code>, with the parsed body on <code>$data</code> and the token counts alongside.</li>
+<li><a href="https://henryspatialanalysis.github.io/closecity-r/articles/first-map.html">Your first walkability map</a></li>
+<li><a href="https://henryspatialanalysis.github.io/closecity-r/articles/home-search.html">Looking for a home</a></li>
+<li><a href="https://henryspatialanalysis.github.io/closecity-r/articles/amenity-basket.html">The amenity basket</a></li>
+<li><a href="https://henryspatialanalysis.github.io/closecity-r/articles/competitor-walksheds.html">Competitor walksheds</a></li>
+<li><a href="https://henryspatialanalysis.github.io/closecity-r/articles/token-use.html">Efficient token use</a></li>
 </ul>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">close</span><span class="op">$</span><span class="va">output</span> <span class="op">&lt;-</span> <span class="st">"raw"</span></span>
-<span><span class="va">reply</span> <span class="op">&lt;-</span> <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span>geoid <span class="op">=</span> <span class="st">"440070008001068"</span>, mode <span class="op">=</span> <span class="st">"walk"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">reply</span><span class="op">$</span><span class="va">results</span>, max.level <span class="op">=</span> <span class="fl">2</span>, list.len <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; List of 33</span></span>
-<span><span class="co">#&gt;  $ :List of 3</span></span>
-<span><span class="co">#&gt;   ..$ dest_type_id: int 1</span></span>
-<span><span class="co">#&gt;   ..$ mode        : chr "walk"</span></span>
-<span><span class="co">#&gt;   ..$ travel_time : num 10</span></span>
-<span><span class="co">#&gt;  $ :List of 3</span></span>
-<span><span class="co">#&gt;   ..$ dest_type_id: int 5</span></span>
-<span><span class="co">#&gt;   ..$ mode        : chr "walk"</span></span>
-<span><span class="co">#&gt;   ..$ travel_time : num 26</span></span>
-<span><span class="co">#&gt;  $ :List of 3</span></span>
-<span><span class="co">#&gt;   ..$ dest_type_id: int 6</span></span>
-<span><span class="co">#&gt;   ..$ mode        : chr "walk"</span></span>
-<span><span class="co">#&gt;   ..$ travel_time : num 22</span></span>
-<span><span class="co">#&gt;   [list output truncated]</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="handling-errors">Handling errors<a class="anchor" aria-label="anchor" href="#handling-errors"></a>
-</h2>
-<p>Failed requests raise a classed condition. Catch the base <code>close_api_error</code>, or a specific one such as <code>close_api_tokens_exhausted</code>.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
-<span>  <span class="va">close</span><span class="op">$</span><span class="fu">block_summary</span><span class="op">(</span>geoid <span class="op">=</span> <span class="st">"000000000000000"</span><span class="op">)</span>,</span>
-<span>  close_api_error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s (%d)"</span>, <span class="va">e</span><span class="op">$</span><span class="va">slug</span>, <span class="va">e</span><span class="op">$</span><span class="va">status</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; block-not-found (404)</span></span></code></pre></div>
-<p>The client does not retry automatically. On a rate-limit or service-unavailable error, wait <code>e$retry_after</code> seconds (from the <code>Retry-After</code> header) and retry the request yourself.</p>
+</li>
+<li>
+<a href="https://henryspatialanalysis.github.io/closecity-r/reference/index.html">Function reference</a> — every client method and helper.</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="reference">Reference<a class="anchor" aria-label="anchor" href="#reference"></a>
 </h2>
 <ul>
-<li>Package documentation: <a href="https://henryspatialanalysis.github.io/closecity-r/" class="uri">https://henryspatialanalysis.github.io/closecity-r/</a>
-</li>
 <li>API docs and guides: <a href="https://docs.close.city" class="external-link uri">https://docs.close.city</a>
 </li>
 <li>Interactive API: <a href="https://api.close.city/docs" class="external-link uri">https://api.close.city/docs</a>

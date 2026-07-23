@@ -51,8 +51,11 @@ city the same way (at a higher token cost).
 ``` r
 
 blocks <- close$blocks_query(
-  center = list(lon = city$lon, lat = city$lat), radius_m = 2500,
-  mode = "walk", type = unname(basket), include_population = TRUE
+  center = list(lon = city$lon, lat = city$lat),
+  radius_m = 2500,
+  mode = "walk",
+  type = unname(basket),
+  include_population = TRUE
 )
 
 # One row per block, for population and for mapping.
@@ -90,8 +93,12 @@ the covered ones highlighted, the city boundary behind.
 near_library <- unique(blocks$geoid[blocks$dest_type_id == basket["library"] &
                                       blocks$travel_time <= 15])
 one_per_block$has_library <- one_per_block$geoid %in% near_library
-closecity::close_map(x = one_per_block, highlight = "has_library", color = "#058040",
-                     boundary = city_boundary)
+closecity::close_map(
+  x = one_per_block,
+  highlight = "has_library",
+  color = "#058040",
+  boundary = city_boundary
+)
 ```
 
 ## The 15-minute-city score
@@ -128,8 +135,12 @@ cat(sprintf("All six amenities: %.0f%% of residents\n", 100 * basket_pop / total
 #> All six amenities: 4% of residents
 
 one_per_block$full_basket <- one_per_block$geoid %in% covered_all
-closecity::close_map(x = one_per_block, highlight = "full_basket", color = "#f36e21",
-                     boundary = city_boundary)
+closecity::close_map(
+  x = one_per_block,
+  highlight = "full_basket",
+  color = "#f36e21",
+  boundary = city_boundary
+)
 ```
 
 ## Which amenity to add first
@@ -174,16 +185,21 @@ covered_by <- lapply(names(basket), function(name) {
 names(covered_by) <- names(basket)
 
 # One logical row per block: is each amenity within 15 minutes?
-have <- vapply(covered_by, function(s) one_per_block$geoid %in% s,
-               logical(nrow(one_per_block)))
+have <- vapply(
+  covered_by,
+  function(s) one_per_block$geoid %in% s,
+  logical(nrow(one_per_block))
+)
 n_missing <- rowSums(!have)
 gap <- apply(!have, 1, function(row) paste(names(basket)[row], collapse = " + "))
 
 # Residents who are short by exactly one or two amenities.
 almost <- n_missing %in% c(1, 2)
 almost_pop <- sum(one_per_block$population[almost])
-cat(sprintf("%.0f%% of residents are one or two amenities short of the full basket.\n\n",
-            100 * almost_pop / total_pop))
+cat(sprintf(
+  "%.0f%% of residents are one or two amenities short of the full basket.\n\n",
+  100 * almost_pop / total_pop
+))
 #> 31% of residents are one or two amenities short of the full basket.
 
 pop_by_gap <- tapply(one_per_block$population[almost], gap[almost], sum)
@@ -210,8 +226,14 @@ the blocks that could reach the site on foot in 15 minutes.
 
 site_lon <- -77.437
 site_lat <- 37.548
-reachable <- close$isochrone(lon = site_lon, lat = site_lat, mode = "walk",
-                             direction = "to", minutes = 15, format = "blocks")
+reachable <- close$isochrone(
+  lon = site_lon,
+  lat = site_lat,
+  mode = "walk",
+  direction = "to",
+  minutes = 15,
+  format = "blocks"
+)
 
 near_supermarket <- unique(blocks$geoid[blocks$dest_type_id == basket["supermarket"] &
                                           blocks$travel_time <= 15])
@@ -227,6 +249,10 @@ Map the whole city and highlight the blocks that would newly gain access
 ``` r
 
 one_per_block$newly_served <- one_per_block$geoid %in% newly_served
-closecity::close_map(x = one_per_block, highlight = "newly_served", color = "#e8590c",
-                     boundary = city_boundary)
+closecity::close_map(
+  x = one_per_block,
+  highlight = "newly_served",
+  color = "#e8590c",
+  boundary = city_boundary
+)
 ```

@@ -19,8 +19,11 @@ Revalidation is free too. Keep a reply’s `etag` and pass it back as
 
 close$output <- "raw"
 first <- close$block_summary(geoid = "440070008001068", mode = "walk")
-again <- close$block_summary(geoid = "440070008001068", mode = "walk",
-                             if_none_match = first$etag)
+again <- close$block_summary(
+  geoid = "440070008001068",
+  mode = "walk",
+  if_none_match = first$etag
+)
 again$not_modified   # TRUE, and nothing was charged
 #> [1] TRUE
 ```
@@ -51,8 +54,12 @@ per block:
 
 ``` r
 
-shed <- close$isochrone(block = "440070008001068", minutes = 30, mode = "walk",
-                        format = "blocks")
+shed <- close$isochrone(
+  block = "440070008001068",
+  minutes = 30,
+  mode = "walk",
+  format = "blocks"
+)
 ```
 
 ## Watch what you spend
@@ -68,12 +75,16 @@ close$output <- "tabular"
 types <- close$destination_types()
 supermarket_dest_type <- types[types$label == "grocery_stores", ]$dest_type_id
 
-supermarkets <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1200,
-                                  type = supermarket_dest_type)
+supermarkets <- close$pois_search(
+  lat = 41.823,
+  lon = -71.412,
+  radius_m = 1200,
+  type = supermarket_dest_type
+)
 attr(supermarkets, "tokens_charged")
 #> [1] 2
 attr(supermarkets, "tokens_remaining")
-#> [1] 999681522
+#> [1] 999648651
 ```
 
 When you only want the numbers, `output = "tabular"` skips the
