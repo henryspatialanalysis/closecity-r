@@ -74,6 +74,9 @@ auto-zooms to fit every layer with a margin, and hover shows all attributes.</p>
 <span>  background <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  background_color <span class="op">=</span> <span class="st">"#3b6fb0"</span>,</span>
 <span>  background_opacity <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  background_fill <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  points <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  points_color <span class="op">=</span> <span class="st">"#e8590c"</span>,</span>
 <span>  mark <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  buffer <span class="op">=</span> <span class="fl">0.15</span>,</span>
 <span>  zoom <span class="op">=</span> <span class="cn">NULL</span></span>
@@ -147,6 +150,20 @@ layers.</p></dd>
 
 <dt id="arg-background-opacity">background_opacity<a class="anchor" aria-label="anchor" href="#arg-background-opacity"></a></dt>
 <dd><p>Fill opacity for <code>background</code> layers.</p></dd>
+
+
+<dt id="arg-background-fill">background_fill<a class="anchor" aria-label="anchor" href="#arg-background-fill"></a></dt>
+<dd><p>Fill the <code>background</code> layers (default <code>TRUE</code>); <code>FALSE</code>
+draws them as outlines only.</p></dd>
+
+
+<dt id="arg-points">points<a class="anchor" aria-label="anchor" href="#arg-points"></a></dt>
+<dd><p>Optional. A point <a href="https://r-spatial.github.io/sf/reference/sf.html" class="external-link">sf</a> drawn as markers on top of the
+main layer — e.g. POI locations over a block map.</p></dd>
+
+
+<dt id="arg-points-color">points_color<a class="anchor" aria-label="anchor" href="#arg-points-color"></a></dt>
+<dd><p>Marker colour for <code>points</code>.</p></dd>
 
 
 <dt id="arg-mark">mark<a class="anchor" aria-label="anchor" href="#arg-mark"></a></dt>

@@ -24,6 +24,9 @@ close_map(
   background = NULL,
   background_color = "#3b6fb0",
   background_opacity = 0.3,
+  background_fill = TRUE,
+  points = NULL,
+  points_color = "#e8590c",
   mark = NULL,
   buffer = 0.15,
   zoom = NULL
@@ -100,6 +103,22 @@ close_map(
 - background_opacity:
 
   Fill opacity for `background` layers.
+
+- background_fill:
+
+  Fill the `background` layers (default `TRUE`); `FALSE` draws them as
+  outlines only.
+
+- points:
+
+  Optional. A point
+  [sf](https://r-spatial.github.io/sf/reference/sf.html) drawn as
+  markers on top of the main layer — e.g. POI locations over a block
+  map.
+
+- points_color:
+
+  Marker colour for `points`.
 
 - mark:
 

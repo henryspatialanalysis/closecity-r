@@ -84,7 +84,7 @@ supermarkets <- close$pois_search(
 attr(supermarkets, "tokens_charged")
 #> [1] 2
 attr(supermarkets, "tokens_remaining")
-#> [1] 999589499
+#> [1] 999569243
 ```
 
 When you only want the numbers, `output = "tabular"` skips the
