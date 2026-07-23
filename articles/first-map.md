@@ -5,7 +5,7 @@ a starting point, map the supermarkets you can reach on foot, then draw
 how far a 30-minute walk takes you. The example city is Providence,
 Rhode Island.
 
-*Running this tutorial uses about 110 tokens.*
+*Running this tutorial uses about 90 tokens.*
 
 ## Set up
 
@@ -14,7 +14,6 @@ Build a client, then read what you need from the free catalog.
 ``` r
 
 library(closecity)
-library(sf)
 close <- closecity::close_client(api_key = "ck_live_your_key")   # use your own key here
 ```
 
@@ -80,23 +79,18 @@ walk_times[order(walk_times$travel_time), c("name", "travel_time")]
 ## Map the supermarkets within a 30-minute walk
 
 A 30-minute walk is a travel-time question, not a distance one, so let
-the routing answer it. Take the 30-minute walk isochrone from the
-starting point, pull every supermarket in the city, and keep the ones
-that fall inside that walkshed.
+the routing answer it directly: `$point_pois()` returns every POI
+reachable from the starting point within `max_minutes`, each carrying
+its walk time — no isochrone to overlay.
 [`close_map()`](https://henryspatialanalysis.github.io/closecity-r/reference/close_map.md)
 draws the result on an interactive basemap in one line, with the city
 boundary behind it for context.
 
 ``` r
 
-walkshed_30min <- close$isochrone(lon = start_lon, lat = start_lat, mode = "walk",
-                                  direction = "from", minutes = 30, format = "geojson")
-
-city_supermarkets <- close$place_pois(geoid = providence_ri$geoid,
-                                      type = supermarket_type)
-within_walkshed <- sf::st_within(city_supermarkets, sf::st_union(walkshed_30min),
-                                 sparse = FALSE)[, 1]
-nearby_supermarkets <- city_supermarkets[within_walkshed, ]
+nearby_supermarkets <- close$point_pois(lat = start_lat, lon = start_lon,
+                                        mode = "walk", type = supermarket_type,
+                                        max_minutes = 30)
 
 city_boundary <- close$place_boundary(geoid = providence_ri$geoid)
 closecity::close_map(x = nearby_supermarkets, color = "#e8590c",

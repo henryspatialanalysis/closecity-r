@@ -73,7 +73,7 @@ supermarkets <- close$pois_search(lat = 41.823, lon = -71.412, radius_m = 1200,
 attr(supermarkets, "tokens_charged")
 #> [1] 2
 attr(supermarkets, "tokens_remaining")
-#> [1] 999697825
+#> [1] 999681522
 ```
 
 When you only want the numbers, `output = "tabular"` skips the
