@@ -2,22 +2,23 @@
 
 ## Authors
 
-- **Nathaniel Henry**. Author, maintainer.
+- **Henry Spatial Analysis**. Author, maintainer, copyright holder,
+  funder.
 
-- **Henry Spatial Analysis**. Copyright holder, funder.
+- **Nathaniel Henry**. Author.
 
 ## Citation
 
 Source:
 [`DESCRIPTION`](https://github.com/henryspatialanalysis/closecity-r/blob/main/DESCRIPTION)
 
-Henry N (2026). *closecity: Client for the Close API (api.close.city)*.
-R package version 1.4.0,
+Henry Spatial Analysis, Henry N (2026). *closecity: Client for the Close
+API (api.close.city)*. R package version 1.4.0,
 <https://henryspatialanalysis.github.io/closecity-r>.
 
     @Manual{,
       title = {closecity: Client for the Close API (api.close.city)},
-      author = {Nathaniel Henry},
+      author = {{Henry Spatial Analysis} and Nathaniel Henry},
       year = {2026},
       note = {R package version 1.4.0},
       url = {https://henryspatialanalysis.github.io/closecity-r},
