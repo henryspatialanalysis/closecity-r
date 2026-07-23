@@ -18,12 +18,12 @@ library(sf)
 close <- closecity::close_client(api_key = Sys.getenv("CLOSECITY_KEY"))
 ```
 
-A coffee shop wants to know which competitors draw from the same neighbourhood it
-does. Its **walkshed** is every residential block that can walk to it. This tutorial
-finds the competitors — the cafes those same blocks can also walk to — and maps
-them. The example city is Providence, Rhode Island.
+A coffee shop wants to understand the competition inside its own catchment. Its
+**walkshed** is every residential block that can walk to it in 10 minutes. This
+tutorial asks, block by block, how many other cafes those residents can also reach on
+foot, and which one is closest. The example city is Providence, Rhode Island.
 
-*Running this tutorial uses about 2,000 tokens.*
+*Running this tutorial uses about 450 tokens.*
 
 ## Set up
 
@@ -46,87 +46,88 @@ city_boundary <- close$place_boundary(geoid = city$geoid)
 
 ## Find the shops and our walkshed
 
-`$place_pois()` returns every cafe within the city's boundary — no radius to guess.
-Pick one as the subject, then pull its walkshed: every block that can walk to it in
-10 minutes.
+`$place_pois()` returns every cafe within the city's boundary. Pick one as the
+subject, then pull its walkshed: every block that can walk to it in 10 minutes. Draw
+the walkshed with the cafes on top, our shop in orange.
 
 ```{r}
 cafes <- close$place_pois(geoid = city$geoid, type = cafe)
 ours <- cafes[1, ]
 ours$name
-cafes$is_ours <- cafes$dest_id == ours$dest_id
 
-our_shed <- close$poi_catchment(dest_id = ours$dest_id, mode = "walk", max_minutes = 10)
-walkshed <- sf::st_union(our_shed)
-```
-
-Draw the walkshed, with the cafes on top and our shop in orange.
-
-```{r}
+our_shed <- close$poi_catchment(dest_id = ours$dest_id, mode = "walk",
+                                max_minutes = 10)
 closecity::close_map(
   x = cafes,
-  color = ifelse(cafes$is_ours, "#f36e21", "#202a5b"),
+  color = ifelse(cafes$dest_id == ours$dest_id, "#f36e21", "#202a5b"),
   label = "name",
-  background = walkshed,
+  background = sf::st_union(our_shed),
   background_color = "#74b9ff",
   boundary = city_boundary
 )
 ```
 
-## Who else those blocks can reach
+## What each block can reach
 
-A competitor is a cafe that the residents of *our* walkshed can also walk to. So take
-the blocks in our walkshed, and for each of the nearest cafes, pull its walkshed:
-if the two share blocks, those residents can reach it too. `our_shed$geoid` is just a
-vector of block ids, so the overlap is a plain set intersection. (We check the
-nearest cafes to keep the token cost down; the recipe scales to all of them.)
+Now split the walkshed by block. A single `$block_pois()` call takes the whole
+vector of walkshed blocks and returns, for every block, each cafe its residents can
+walk to within 10 minutes — the real routed answer, not a straight-line guess, and
+one request rather than one per block. Passing a vector of GEOIDs tags every row with
+its origin `geoid`, so grouping by it reads two things per block: how many cafes are
+in reach, and which one is closest by walk time.
 
 ```{r}
-our_geoids <- our_shed$geoid
-others <- cafes[!cafes$is_ours, ]
-dist_to_ours <- as.numeric(sf::st_distance(others, ours))
-nearest <- others[order(dist_to_ours)[seq_len(min(15, nrow(others)))], ]
+reach <- close$block_pois(
+  our_shed$geoid,
+  mode = "walk", type = cafe, max_minutes = 10, output = "tabular"
+)
 
-shared <- vapply(nearest$dest_id, function(id) {
-  their_shed <- close$poi_catchment(dest_id = id, mode = "walk", max_minutes = 10)
-  length(intersect(our_geoids, their_shed$geoid))
-}, integer(1))
-
-competing <- nearest[shared > 0, ]
-for (i in order(shared, decreasing = TRUE)) {
-  if (shared[i] == 0) next
-  cat(sprintf(
-    "%-28s %3d shared blocks (%.0f%% of ours)\n",
-    nearest$name[i],
-    shared[i],
-    100 * shared[i] / length(our_geoids)
-  ))
-}
-
-cafes$is_competitor <- cafes$dest_id %in% competing$dest_id
+per_block <- split(reach, reach$geoid)
+counts <- vapply(per_block, nrow, integer(1))
+closest <- vapply(
+  per_block, function(r) r$dest_id[which.min(r$travel_time)], numeric(1)
+)
+our_shed$n_cafes <- unname(counts[as.character(our_shed$geoid)])
+our_shed$n_cafes[is.na(our_shed$n_cafes)] <- 0L
+our_shed$closest_cafe <- unname(closest[as.character(our_shed$geoid)])
 ```
 
-## Map the contested ground
+## How many cafes each block can reach
 
-Draw every cafe over our walkshed: our shop in orange, the competitors those blocks
-can also reach in red, and the rest in navy. The red cafes are the ones fighting for
-the same walk-in traffic.
+Shade every block in the walkshed by the number of cafes within a 10-minute walk;
+blue marks the blocks with the most choice.
 
 ```{r}
-cafe_color <- ifelse(
-  cafes$is_ours,
-  "#f36e21",
-  ifelse(cafes$is_competitor, "#e03131", "#202a5b")
-)
 closecity::close_map(
-  x = cafes,
-  color = cafe_color,
-  label = "name",
-  background = walkshed,
-  background_color = "#74b9ff",
+  x = our_shed,
+  fill = "n_cafes",
+  reverse = TRUE,
   boundary = city_boundary
 )
 ```
 
-The same recipe scales up: raise the cafe count you check, or compare whole cities by
-pulling each one's cafes with `$place_pois()`.
+## Which cafe is closest
+
+Give each cafe that wins at least one block a colour, then paint every block with the
+colour of its closest cafe. The cafe points share those colours. The result is the
+contested ground — where our shop's catchment gives way to a competitor's.
+
+```{r}
+closest <- unique(stats::na.omit(our_shed$closest_cafe))
+palette <- setNames(grDevices::hcl.colors(length(closest), "Dark 3"), closest)
+
+block_color <- palette[as.character(our_shed$closest_cafe)]
+block_color[is.na(block_color)] <- "#dddddd"
+
+winning_cafes <- cafes[cafes$dest_id %in% closest, ]
+closecity::close_map(
+  x = our_shed,
+  color = block_color,
+  points = winning_cafes,
+  points_color = palette[as.character(winning_cafes$dest_id)],
+  boundary = city_boundary
+)
+```
+
+The same recipe scales up: raise `max_minutes`, or compare whole cities by pulling
+each one's cafes with `$place_pois()`.
