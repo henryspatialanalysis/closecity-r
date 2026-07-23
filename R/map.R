@@ -6,6 +6,20 @@
 # city boundary outline or semi-transparent background layers can sit underneath.
 # GDAL-free (plotly + geojsonsf), unlike leaflet/mapgl.
 
+# "YlGnBu" truncated to its 10-90% range — the extreme dark-blue and pale-yellow
+# look jarring on the pale basemap. Ordered to match plotly's named "YlGnBu" in a
+# trace (position 0 is the blue end), so `reverse` behaves the same as before.
+.close_ylgnbu <- list(
+  list(0.000, "rgb(31, 47, 136)"), list(0.125, "rgb(35, 77, 160)"),
+  list(0.250, "rgb(32, 114, 178)"), list(0.375, "rgb(36, 152, 193)"),
+  list(0.500, "rgb(65, 182, 196)"), list(0.625, "rgb(115, 200, 189)"),
+  list(0.750, "rgb(170, 222, 183)"), list(0.875, "rgb(214, 239, 179)"),
+  list(1.000, "rgb(241, 249, 185)")
+)
+.close_scale <- function(palette) {
+  if (identical(palette, "YlGnBu")) .close_ylgnbu else palette
+}
+
 # hex + alpha -> "rgba(r, g, b, a)" for plotly fill/line colours.
 .close_rgba <- function(hex, alpha) {
   v <- grDevices::col2rgb(hex)
@@ -181,7 +195,7 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
       hoverinfo = "skip", showlegend = FALSE
     )
     if (!is.null(fv)) {
-      marker <- list(size = size, color = fv, colorscale = palette,
+      marker <- list(size = size, color = fv, colorscale = .close_scale(palette),
                      reversescale = reverse, showscale = TRUE,
                      colorbar = list(title = fill))
     } else {
@@ -215,7 +229,7 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
         )
       }
       p <- plotly::layout(p, coloraxis = list(
-        colorscale = palette, reversescale = reverse,
+        colorscale = .close_scale(palette), reversescale = reverse,
         cmin = min(fv), cmax = max(fv), colorbar = list(title = fill)
       ))
     } else {
@@ -229,7 +243,7 @@ close_map <- function(x, color = "#e8590c", highlight = NULL, fill = NULL,
         text = hover, hoverinfo = "text", showlegend = FALSE
       )
       if (!is.null(fv)) {
-        args <- c(common, list(z = fv, colorscale = palette, reversescale = reverse,
+        args <- c(common, list(z = fv, colorscale = .close_scale(palette), reversescale = reverse,
                                showscale = TRUE, colorbar = list(title = fill)))
       } else {
         z <- if (is.null(hl)) rep(1, nrow(x)) else as.integer(hl)
